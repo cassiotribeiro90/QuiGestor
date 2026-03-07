@@ -3,7 +3,6 @@ import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../features/auth/bloc/auth_cubit.dart';
 import '../../injection.dart';
-import '../../core/utils/event_bus.dart';
 
 class ApiClient {
   late final Dio _dio;
@@ -12,11 +11,11 @@ class ApiClient {
     _dio = Dio(BaseOptions(
       baseUrl: const String.fromEnvironment(
         'API_URL',
-        defaultValue: 'http://localhost/api',
+        defaultValue: 'http://localhost:8001/api/gestor',
       ),
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
-      headers: {'Content-Type': 'application/json'},
+      headers: {'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest'}
     ));
     
     _dio.interceptors.add(AuthInterceptor());
@@ -55,16 +54,10 @@ class AuthInterceptor extends QueuedInterceptor {
       return;
     }
 
-    // Missão 1: Interceptor Robusto
     if (err.response?.statusCode == 401) {
       final prefs = getIt<SharedPreferences>();
       await prefs.remove('access_token');
       await prefs.remove('token_expires_at');
-      
-      // Notificar expiração via EventBus
-      getIt<EventBus>().fire(SessionExpiredEvent(
-        message: 'Sua sessão expirou. Por favor, faça login novamente.'
-      ));
       
       // Logout no Cubit
       getIt<AuthCubit>().logout();

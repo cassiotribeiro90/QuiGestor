@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../auth/bloc/auth_cubit.dart';
@@ -8,7 +7,6 @@ import '../../loja/views/criar_loja_screen.dart';
 import '../../settings/views/settings_screen.dart';
 import '../../../core/theme/theme_cubit.dart';
 import '../../../injection.dart';
-import '../../../core/utils/event_bus.dart';
 import '../../../core/widgets/quigestor_card.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -19,35 +17,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late final StreamSubscription _sessionSubscription;
-
-  @override
-  void initState() {
-    super.initState();
-    _sessionSubscription = getIt<EventBus>().on<SessionExpiredEvent>().listen((event) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(event.message ?? 'Sessão expirada'),
-            backgroundColor: Colors.orange[800],
-            duration: const Duration(seconds: 5),
-            action: SnackBarAction(
-              label: 'Login',
-              textColor: Colors.white,
-              onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
-            ),
-          ),
-        );
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _sessionSubscription.cancel();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);

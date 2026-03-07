@@ -4,7 +4,6 @@ import 'features/auth/bloc/auth_cubit.dart';
 import 'features/loja/bloc/loja_cubit.dart';
 import 'core/theme/theme_cubit.dart';
 import 'shared/api/api_client.dart';
-import 'core/utils/event_bus.dart';
 
 final getIt = GetIt.instance;
 
@@ -12,9 +11,7 @@ Future<void> setupDependencies() async {
   // SharedPreferences
   final prefs = await SharedPreferences.getInstance();
   getIt.registerSingleton<SharedPreferences>(prefs);
-  
-  // EventBus
-  getIt.registerSingleton<EventBus>(EventBus());
+
   
   // API Client
   getIt.registerLazySingleton<ApiClient>(() => ApiClient());
@@ -26,7 +23,6 @@ Future<void> setupDependencies() async {
   getIt.registerSingleton<AuthCubit>(AuthCubit(
     getIt<ApiClient>(),
     getIt<SharedPreferences>(),
-    getIt<EventBus>(),
   ));
 
   // Loja Cubit
