@@ -18,7 +18,7 @@ class ApiClient {
       baseUrl: baseUrlEnv.isNotEmpty 
           ? baseUrlEnv 
           : (kIsWeb 
-              ? 'http://localhost:8001/api/gestor' 
+               ? 'http://localhost:8001/api/gestor'
               : (defaultTargetPlatform == TargetPlatform.android 
                   ? 'http://10.0.2.2:8001/api/gestor' 
                   : 'http://localhost:8001/api/gestor')),
