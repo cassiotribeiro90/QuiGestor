@@ -6,7 +6,7 @@ import '../../loja/bloc/loja_state.dart';
 import '../../theme/bloc/theme_cubit.dart';
 import '../../theme/bloc/theme_state.dart';
 import '../../../di/dependencies.dart';
-import '../../../../apparte/widgets/quigestor_card.dart'; // To be moved/created
+import '../../../../apparte/widgets/quigestor_card.dart';
 import '../../../routes/app_routes.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -111,17 +111,58 @@ class _HomeScreenState extends State<HomeScreen> {
                   separatorBuilder: (_, __) => const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     final loja = state.lojas[index];
-                    return Card( // Fallback while QuiGestorCard is not fully migrated
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          child: Text(loja.nome[0].toUpperCase()),
-                        ),
-                        title: Text(loja.nome),
-                        subtitle: Text(loja.categoria ?? 'Sem categoria'),
-                        trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: () {
-                          // Navigator.pushNamed(context, Routes.LOJA_DETAILS, arguments: loja);
-                        },
+                    return QuiGestorCard(
+                      onTap: () {
+                        // Ver detalhes
+                      },
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 56,
+                            height: 56,
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Center(
+                              child: Text(
+                                loja.nome[0].toUpperCase(),
+                                style: TextStyle(
+                                  color: theme.colorScheme.primary,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  loja.nome,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Icon(Icons.category_outlined, size: 14, color: Colors.grey[600]),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      loja.categoria ?? 'Sem categoria',
+                                      style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(Icons.chevron_right_rounded, color: Colors.grey[400]),
+                        ],
                       ),
                     );
                   },
@@ -134,7 +175,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: () {
-            // Navigator.pushNamed(context, Routes.NOME_DA_ROTA_CRIAR_LOJA);
+            Navigator.pushNamed(context, Routes.CRIAR_LOJA);
           },
           label: const Text('Nova Loja'),
           icon: const Icon(Icons.add_rounded),
@@ -178,6 +219,7 @@ class AppDrawer extends StatelessWidget {
                     'QuiGestor',
                     style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
                   ),
+                  Text('Gestão do ecossistema', style: TextStyle(color: Colors.white70, fontSize: 13)),
                 ],
               ),
             ),
@@ -186,6 +228,14 @@ class AppDrawer extends StatelessWidget {
             leading: const Icon(Icons.home_outlined),
             title: const Text('Início'),
             onTap: () => Navigator.pop(context),
+          ),
+          ListTile(
+            leading: const Icon(Icons.settings_outlined),
+            title: const Text('Configurações'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, Routes.SETTINGS);
+            },
           ),
           const Spacer(),
           const Divider(),

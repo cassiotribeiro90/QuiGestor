@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'app/di/dependencies.dart';
 import 'app/modules/auth/bloc/auth_cubit.dart';
+import 'app/modules/dashboard/bloc/dashboard_cubit.dart';
 import 'app/modules/theme/bloc/theme_cubit.dart';
 import 'app/modules/theme/bloc/theme_state.dart';
+import 'app/modules/usuarios/usuario_state.dart';
 import 'app/routes/app_router.dart';
 import 'app/routes/app_routes.dart';
 import 'app/theme/app_theme.dart';
@@ -24,6 +26,8 @@ class QuiGestorApp extends StatelessWidget {
       providers: [
         BlocProvider<ThemeCubit>(create: (_) => getIt<ThemeCubit>()),
         BlocProvider<AuthCubit>(create: (_) => getIt<AuthCubit>()),
+        BlocProvider<DashboardCubit>(create: (_) => getIt<DashboardCubit>()),
+        BlocProvider<UsuarioCubit>(create: (_) => getIt<UsuarioCubit>()),
       ],
       child: BlocBuilder<ThemeCubit, ThemeState>(
         builder: (context, themeState) {

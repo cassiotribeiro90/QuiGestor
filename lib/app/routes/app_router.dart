@@ -15,6 +15,16 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const LoginScreen());
       case Routes.HOME:
         return MaterialPageRoute(builder: (_) => const HomeScreen());
+      case Routes.DASHBOARD:  // NOVO
+        return MaterialPageRoute(builder: (_) => const DashboardScreen());
+      case Routes.USUARIOS:   // NOVO
+        return MaterialPageRoute(builder: (_) => const UsuariosListScreen());
+      case Routes.USUARIO_FORM:  // NOVO
+        return MaterialPageRoute(
+          builder: (_) => UsuarioFormScreen(
+            usuario: settings.arguments as Map<String, dynamic>?,
+          ),
+        );
       case Routes.CRIAR_LOJA:
         return MaterialPageRoute(builder: (_) => const CriarLojaScreen());
       case Routes.SETTINGS:

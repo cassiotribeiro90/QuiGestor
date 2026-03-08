@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/auth_cubit.dart';
 import '../bloc/auth_state.dart';
 import '../../../routes/app_routes.dart';
-import '../../../../apparte/widgets/gradient_button.dart'; // Assuming I move/create this
+import '../../../../apparte/widgets/gradient_button.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -29,6 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final theme = Theme.of(context);
     
     return Scaffold(
+      backgroundColor: theme.colorScheme.surface,
       body: BlocConsumer<AuthCubit, AuthState>(
         listener: (context, state) {
           if (state is AuthSuccess) {
@@ -52,10 +53,17 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.store_rounded, 
-                        size: 80, 
-                        color: theme.colorScheme.primary
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.store_rounded, 
+                          size: 80, 
+                          color: theme.colorScheme.primary
+                        ),
                       ),
                       const SizedBox(height: 24),
                       Text(
@@ -63,6 +71,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: theme.textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: theme.colorScheme.primary,
+                        ),
+                      ),
+                      Text(
+                        'Gestão Inteligente',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: Colors.grey[600],
                         ),
                       ),
                       const SizedBox(height: 48),
@@ -73,6 +87,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           prefixIcon: Icon(Icons.email_outlined),
                         ),
                         keyboardType: TextInputType.emailAddress,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) return 'E-mail obrigatório';
+                          return null;
+                        },
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
@@ -82,10 +100,15 @@ class _LoginScreenState extends State<LoginScreen> {
                           labelText: 'Senha',
                           prefixIcon: Icon(Icons.lock_outline),
                         ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) return 'Senha obrigatória';
+                          return null;
+                        },
                       ),
                       const SizedBox(height: 32),
-                      ElevatedButton(
-                        onPressed: state is AuthLoading ? null : () {
+                      GradientButton(
+                        label: 'Entrar',
+                        onPressed: () {
                           if (_formKey.currentState!.validate()) {
                             context.read<AuthCubit>().login(
                               _emailController.text,
@@ -93,9 +116,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             );
                           }
                         },
-                        child: state is AuthLoading 
-                          ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                          : const Text('Entrar'),
+                        isLoading: state is AuthLoading,
+                        icon: Icons.login_rounded,
                       ),
                     ],
                   ),
