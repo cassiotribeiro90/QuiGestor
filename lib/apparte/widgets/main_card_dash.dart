@@ -8,6 +8,7 @@ class MainCardDash extends StatelessWidget {
   final IconData icone;
   final Color cor;
   final String? subtitulo;
+  final bool selectable; // NOVO
 
   const MainCardDash({
     super.key,
@@ -16,6 +17,7 @@ class MainCardDash extends StatelessWidget {
     required this.icone,
     required this.cor,
     this.subtitulo,
+    this.selectable = true, // NOVO - padrão segue regra da plataforma
   });
 
   @override
@@ -23,15 +25,15 @@ class MainCardDash extends StatelessWidget {
     return QuiGestorCard(
       padding: const EdgeInsets.symmetric(
         horizontal: 16,
-        vertical: 8, // Reduzido de 16 para 8 para diminuir a altura
+        vertical: 16,
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center, // Centraliza verticalmente dentro do card
-        crossAxisAlignment: CrossAxisAlignment.center, // Centraliza horizontalmente
-        mainAxisSize: MainAxisSize.min, // Faz a coluna ocupar apenas o espaço necessário
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.center, // Centraliza ícone e título na linha
+            mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
@@ -44,31 +46,34 @@ class MainCardDash extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Flexible(
-                child: TextBody2(
+                child: TextBody1(
                   titulo,
                   color: Colors.grey[600],
                   maxLines: 1,
                   textAlign: TextAlign.center,
+                  selectable: selectable, // REPASSAR
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           FittedBox(
             fit: BoxFit.scaleDown,
             child: TextH2(
               valor,
               color: Theme.of(context).textTheme.bodyLarge?.color,
               textAlign: TextAlign.center,
+              selectable: selectable, // REPASSAR
             ),
           ),
           if (subtitulo != null) ...[
-            const SizedBox(height: 2),
+            const SizedBox(height: 4),
             TextCaption(
               subtitulo!,
               color: Colors.grey[600],
               maxLines: 1,
               textAlign: TextAlign.center,
+              selectable: selectable, // REPASSAR
             ),
           ],
         ],

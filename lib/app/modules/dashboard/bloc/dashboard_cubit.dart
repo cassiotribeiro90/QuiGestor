@@ -39,19 +39,31 @@ class DashboardCubit extends Cubit<DashboardState> {
   DashboardCubit(this._apiClient) : super(DashboardInitial());
 
   Future<void> fetchDashboard() async {
-    emit(DashboardLoading());
-
+    // Só mostra loading se não estiver em loading já
+    if (state is! DashboardLoading) {
+      print('📊 [DASHBOARD] Iniciando carregamento...');
+      emit(DashboardLoading());
+    }
 
     try {
-      // 🔥 requiresAuth: true (padrão) - envia token
+      // Opcional: Log do token para depuração
+      // print('📊 [DASHBOARD] Token antes da requisição: ${_apiClient.getToken()}');
+      
+      print('📊 [DASHBOARD] Buscando dados...');
       final response = await _apiClient.get('/gestor/dashboard');
 
+      print('📊 [DASHBOARD] Resposta recebida: ${response.statusCode}');
+
       if (response.data['success'] == true) {
+        print('📊 [DASHBOARD] Dados carregados com sucesso');
         emit(DashboardLoaded(response.data['data'] ?? {}));
       } else {
-        emit(DashboardError(response.data['message'] ?? 'Erro ao carregar dashboard'));
+        final errorMsg = response.data['message'] ?? 'Erro ao carregar dashboard';
+        print('📊 [DASHBOARD] Erro: $errorMsg');
+        emit(DashboardError(errorMsg));
       }
     } catch (e) {
+      print('📊 [DASHBOARD] Exceção: $e');
       emit(const DashboardError('Erro de conexão'));
     }
   }

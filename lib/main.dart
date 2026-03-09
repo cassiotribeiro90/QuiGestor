@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'app/di/dependencies.dart';
@@ -10,6 +11,7 @@ import 'app/routes/app_router.dart';
 import 'app/routes/app_routes.dart';
 import 'app/theme/app_theme.dart';
 import 'shared/auth/auth_observer.dart';
+import 'shared/api/api_client.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,9 +39,18 @@ class QuiGestorApp extends StatelessWidget {
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: themeState.themeMode,
+            scrollBehavior: const MaterialScrollBehavior().copyWith(
+              dragDevices: {
+                PointerDeviceKind.mouse,
+                PointerDeviceKind.touch,
+                PointerDeviceKind.stylus,
+                PointerDeviceKind.unknown,
+              },
+            ),
             initialRoute: Routes.SPLASH,
             onGenerateRoute: AppRouter.onGenerateRoute,
             navigatorObservers: [AuthObserver()],
+            navigatorKey: ApiClient.navigatorKey, // Adicionado para o RefreshInterceptor
           );
         },
       ),

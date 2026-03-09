@@ -98,51 +98,73 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // === CARDS DE RESUMO ===
-                  GridView.count(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 8,
-                    crossAxisSpacing: 8,
-                    childAspectRatio: 1.3, // Adicionado para controlar a altura dos cartões
+                  // === CARDS DE RESUMO USANDO WRAP ===
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
-                      MainCardDash(
-                        titulo: 'Lojas',
-                        valor: '${lojas['total']}',
-                        icone: Icons.store,
-                        cor: Colors.blue,
-                        subtitulo: '${lojas['ativas']} ativas',
+                      _buildWrapItem(
+                        context,
+                        MainCardDash(
+                          titulo: 'Lojas',
+                          valor: '${lojas['total']}',
+                          icone: Icons.store,
+                          cor: Colors.blue,
+                        ),
                       ),
-                      MainCardDash(
-                        titulo: 'Pedidos Hoje',
-                        valor: '${pedidos['hoje']}',
-                        icone: Icons.today,
-                        cor: Colors.green,
+                      _buildWrapItem(
+                        context,
+                        MainCardDash(
+                          titulo: 'Lojas Ativas',
+                          valor: '${lojas['ativas']}',
+                          icone: Icons.check_circle_outline,
+                          cor: Colors.indigo,
+                        ),
                       ),
-                      MainCardDash(
-                        titulo: 'Esta Semana',
-                        valor: '${pedidos['semana']}',
-                        icone: Icons.calendar_view_week,
-                        cor: Colors.orange,
+                      _buildWrapItem(
+                        context,
+                        MainCardDash(
+                          titulo: 'Pedidos Hoje',
+                          valor: '${pedidos['hoje']}',
+                          icone: Icons.today,
+                          cor: Colors.green,
+                        ),
                       ),
-                      MainCardDash(
-                        titulo: 'Este Mês',
-                        valor: '${pedidos['mes']}',
-                        icone: Icons.calendar_month,
-                        cor: Colors.purple,
+                      _buildWrapItem(
+                        context,
+                        MainCardDash(
+                          titulo: 'Esta Semana',
+                          valor: '${pedidos['semana']}',
+                          icone: Icons.calendar_view_week,
+                          cor: Colors.orange,
+                        ),
                       ),
-                      MainCardDash(
-                        titulo: 'Este Ano',
-                        valor: '${pedidos['ano']}',
-                        icone: Icons.calendar_today,
-                        cor: Colors.teal,
+                      _buildWrapItem(
+                        context,
+                        MainCardDash(
+                          titulo: 'Este Mês',
+                          valor: '${pedidos['mes']}',
+                          icone: Icons.calendar_month,
+                          cor: Colors.purple,
+                        ),
                       ),
-                      MainCardDash(
-                        titulo: 'Total Acumulado',
-                        valor: '${pedidos['total']}',
-                        icone: Icons.history,
-                        cor: Colors.brown,
+                      _buildWrapItem(
+                        context,
+                        MainCardDash(
+                          titulo: 'Este Ano',
+                          valor: '${pedidos['ano']}',
+                          icone: Icons.calendar_today,
+                          cor: Colors.teal,
+                        ),
+                      ),
+                      _buildWrapItem(
+                        context,
+                        MainCardDash(
+                          titulo: 'Total Acumulado',
+                          valor: '${pedidos['total']}',
+                          icone: Icons.history,
+                          cor: Colors.brown,
+                        ),
                       ),
                     ],
                   ),
@@ -173,15 +195,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 SingleChildScrollView(
                                   controller: _faturamentoScrollController,
                                   scrollDirection: Axis.horizontal,
+                                  padding: const EdgeInsets.only(right: 32),
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.start,
                                     children: [
                                       _buildFaturamentoItem(context, 'Hoje', data['faturamento']['hoje']),
-                                      const SizedBox(width: 64),
+                                      const SizedBox(width: 16),
                                       _buildFaturamentoItem(context, 'Semana', data['faturamento']['semana']),
-                                      const SizedBox(width: 64),
+                                      const SizedBox(width: 16),
                                       _buildFaturamentoItem(context, 'Mês', data['faturamento']['mes']),
-                                      const SizedBox(width: 64),
+                                      const SizedBox(width: 16),
                                       _buildFaturamentoItem(context, 'Ano', data['faturamento']['ano']),
                                     ],
                                   ),
@@ -294,6 +317,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
         return const SizedBox();
       },
+    );
+  }
+
+  Widget _buildWrapItem(BuildContext context, Widget child) {
+    final width = (MediaQuery.of(context).size.width - 40) / 2; // (padding total + spacing)
+    return SizedBox(
+      width: width,
+      child: child,
     );
   }
 

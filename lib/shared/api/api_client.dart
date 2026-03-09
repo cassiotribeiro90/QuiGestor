@@ -1,62 +1,59 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import '../../app/di/dependencies.dart';
 import '../services/token_service.dart';
+import 'refresh_interceptor.dart';
 
 class ApiClient {
   late final Dio _dio;
   late final TokenService _tokenService;
+  late final RefreshInterceptor _refreshInterceptor;
+
+  // GlobalKey para navegação (adicionar no main.dart)
+  static final navigatorKey = GlobalKey<NavigatorState>();
 
   ApiClient() {
+    print('🌐 [ApiClient] Inicializando...');
     _tokenService = getIt<TokenService>();
     
+    // Pegar URL da variável de ambiente se existir
+    const String baseUrlEnv = String.fromEnvironment('API_URL');
+    
     final options = BaseOptions(
-      baseUrl: kIsWeb 
-          ? 'http://localhost:8001/api'
-          : (defaultTargetPlatform == TargetPlatform.android 
-              ? 'http://10.0.2.2:8001/api' 
-              : 'http://localhost:8001/api'),
+      baseUrl: baseUrlEnv.isNotEmpty 
+          ? baseUrlEnv 
+          : (kIsWeb 
+               ? 'http://localhost:8001/api'
+              : (defaultTargetPlatform == TargetPlatform.android 
+                  ? 'http://10.0.2.2:8001/api' 
+                  : 'http://localhost:8001/api')),
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
       headers: {
         'Content-Type': 'application/json',
         'X-Requested-With': 'XMLHttpRequest'
-      }
+      },
+      // 🔥 IMPORTANTE: Valida todos os status codes < 500 para tratar 401 no Cubit
+      validateStatus: (status) {
+        return status != null && status < 500;
+      },
     );
 
     _dio = Dio(options);
-
-    // 🛡️ INTERCEPTOR DE AUTENTICAÇÃO (O "Cérebro" do Sistema)
-    _dio.interceptors.add(InterceptorsWrapper(
-      onRequest: (options, handler) {
-        // Verifica a flag 'requiresAuth' nos extras (padrão: true)
-        final bool requiresAuth = options.extra['requiresAuth'] ?? true;
-        
-        if (requiresAuth) {
-          final token = _tokenService.getToken();
-          if (token != null && token.isNotEmpty) {
-            options.headers['Authorization'] = ['Bearer $token'];
-            debugPrint('🚀 [DIO] Header Authorization injetado com sucesso');
-          } else {
-            debugPrint('⚠️ [DIO] Requisição requer auth, mas TokenService retornou null/vazio');
-          }
-        }
-        return handler.next(options);
-      },
-      onError: (e, handler) {
-        if (e.response?.statusCode == 401) {
-          debugPrint('🚫 [DIO] Erro 401 detectado no interceptor');
-        }
-        return handler.next(e);
-      }
-    ));
-
-    _dio.interceptors.add(LogInterceptor(
-      requestHeader: true, 
+    
+    // Cria o interceptor de refresh
+    _refreshInterceptor = RefreshInterceptor(_dio, _tokenService);
+    
+    // Adiciona os interceptores (ORDEM IMPORTA!)
+    _dio.interceptors.add(_refreshInterceptor); // Primeiro tenta refresh
+    _dio.interceptors.add(LogInterceptor(        // Depois log
+      request: true,
       requestBody: true,
       responseBody: true,
       responseHeader: false,
     ));
+    print('🌐 [ApiClient] Configurado com validateStatus < 500');
   }
   
   Future<Response> get(String path, {bool requiresAuth = true}) async {

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../shared/api/api_client.dart';
@@ -14,6 +15,9 @@ Future<void> setupDependencies() async {
   // SharedPreferences
   final prefs = await SharedPreferences.getInstance();
   getIt.registerSingleton<SharedPreferences>(prefs);
+
+  // Navigator Key (necessária para o RefreshInterceptor)
+  getIt.registerSingleton<GlobalKey<NavigatorState>>(ApiClient.navigatorKey);
 
   // Token Service
   getIt.registerSingleton<TokenService>(TokenService(prefs));

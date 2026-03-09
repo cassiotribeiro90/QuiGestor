@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../app/theme/app_text_styles.dart';
 
 /// Componente base para todos os textos do app.
-/// Não herda diretamente de [Text] porque [Text] não permite herança de forma simples 
-/// para sobrescrever parâmetros (quase todos os campos são finais e privados).
-/// Em vez disso, compomos o [Text] dentro deste widget.
+/// Permite habilitar seleção de texto automaticamente na Web (Chrome)
+/// e desabilitar por padrão no Mobile (Android/iOS).
 class AppText extends StatelessWidget {
   final String text;
   final TextStyle? style;
@@ -14,6 +14,7 @@ class AppText extends StatelessWidget {
   final Color? color;
   final double? fontSize;
   final FontWeight? fontWeight;
+  final bool selectable; // Permite habilitar/desabilitar manualmente
 
   const AppText(
     this.text, {
@@ -25,22 +26,41 @@ class AppText extends StatelessWidget {
     this.color,
     this.fontSize,
     this.fontWeight,
+    this.selectable = true, // true = segue regra da plataforma
   });
+
+  /// Retorna se o texto deve ser selecionável baseado na plataforma
+  bool get _isSelectable {
+    if (!selectable) return false; // Se selectable=false, nunca é selecionável
+    return kIsWeb; // Web = true, Mobile/Desktop = false
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: (style ?? const TextStyle()).copyWith(
-        color: color,
-        fontSize: fontSize,
-        fontWeight: fontWeight,
-        fontFamily: AppTextStyles.fontFamily,
-      ),
-      textAlign: textAlign,
-      maxLines: maxLines,
-      overflow: overflow,
+    final baseStyle = (style ?? const TextStyle()).copyWith(
+      color: color,
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      fontFamily: AppTextStyles.fontFamily,
     );
+
+    // Usar SelectableText na Web, Text no mobile
+    if (_isSelectable) {
+      return SelectableText(
+        text,
+        style: baseStyle,
+        textAlign: textAlign,
+        maxLines: maxLines,
+      );
+    } else {
+      return Text(
+        text,
+        style: baseStyle,
+        textAlign: textAlign,
+        maxLines: maxLines,
+        overflow: overflow,
+      );
+    }
   }
 }
 
@@ -51,6 +71,7 @@ class TextH1 extends StatelessWidget {
   final TextAlign? textAlign;
   final int? maxLines;
   final FontWeight? fontWeight;
+  final bool selectable;
 
   const TextH1(
     this.text, {
@@ -59,6 +80,7 @@ class TextH1 extends StatelessWidget {
     this.textAlign,
     this.maxLines,
     this.fontWeight,
+    this.selectable = true,
   });
 
   @override
@@ -70,6 +92,7 @@ class TextH1 extends StatelessWidget {
       textAlign: textAlign,
       maxLines: maxLines,
       fontWeight: fontWeight,
+      selectable: selectable,
       overflow: TextOverflow.ellipsis,
     );
   }
@@ -82,6 +105,7 @@ class TextH2 extends StatelessWidget {
   final TextAlign? textAlign;
   final int? maxLines;
   final FontWeight? fontWeight;
+  final bool selectable;
 
   const TextH2(
     this.text, {
@@ -90,6 +114,7 @@ class TextH2 extends StatelessWidget {
     this.textAlign,
     this.maxLines,
     this.fontWeight,
+    this.selectable = true,
   });
 
   @override
@@ -101,6 +126,7 @@ class TextH2 extends StatelessWidget {
       textAlign: textAlign,
       maxLines: maxLines,
       fontWeight: fontWeight,
+      selectable: selectable,
       overflow: TextOverflow.ellipsis,
     );
   }
@@ -113,6 +139,7 @@ class TextH3 extends StatelessWidget {
   final TextAlign? textAlign;
   final int? maxLines;
   final FontWeight? fontWeight;
+  final bool selectable;
 
   const TextH3(
     this.text, {
@@ -121,6 +148,7 @@ class TextH3 extends StatelessWidget {
     this.textAlign,
     this.maxLines,
     this.fontWeight,
+    this.selectable = true,
   });
 
   @override
@@ -132,6 +160,7 @@ class TextH3 extends StatelessWidget {
       textAlign: textAlign,
       maxLines: maxLines,
       fontWeight: fontWeight,
+      selectable: selectable,
       overflow: TextOverflow.ellipsis,
     );
   }
@@ -144,6 +173,7 @@ class TextBody1 extends StatelessWidget {
   final TextAlign? textAlign;
   final int? maxLines;
   final FontWeight? fontWeight;
+  final bool selectable;
 
   const TextBody1(
     this.text, {
@@ -152,6 +182,7 @@ class TextBody1 extends StatelessWidget {
     this.textAlign,
     this.maxLines,
     this.fontWeight,
+    this.selectable = true,
   });
 
   @override
@@ -163,6 +194,7 @@ class TextBody1 extends StatelessWidget {
       textAlign: textAlign,
       maxLines: maxLines,
       fontWeight: fontWeight,
+      selectable: selectable,
       overflow: TextOverflow.ellipsis,
     );
   }
@@ -175,6 +207,7 @@ class TextBody2 extends StatelessWidget {
   final TextAlign? textAlign;
   final int? maxLines;
   final FontWeight? fontWeight;
+  final bool selectable;
 
   const TextBody2(
     this.text, {
@@ -183,6 +216,7 @@ class TextBody2 extends StatelessWidget {
     this.textAlign,
     this.maxLines,
     this.fontWeight,
+    this.selectable = true,
   });
 
   @override
@@ -194,6 +228,7 @@ class TextBody2 extends StatelessWidget {
       textAlign: textAlign,
       maxLines: maxLines,
       fontWeight: fontWeight,
+      selectable: selectable,
       overflow: TextOverflow.ellipsis,
     );
   }
@@ -206,6 +241,7 @@ class AppTextButton extends StatelessWidget {
   final Color? color;
   final TextAlign? textAlign;
   final FontWeight? fontWeight;
+  final bool selectable;
 
   const AppTextButton(
     this.text, {
@@ -213,6 +249,7 @@ class AppTextButton extends StatelessWidget {
     this.color,
     this.textAlign,
     this.fontWeight,
+    this.selectable = false, // Botões geralmente não são selecionáveis por padrão
   });
 
   @override
@@ -223,6 +260,7 @@ class AppTextButton extends StatelessWidget {
       color: color,
       textAlign: textAlign,
       fontWeight: fontWeight,
+      selectable: selectable,
     );
   }
 }
@@ -234,6 +272,7 @@ class TextCaption extends StatelessWidget {
   final TextAlign? textAlign;
   final int? maxLines;
   final FontWeight? fontWeight;
+  final bool selectable;
 
   const TextCaption(
     this.text, {
@@ -242,6 +281,7 @@ class TextCaption extends StatelessWidget {
     this.textAlign,
     this.maxLines,
     this.fontWeight,
+    this.selectable = true,
   });
 
   @override
@@ -253,6 +293,7 @@ class TextCaption extends StatelessWidget {
       textAlign: textAlign,
       maxLines: maxLines,
       fontWeight: fontWeight,
+      selectable: selectable,
       overflow: TextOverflow.ellipsis,
     );
   }
