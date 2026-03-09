@@ -225,7 +225,7 @@ class GestoresCubit extends Cubit<GestoresState> {
     try {
       final currentState = state;
       emit(GestoresLoading());
-      final response = await _apiClient.delete('/gestor/gestor-usuarios/$id');
+      final response = await _apiClient.post('/gestor/gestor-usuarios/delete/$id');
       if (response.data['success'] == true) {
         int pageToReload = 1;
         if (currentState is GestoresLoaded) {
