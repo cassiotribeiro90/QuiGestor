@@ -4,6 +4,7 @@ import '../../../../apparte/widgets/quigestor_card.dart';
 import '../../../../apparte/widgets/main_card_dash.dart';
 import '../../../../apparte/widgets/app_text.dart';
 import '../bloc/dashboard_cubit.dart';
+import '../../../../core/widgets/responsive_layout.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -20,6 +21,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
+    print('📊 [DashboardScreen] initState - Carregando dados...');
     context.read<DashboardCubit>().fetchDashboard();
     _faturamentoScrollController.addListener(_updateFadeVisibility);
     WidgetsBinding.instance.addPostFrameCallback((_) => _updateFadeVisibility());
@@ -47,6 +49,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    print('📊 [DashboardScreen] build - width: ${MediaQuery.of(context).size.width}');
 
     return BlocBuilder<DashboardCubit, DashboardState>(
       builder: (context, state) {
@@ -320,10 +323,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  // Função auxiliar para calcular largura responsiva dos cards
   Widget _buildWrapItem(BuildContext context, Widget child) {
-    final width = (MediaQuery.of(context).size.width - 40) / 2; // (padding total + spacing)
+    final isWeb = ResponsiveLayout.isWeb(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    
+    // Cálculo da largura disponível considerando a Sidebar na Web
+    final availableWidth = isWeb ? (screenWidth - 260 - 32) : (screenWidth - 32);
+    
+    // Na Web (maxWidth 1000px), tentamos colocar 3 ou 4 cards por linha
+    // No Mobile, mantemos 2 por linha
+    final int itemsPerRow = isWeb ? (availableWidth > 800 ? 4 : 3) : 2;
+    
+    final itemWidth = (availableWidth - (itemsPerRow - 1) * 8) / itemsPerRow;
+    
+    // Limita a largura mínima para não quebrar o layout interno dos cards
+    final finalWidth = itemWidth.clamp(140.0, 400.0);
+    
     return SizedBox(
-      width: width,
+      width: finalWidth,
       child: child,
     );
   }
