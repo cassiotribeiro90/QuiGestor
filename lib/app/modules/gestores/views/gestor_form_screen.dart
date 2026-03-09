@@ -53,17 +53,20 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final data = {
-      'nome': _nomeController.text,
-      'email': _emailController.text,
-      'cpf': _cpfController.text,
-      'telefone': _telefoneController.text,
+      'nome': _nomeController.text.trim(),
+      'email': _emailController.text.trim(),
+      'cpf': _cpfController.text.isNotEmpty ? _cpfController.text.trim() : null,
+      'telefone': _telefoneController.text.isNotEmpty ? _telefoneController.text.trim() : null,
       'nivel': _nivel,
       'status': _status,
     };
 
+    // 🔥 SÓ ADICIONA SENHA SE FOI PREENCHIDA
     if (_senhaController.text.isNotEmpty) {
       data['senha'] = _senhaController.text;
     }
+
+    print('📝 [FORM] Dados a enviar: $data');
 
     bool success;
     if (_isEditing) {
@@ -73,6 +76,7 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
     }
 
     if (success && mounted) {
+      print('📝 [FORM] Operação bem-sucedida, voltando...');
       Navigator.pop(context, true);
     }
   }

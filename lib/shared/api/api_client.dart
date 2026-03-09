@@ -49,8 +49,13 @@ class ApiClient {
     print('🌐 [ApiClient] Configurado com RefreshInterceptor');
   }
   
-  Future<Response> get(String path, {bool requiresAuth = true}) async {
-    return _dio.get(path, options: Options(extra: {'requiresAuth': requiresAuth}));
+  Future<Response> get(String path, {bool requiresAuth = true, Map<String, dynamic>? queryParameters}) async {
+    print('🌐 [API] GET $path - requiresAuth: $requiresAuth - query: $queryParameters');
+    return _dio.get(
+      path, 
+      queryParameters: queryParameters,
+      options: Options(extra: {'requiresAuth': requiresAuth}),
+    );
   }
   
   Future<Response> post(String path, {dynamic data, bool requiresAuth = true}) async {

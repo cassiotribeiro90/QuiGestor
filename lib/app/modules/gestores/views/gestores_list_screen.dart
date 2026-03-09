@@ -8,7 +8,7 @@ import '../widgets/gestor_filters.dart';
 import 'gestor_form_screen.dart';
 import 'gestor_detail_screen.dart';
 import '../../../../apparte/widgets/app_text.dart';
-import '../../../../core/widgets/responsive_layout.dart';
+import '../../../../apparte/widgets/pagination_widget.dart';
 
 class GestoresListScreen extends StatefulWidget {
   const GestoresListScreen({super.key});
@@ -18,44 +18,38 @@ class GestoresListScreen extends StatefulWidget {
 }
 
 class _GestoresListScreenState extends State<GestoresListScreen> {
-  final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
   Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_onScroll);
-    context.read<GestoresCubit>().fetchGestores();
+    _loadInitialData();
+  }
+
+  void _loadInitialData() {
+    context.read<GestoresCubit>().fetchGestores(page: 1);
   }
 
   @override
   void dispose() {
-    _scrollController.removeListener(_onScroll);
-    _scrollController.dispose();
     _searchController.dispose();
     _debounce?.cancel();
     super.dispose();
   }
 
-  void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
-      context.read<GestoresCubit>().loadMore();
-    }
-  }
-
   void _onSearchChanged(String value) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
-      context.read<GestoresCubit>().setSearch(value);
+      if (mounted) {
+        context.read<GestoresCubit>().applyFilters(search: value);
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final gestoresCubit = context.read<GestoresCubit>();
 
     return Scaffold(
       appBar: AppBar(
@@ -63,13 +57,12 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_list_rounded),
-            onPressed: () => _showFilters(context, gestoresCubit),
+            onPressed: () => _showFilters(context),
           ),
         ],
       ),
       body: Column(
         children: [
-          // Barra de pesquisa
           Padding(
             padding: const EdgeInsets.all(16),
             child: TextField(
@@ -82,7 +75,7 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
                         icon: const Icon(Icons.clear),
                         onPressed: () {
                           _searchController.clear();
-                          context.read<GestoresCubit>().setSearch('');
+                          context.read<GestoresCubit>().applyFilters(search: '');
                         },
                       )
                     : null,
@@ -94,18 +87,20 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
             ),
           ),
 
-          // Lista de gestores
           Expanded(
             child: BlocConsumer<GestoresCubit, GestoresState>(
               listener: (context, state) {
                 if (state is GestorOperationSuccess) {
+                  print('📋 [LIST] Operação bem-sucedida: ${state.message}');
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(state.message),
                       backgroundColor: Colors.green,
+                      duration: const Duration(seconds: 2),
                     ),
                   );
                 } else if (state is GestoresError) {
+                  print('📋 [LIST] Erro no Cubit: ${state.message}');
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(state.message),
@@ -115,11 +110,13 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
                 }
               },
               builder: (context, state) {
-                if (state is GestoresLoading && state is! GestoresLoadingMore) {
+                print('📋 [LIST] Renderizando estado: $state');
+
+                if (state is GestoresLoading && state is! GestoresLoaded) {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                if (state is GestoresError) {
+                if (state is GestoresError && state is! GestoresLoaded) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -129,7 +126,7 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
                         TextBody1(state.message),
                         const SizedBox(height: 24),
                         ElevatedButton(
-                          onPressed: () => context.read<GestoresCubit>().fetchGestores(),
+                          onPressed: _loadInitialData,
                           child: const Text('Tentar novamente'),
                         ),
                       ],
@@ -138,7 +135,7 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
                 }
 
                 if (state is GestoresLoaded) {
-                  if (state.filteredGestores.isEmpty) {
+                  if (state.gestores.isEmpty) {
                     return Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -147,40 +144,50 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
                           const SizedBox(height: 16),
                           const TextH3('Nenhum gestor encontrado'),
                           const SizedBox(height: 8),
-                          TextBody2(
-                            _searchController.text.isNotEmpty
-                                ? 'Tente outros termos de busca'
-                                : 'Clique no botão + para adicionar',
-                          ),
+                          TextBody2('Tente outros termos de busca ou filtros'),
                         ],
                       ),
                     );
                   }
 
-                  return RefreshIndicator(
-                    onRefresh: () => context.read<GestoresCubit>().fetchGestores(),
-                    child: ListView.builder(
-                      controller: _scrollController,
-                      padding: const EdgeInsets.all(16),
-                      itemCount: state.filteredGestores.length + (state.hasMore ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        if (index == state.filteredGestores.length) {
-                          return const Padding(
-                            padding: EdgeInsets.all(16),
-                            child: Center(child: CircularProgressIndicator()),
-                          );
-                        }
+                  return Column(
+                    children: [
+                      Expanded(
+                        child: RefreshIndicator(
+                          onRefresh: () async => _loadInitialData(),
+                          child: ListView.separated(
+                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                            itemCount: state.gestores.length,
+                            separatorBuilder: (_, __) => const SizedBox(height: 8),
+                            itemBuilder: (context, index) {
+                              final gestor = state.gestores[index];
+                              return GestorCard(
+                                gestor: gestor,
+                                onTap: () => _navigateToDetail(context, gestor),
+                                onEdit: () => _navigateToEdit(context, gestor),
+                                onDelete: () => _confirmDelete(context, gestor),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
 
-                        final gestor = state.filteredGestores[index];
-                        return GestorCard(
-                          gestor: gestor,
-                          onTap: () => _navigateToDetail(context, gestor),
-                          onEdit: () => _navigateToEdit(context, gestoresCubit, gestor),
-                          onDelete: () => _confirmDelete(context, gestor),
-                        );
-                      },
-                    ),
+                      PaginationWidget(
+                        currentPage: state.currentPage,
+                        totalPages: state.totalPages,
+                        totalItems: state.totalItems,
+                        onPageChanged: (page) {
+                          context.read<GestoresCubit>().goToPage(page);
+                        },
+                        isLoading: state is GestoresLoading,
+                      ),
+                    ],
                   );
+                }
+
+                // Fallback para loading se não houver dados e estiver em transição
+                if (state is GestoresLoading) {
+                  return const Center(child: CircularProgressIndicator());
                 }
 
                 return const SizedBox();
@@ -190,14 +197,15 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _navigateToCreate(context, gestoresCubit),
+        onPressed: () => _navigateToCreate(context),
         icon: const Icon(Icons.add),
         label: const Text('Novo Gestor'),
       ),
     );
   }
 
-  void _showFilters(BuildContext context, GestoresCubit cubit) {
+  void _showFilters(BuildContext context) {
+    final gestoresCubit = context.read<GestoresCubit>();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -205,47 +213,50 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) => BlocProvider.value(
-        value: cubit,
+        value: gestoresCubit,
         child: const GestorFilters(),
       ),
     );
   }
 
-  void _navigateToCreate(BuildContext context, GestoresCubit cubit) async {
-    final result = await Navigator.push(
+  void _navigateToCreate(BuildContext context) async {
+    final gestoresCubit = context.read<GestoresCubit>();
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => BlocProvider.value(
-          value: cubit,
+          value: gestoresCubit,
           child: const GestorFormScreen(),
         ),
       ),
     );
-    if (result == true && context.mounted) {
-      cubit.fetchGestores();
-    }
+    // Cubit recarrega sozinho no sucesso
   }
 
-  void _navigateToEdit(BuildContext context, GestoresCubit cubit, Gestor gestor) async {
-    final result = await Navigator.push(
+  void _navigateToEdit(BuildContext context, Gestor gestor) async {
+    final gestoresCubit = context.read<GestoresCubit>();
+    print('📋 [LIST] Navegando para edição do gestor ID: ${gestor.id}');
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => BlocProvider.value(
-          value: cubit,
+          value: gestoresCubit,
           child: GestorFormScreen(gestor: gestor),
         ),
       ),
     );
-    if (result == true && context.mounted) {
-      cubit.fetchGestores();
-    }
+    // Cubit recarrega sozinho no sucesso
   }
 
   void _navigateToDetail(BuildContext context, Gestor gestor) {
+    final gestoresCubit = context.read<GestoresCubit>();
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => GestorDetailScreen(gestor: gestor),
+        builder: (_) => BlocProvider.value(
+          value: gestoresCubit,
+          child: GestorDetailScreen(gestor: gestor),
+        ),
       ),
     );
   }
