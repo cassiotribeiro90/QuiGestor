@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'fade_horizontal_scroll.dart';
 
 class QuiGestorCard extends StatelessWidget {
   final Widget child;
@@ -6,6 +7,7 @@ class QuiGestorCard extends StatelessWidget {
   final EdgeInsetsGeometry? padding;
   final Color? color;
   final bool horizontalScroll;
+  final bool enableFade;
 
   const QuiGestorCard({
     super.key,
@@ -14,12 +16,36 @@ class QuiGestorCard extends StatelessWidget {
     this.padding,
     this.color,
     this.horizontalScroll = false,
+    this.enableFade = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+    final cardColor = color ?? theme.cardTheme.color ?? theme.colorScheme.surface;
+
+    Widget content;
+    if (horizontalScroll && enableFade) {
+      content = FadeHorizontalScroll(
+        fadeColor: cardColor,
+        child: Padding(
+          padding: padding ?? const EdgeInsets.all(16),
+          child: child,
+        ),
+      );
+    } else if (horizontalScroll) {
+      content = SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: padding ?? const EdgeInsets.all(16),
+        child: child,
+      );
+    } else {
+      content = Padding(
+        padding: padding ?? const EdgeInsets.all(16),
+        child: child,
+      );
+    }
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -27,7 +53,7 @@ class QuiGestorCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         child: Container(
           decoration: BoxDecoration(
-            color: color ?? theme.cardTheme.color,
+            color: cardColor,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: theme.brightness == Brightness.light 
@@ -35,16 +61,7 @@ class QuiGestorCard extends StatelessWidget {
                   : Colors.grey[800]!,
             ),
           ),
-          child: horizontalScroll 
-            ? SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: padding ?? const EdgeInsets.all(16),
-                child: child,
-              )
-            : Padding(
-                padding: padding ?? const EdgeInsets.all(16),
-                child: child,
-              ),
+          child: content,
         ),
       ),
     );

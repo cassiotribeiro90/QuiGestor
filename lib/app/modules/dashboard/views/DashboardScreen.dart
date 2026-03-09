@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../apparte/widgets/quigestor_card.dart';
+import '../../../../apparte/widgets/main_card_dash.dart';
+import '../../../../apparte/widgets/app_text.dart';
 import '../bloc/dashboard_cubit.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -11,10 +13,35 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  final ScrollController _faturamentoScrollController = ScrollController();
+  bool _showLeftFade = false;
+  bool _showRightFade = true;
+
   @override
   void initState() {
     super.initState();
     context.read<DashboardCubit>().fetchDashboard();
+    _faturamentoScrollController.addListener(_updateFadeVisibility);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _updateFadeVisibility());
+  }
+
+  @override
+  void dispose() {
+    _faturamentoScrollController.removeListener(_updateFadeVisibility);
+    _faturamentoScrollController.dispose();
+    super.dispose();
+  }
+
+  void _updateFadeVisibility() {
+    if (!_faturamentoScrollController.hasClients) return;
+
+    final maxScroll = _faturamentoScrollController.position.maxScrollExtent;
+    final currentScroll = _faturamentoScrollController.offset;
+
+    setState(() {
+      _showLeftFade = currentScroll > 0;
+      _showRightFade = currentScroll < maxScroll;
+    });
   }
 
   @override
@@ -36,17 +63,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   Icon(Icons.error_outline, size: 80, color: theme.colorScheme.error),
                   const SizedBox(height: 16),
-                  Text(
+                  TextH2(
                     'Erro ao carregar dashboard',
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    color: theme.colorScheme.error,
                   ),
                   const SizedBox(height: 8),
-                  Text(state.message),
+                  TextBody1(
+                    state.message,
+                    textAlign: TextAlign.center,
+                  ),
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
                     onPressed: () => context.read<DashboardCubit>().fetchDashboard(),
                     icon: const Icon(Icons.refresh_rounded),
-                    label: const Text('Tentar novamente'),
+                    label: const AppTextButton('Tentar novamente'),
                   ),
                 ],
               ),
@@ -73,65 +103,46 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     crossAxisCount: 2,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 8,
+                    crossAxisSpacing: 8,
+                    childAspectRatio: 1.3, // Adicionado para controlar a altura dos cartões
                     children: [
-                      _buildMetricCard(
-                        context,
-                        'Lojas',
-                        '${lojas['total']}',
-                        Icons.store,
-                        Colors.blue,
+                      MainCardDash(
+                        titulo: 'Lojas',
+                        valor: '${lojas['total']}',
+                        icone: Icons.store,
+                        cor: Colors.blue,
                         subtitulo: '${lojas['ativas']} ativas',
                       ),
-                      _buildMetricCard(
-                        context,
-                        'Pedidos Hoje',
-                        '${pedidos['hoje']}',
-                        Icons.today,
-                        Colors.green,
+                      MainCardDash(
+                        titulo: 'Pedidos Hoje',
+                        valor: '${pedidos['hoje']}',
+                        icone: Icons.today,
+                        cor: Colors.green,
                       ),
-                      _buildMetricCard(
-                        context,
-                        'Esta Semana',
-                        '${pedidos['semana']}',
-                        Icons.calendar_view_week,
-                        Colors.orange,
+                      MainCardDash(
+                        titulo: 'Esta Semana',
+                        valor: '${pedidos['semana']}',
+                        icone: Icons.calendar_view_week,
+                        cor: Colors.orange,
                       ),
-                      _buildMetricCard(
-                        context,
-                        'Este Mês',
-                        '${pedidos['mes']}',
-                        Icons.calendar_month,
-                        Colors.purple,
+                      MainCardDash(
+                        titulo: 'Este Mês',
+                        valor: '${pedidos['mes']}',
+                        icone: Icons.calendar_month,
+                        cor: Colors.purple,
                       ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // === SEGUNDA LINHA DE CARDS ===
-                  GridView.count(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 1.4,
-                    children: [
-                      _buildMetricCard(
-                        context,
-                        'Este Ano',
-                        '${pedidos['ano']}',
-                        Icons.calendar_today,
-                        Colors.teal,
+                      MainCardDash(
+                        titulo: 'Este Ano',
+                        valor: '${pedidos['ano']}',
+                        icone: Icons.calendar_today,
+                        cor: Colors.teal,
                       ),
-                      _buildMetricCard(
-                        context,
-                        'Total Acumulado',
-                        '${pedidos['total']}',
-                        Icons.history,
-                        Colors.brown,
+                      MainCardDash(
+                        titulo: 'Total Acumulado',
+                        valor: '${pedidos['total']}',
+                        icone: Icons.history,
+                        cor: Colors.brown,
                       ),
                     ],
                   ),
@@ -140,7 +151,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                   // === CARD DE FATURAMENTO ===
                   QuiGestorCard(
-                    horizontalScroll: true,
+                    horizontalScroll: false,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -148,26 +159,74 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           children: [
                             Icon(Icons.attach_money, color: theme.colorScheme.primary),
                             const SizedBox(width: 8),
-                            Text(
+                            TextH2(
                               'Faturamento',
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                              color: theme.colorScheme.primary,
                             ),
                           ],
                         ),
                         const SizedBox(height: 16),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            _buildFaturamentoItem(context, 'Hoje', data['faturamento']['hoje']),
-                            const SizedBox(width: 48),
-                            _buildFaturamentoItem(context, 'Semana', data['faturamento']['semana']),
-                            const SizedBox(width: 48),
-                            _buildFaturamentoItem(context, 'Mês', data['faturamento']['mes']),
-                            const SizedBox(width: 48),
-                            _buildFaturamentoItem(context, 'Ano', data['faturamento']['ano']),
-                          ],
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            return Stack(
+                              children: [
+                                SingleChildScrollView(
+                                  controller: _faturamentoScrollController,
+                                  scrollDirection: Axis.horizontal,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      _buildFaturamentoItem(context, 'Hoje', data['faturamento']['hoje']),
+                                      const SizedBox(width: 64),
+                                      _buildFaturamentoItem(context, 'Semana', data['faturamento']['semana']),
+                                      const SizedBox(width: 64),
+                                      _buildFaturamentoItem(context, 'Mês', data['faturamento']['mes']),
+                                      const SizedBox(width: 64),
+                                      _buildFaturamentoItem(context, 'Ano', data['faturamento']['ano']),
+                                    ],
+                                  ),
+                                ),
+                                if (_showLeftFade)
+                                  Positioned(
+                                    left: 0,
+                                    top: 0,
+                                    bottom: 0,
+                                    child: Container(
+                                      width: 30,
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          begin: Alignment.centerLeft,
+                                          end: Alignment.centerRight,
+                                          colors: [
+                                            theme.cardTheme.color ?? theme.colorScheme.surface,
+                                            (theme.cardTheme.color ?? theme.colorScheme.surface).withOpacity(0.0),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                if (_showRightFade)
+                                  Positioned(
+                                    right: 0,
+                                    top: 0,
+                                    bottom: 0,
+                                    child: Container(
+                                      width: 30,
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          begin: Alignment.centerRight,
+                                          end: Alignment.centerLeft,
+                                          colors: [
+                                            theme.cardTheme.color ?? theme.colorScheme.surface,
+                                            (theme.cardTheme.color ?? theme.colorScheme.surface).withOpacity(0.0),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -184,11 +243,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           children: [
                             Icon(Icons.analytics, color: theme.colorScheme.primary),
                             const SizedBox(width: 8),
-                            Text(
+                            TextH2(
                               'Métricas',
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                              color: theme.colorScheme.primary,
                             ),
                           ],
                         ),
@@ -223,9 +280,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                   const SizedBox(height: 16),
                   Center(
-                    child: Text(
+                    child: TextCaption(
                       'Última atualização: ${pedidos['ultima_atualizacao']}',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      color: Colors.grey[600],
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -240,41 +297,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildMetricCard(BuildContext context, String titulo, String valor, IconData icone, Color cor, {String? subtitulo}) {
-    return QuiGestorCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: cor.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-                child: Icon(icone, color: cor, size: 18),
-              ),
-              const SizedBox(width: 8),
-              Expanded(child: Text(titulo, style: const TextStyle(fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis)),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(valor, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-          if (subtitulo != null) ...[
-            const SizedBox(height: 4),
-            Text(subtitulo, style: TextStyle(color: Colors.grey[600], fontSize: 11)),
-          ],
-        ],
-      ),
-    );
-  }
-
   Widget _buildFaturamentoItem(BuildContext context, String periodo, String valor) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(periodo, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+        TextCaption(periodo, color: Colors.grey[600]),
         const SizedBox(height: 4),
-        Text(valor, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        TextBody1(valor, fontWeight: FontWeight.bold),
       ],
     );
   }
@@ -289,8 +318,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Icon(icone, color: cor ?? theme.colorScheme.primary, size: 20),
         ),
         const SizedBox(height: 8),
-        Text(valor, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+        TextBody1(valor, fontWeight: FontWeight.bold),
+        TextCaption(label, color: Colors.grey[600]),
       ],
     );
   }

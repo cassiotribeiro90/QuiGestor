@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/home_cubit.dart';
 import '../widgets/home_drawer.dart';
-import '../../auth/bloc/auth_cubit.dart';
 import '../../theme/bloc/theme_cubit.dart';
 import '../../theme/bloc/theme_state.dart';
 import '../../dashboard/views/DashboardScreen.dart';
