@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:dio/dio.dart';
 import '../../../../shared/api/api_client.dart';
 
 // States
@@ -46,9 +47,6 @@ class DashboardCubit extends Cubit<DashboardState> {
     }
 
     try {
-      // Opcional: Log do token para depuração
-      // print('📊 [DASHBOARD] Token antes da requisição: ${_apiClient.getToken()}');
-      
       print('📊 [DASHBOARD] Buscando dados...');
       final response = await _apiClient.get('/gestor/dashboard');
 
@@ -62,9 +60,18 @@ class DashboardCubit extends Cubit<DashboardState> {
         print('📊 [DASHBOARD] Erro: $errorMsg');
         emit(DashboardError(errorMsg));
       }
+    } on DioException catch (e) {
+      // 🔥 TRATAMENTO ESPECÍFICO PARA 401
+      if (e.response?.statusCode == 401) {
+        print('📊 [DASHBOARD] Token 401 detectado, aguardando redirecionamento pelo interceptor...');
+        // Não emite erro, pois o interceptor vai tentar refresh ou redirecionar
+      } else {
+        print('📊 [DASHBOARD] DioException: $e');
+        emit(DashboardError('Erro de conexão: ${e.message}'));
+      }
     } catch (e) {
       print('📊 [DASHBOARD] Exceção: $e');
-      emit(const DashboardError('Erro de conexão'));
+      emit(const DashboardError('Erro inesperado ao carregar dashboard'));
     }
   }
 }

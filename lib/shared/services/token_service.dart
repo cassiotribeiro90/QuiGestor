@@ -10,14 +10,10 @@ class TokenService {
   
   final SharedPreferences _prefs;
   
-  // Controla se já está tentando refresh para evitar múltiplas chamadas
   bool _isRefreshing = false;
-  // Fila de requisições que esperam o refresh
   final List<Completer<bool>> _refreshCompleters = [];
 
   TokenService(this._prefs);
-
-  // ========== MÉTODOS BÁSICOS ==========
 
   Future<void> saveTokens(String accessToken, String? refreshToken, {int expiresIn = 7200}) async {
     final cleanAccessToken = accessToken.trim().replaceAll('"', '');
@@ -49,11 +45,6 @@ class TokenService {
     return _prefs.getString(_refreshTokenKey);
   }
 
-  // Mantido para compatibilidade temporária
-  String? getToken() => getAccessToken();
-  Future<void> saveToken(String token) => saveTokens(token, null);
-  Future<void> clearToken() => clearTokens();
-
   bool hasToken() {
     return getAccessToken() != null;
   }
@@ -77,13 +68,10 @@ class TokenService {
     return {};
   }
 
-  // ========== MÉTODO DE REFRESH ==========
-
   /// Tenta renovar o token usando o refresh_token
   Future<bool> refreshToken(Dio dio) async {
-    // Se já estiver refrescando, aguarda na fila
     if (_isRefreshing) {
-      print('🔄 [TokenService] Já está refrescando, aguardando...');
+      print('🔄 [TokenService] Já está refrescando, adicionando à fila...');
       final completer = Completer<bool>();
       _refreshCompleters.add(completer);
       return completer.future;
@@ -100,9 +88,8 @@ class TokenService {
         return false;
       }
 
-      print('🔄 [TokenService] Chamando endpoint de refresh com token: ${refreshTokenValue.substring(0, min(20, refreshTokenValue.length))}...');
+      print('🔄 [TokenService] Chamando endpoint de refresh...');
       
-      // Cria um Dio temporário sem interceptores para evitar loop
       final tempDio = Dio(BaseOptions(
         baseUrl: dio.options.baseUrl,
         headers: {'Content-Type': 'application/json'},
@@ -111,6 +98,9 @@ class TokenService {
       final response = await tempDio.post(
         '/gestor/gestor-usuarios/refresh',
         data: {'refresh_token': refreshTokenValue},
+        options: Options(
+          extra: {'requiresAuth': false},
+        ),
       );
 
       print('🔄 [TokenService] Resposta do refresh: ${response.statusCode}');
@@ -122,12 +112,10 @@ class TokenService {
         final newRefreshToken = data['refresh_token'];
         final expiresIn = data['expires_in'] ?? 7200;
 
-        // Salva os novos tokens
         await saveTokens(newAccessToken, newRefreshToken, expiresIn: expiresIn);
         
         print('✅ [TokenService] Token renovado com sucesso!');
         
-        // Completa todas as requisições na fila com sucesso
         for (var completer in _refreshCompleters) {
           completer.complete(true);
         }
@@ -138,7 +126,6 @@ class TokenService {
         print('❌ [TokenService] Falha no refresh: ${response.data['message']}');
         await clearTokens();
         
-        // Completa todas com falha
         for (var completer in _refreshCompleters) {
           completer.complete(false);
         }
@@ -146,11 +133,20 @@ class TokenService {
         
         return false;
       }
+    } on DioException catch (e) {
+      print('❌ [TokenService] DioException no refresh: ${e.response?.statusCode} - ${e.response?.data}');
+      await clearTokens();
+      
+      for (var completer in _refreshCompleters) {
+        completer.complete(false);
+      }
+      _refreshCompleters.clear();
+      
+      return false;
     } catch (e) {
       print('❌ [TokenService] Erro no refresh: $e');
       await clearTokens();
       
-      // Completa todas com falha
       for (var completer in _refreshCompleters) {
         completer.complete(false);
       }

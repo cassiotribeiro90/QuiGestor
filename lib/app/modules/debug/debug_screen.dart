@@ -21,7 +21,8 @@ class DebugScreen extends StatelessWidget {
           }
           
           final prefs = snapshot.data!;
-          final token = prefs.getString('access_token');
+          final token = tokenService.getAccessToken();
+          final refreshToken = tokenService.getRefreshToken();
           
           return ListView(
             padding: const EdgeInsets.all(16),
@@ -34,11 +35,16 @@ class DebugScreen extends StatelessWidget {
                     children: [
                       const Text('Status do Token', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                       const Divider(),
-                      _buildInfoRow('Token existe', token != null ? 'SIM' : 'NÃO'),
+                      _buildInfoRow('Access Token', token != null ? 'SIM' : 'NÃO'),
                       if (token != null) ...[
                         _buildInfoRow('Tamanho', '${token.length} caracteres'),
                         _buildInfoRow('Começa com', token.substring(0, min<int>(20, token.length))),
                         _buildInfoRow('Header', 'Bearer $token'),
+                      ],
+                      const SizedBox(height: 16),
+                      _buildInfoRow('Refresh Token', refreshToken != null ? 'SIM' : 'NÃO'),
+                      if (refreshToken != null) ...[
+                        _buildInfoRow('Tamanho', '${refreshToken.length} caracteres'),
                       ],
                     ],
                   ),
@@ -47,24 +53,31 @@ class DebugScreen extends StatelessWidget {
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () async {
-                  await tokenService.clearToken();
+                  await tokenService.clearTokens();
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Token limpo!')),
+                      const SnackBar(content: Text('Tokens limpos!')),
                     );
+                    Navigator.of(context).pop();
                   }
                 },
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                child: const Text('LIMPAR TOKEN', style: TextStyle(color: Colors.white)),
+                child: const Text('LIMPAR TOKENS', style: TextStyle(color: Colors.white)),
               ),
               const SizedBox(height: 8),
               ElevatedButton(
-                onPressed: () async {
-                  final token = tokenService.getToken();
+                onPressed: () {
                   if (context.mounted) {
                     if (token != null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Token: $token')),
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Access Token Completo'),
+                          content: SelectableText(token),
+                          actions: [
+                            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Fechar'))
+                          ],
+                        ),
                       );
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -73,7 +86,7 @@ class DebugScreen extends StatelessWidget {
                     }
                   }
                 },
-                child: const Text('VER TOKEN'),
+                child: const Text('VER ACCESS TOKEN COMPLETO'),
               ),
             ],
           );
@@ -88,7 +101,7 @@ class DebugScreen extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 100, child: Text('$label:', style: const TextStyle(fontWeight: FontWeight.bold))),
+          SizedBox(width: 120, child: Text('$label:', style: const TextStyle(fontWeight: FontWeight.bold))),
           Expanded(child: Text(value)),
         ],
       ),

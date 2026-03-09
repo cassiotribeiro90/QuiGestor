@@ -8,6 +8,7 @@ import '../modules/theme/bloc/theme_cubit.dart';
 import '../modules/loja/bloc/loja_cubit.dart';
 import '../modules/dashboard/bloc/dashboard_cubit.dart';
 import '../modules/home/bloc/home_cubit.dart';
+import '../modules/gestores/bloc/gestores_cubit.dart';
 
 final getIt = GetIt.instance;
 
@@ -43,4 +44,7 @@ Future<void> setupDependencies() async {
   
   // Home Cubit
   getIt.registerSingleton<HomeCubit>(HomeCubit());
+
+  // Gestores Cubit
+  getIt.registerFactory<GestoresCubit>(() => GestoresCubit(getIt<ApiClient>()));
 }

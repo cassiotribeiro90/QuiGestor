@@ -4,6 +4,10 @@ import '../bloc/home_cubit.dart';
 import '../../auth/bloc/auth_cubit.dart';
 import '../../../routes/app_routes.dart';
 import '../../dashboard/views/DashboardScreen.dart';
+import '../../gestores/views/gestores_list_screen.dart';
+import '../../gestores/bloc/gestores_cubit.dart';
+import '../../debug/debug_screen.dart';
+import '../../../di/dependencies.dart';
 
 class SideMenu extends StatelessWidget {
   final bool isCompact; // Para futura versão compacta (ícones apenas)
@@ -79,14 +83,17 @@ class SideMenu extends StatelessWidget {
                   content: const DashboardScreen(),
                   isCompact: isCompact,
                 ),
-                const Divider(),
+                
                 _buildSectionHeader('USUÁRIOS', isCompact),
                 _buildMenuItem(
                   context,
                   icon: Icons.admin_panel_settings_outlined,
                   label: 'Gestores',
                   index: 1,
-                  content: const Center(child: Text('Gestores Screen')),
+                  content: BlocProvider<GestoresCubit>(
+                    create: (context) => getIt<GestoresCubit>(),
+                    child: const GestoresListScreen(),
+                  ),
                   isCompact: isCompact,
                 ),
                 _buildMenuItem(
@@ -106,7 +113,6 @@ class SideMenu extends StatelessWidget {
                   isCompact: isCompact,
                 ),
                 
-                const Divider(),
                 _buildSectionHeader('LOJAS', isCompact),
                 _buildMenuItem(
                   context,
@@ -125,7 +131,6 @@ class SideMenu extends StatelessWidget {
                   isCompact: isCompact,
                 ),
                 
-                const Divider(),
                 _buildSectionHeader('PEDIDOS', isCompact),
                 _buildMenuItem(
                   context,
@@ -136,13 +141,23 @@ class SideMenu extends StatelessWidget {
                   isCompact: isCompact,
                 ),
                 
-                const Divider(),
+                _buildSectionHeader('SISTEMA', isCompact),
                 _buildMenuItem(
                   context,
                   icon: Icons.settings_outlined,
                   label: 'Configurações',
                   index: 10,
                   content: const Center(child: Text('Configurações Screen')),
+                  isCompact: isCompact,
+                ),
+                
+                // 🔥 BOTÃO DE DEBUG
+                _buildMenuItem(
+                  context,
+                  icon: Icons.bug_report_outlined,
+                  label: 'Debug Token',
+                  index: 99,
+                  content: const DebugScreen(),
                   isCompact: isCompact,
                 ),
               ],
@@ -173,7 +188,7 @@ class SideMenu extends StatelessWidget {
   Widget _buildSectionHeader(String title, bool isCompact) {
     if (isCompact) return const SizedBox.shrink();
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
       child: Text(
         title,
         style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey),
@@ -192,6 +207,7 @@ class SideMenu extends StatelessWidget {
     return ListTile(
       leading: Icon(icon),
       title: isCompact ? null : Text(label),
+      dense: true, // Menu mais compacto sem linhas
       onTap: () {
         print('Sidebar/Drawer -> Navegando para: $label (index: $index)');
         // Se estiver dentro de um Drawer, fecha ele primeiro

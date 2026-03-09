@@ -72,6 +72,7 @@ class TextH1 extends StatelessWidget {
   final int? maxLines;
   final FontWeight? fontWeight;
   final bool selectable;
+  final TextOverflow? overflow;
 
   const TextH1(
     this.text, {
@@ -81,6 +82,7 @@ class TextH1 extends StatelessWidget {
     this.maxLines,
     this.fontWeight,
     this.selectable = true,
+    this.overflow = TextOverflow.ellipsis,
   });
 
   @override
@@ -93,7 +95,7 @@ class TextH1 extends StatelessWidget {
       maxLines: maxLines,
       fontWeight: fontWeight,
       selectable: selectable,
-      overflow: TextOverflow.ellipsis,
+      overflow: overflow,
     );
   }
 }
@@ -106,6 +108,7 @@ class TextH2 extends StatelessWidget {
   final int? maxLines;
   final FontWeight? fontWeight;
   final bool selectable;
+  final TextOverflow? overflow;
 
   const TextH2(
     this.text, {
@@ -115,6 +118,7 @@ class TextH2 extends StatelessWidget {
     this.maxLines,
     this.fontWeight,
     this.selectable = true,
+    this.overflow = TextOverflow.ellipsis,
   });
 
   @override
@@ -127,7 +131,7 @@ class TextH2 extends StatelessWidget {
       maxLines: maxLines,
       fontWeight: fontWeight,
       selectable: selectable,
-      overflow: TextOverflow.ellipsis,
+      overflow: overflow,
     );
   }
 }
@@ -140,6 +144,7 @@ class TextH3 extends StatelessWidget {
   final int? maxLines;
   final FontWeight? fontWeight;
   final bool selectable;
+  final TextOverflow? overflow;
 
   const TextH3(
     this.text, {
@@ -149,6 +154,7 @@ class TextH3 extends StatelessWidget {
     this.maxLines,
     this.fontWeight,
     this.selectable = true,
+    this.overflow = TextOverflow.ellipsis,
   });
 
   @override
@@ -161,7 +167,7 @@ class TextH3 extends StatelessWidget {
       maxLines: maxLines,
       fontWeight: fontWeight,
       selectable: selectable,
-      overflow: TextOverflow.ellipsis,
+      overflow: overflow,
     );
   }
 }
@@ -174,6 +180,7 @@ class TextBody1 extends StatelessWidget {
   final int? maxLines;
   final FontWeight? fontWeight;
   final bool selectable;
+  final TextOverflow? overflow;
 
   const TextBody1(
     this.text, {
@@ -183,6 +190,7 @@ class TextBody1 extends StatelessWidget {
     this.maxLines,
     this.fontWeight,
     this.selectable = true,
+    this.overflow = TextOverflow.ellipsis,
   });
 
   @override
@@ -195,7 +203,7 @@ class TextBody1 extends StatelessWidget {
       maxLines: maxLines,
       fontWeight: fontWeight,
       selectable: selectable,
-      overflow: TextOverflow.ellipsis,
+      overflow: overflow,
     );
   }
 }
@@ -208,6 +216,7 @@ class TextBody2 extends StatelessWidget {
   final int? maxLines;
   final FontWeight? fontWeight;
   final bool selectable;
+  final TextOverflow? overflow;
 
   const TextBody2(
     this.text, {
@@ -217,6 +226,7 @@ class TextBody2 extends StatelessWidget {
     this.maxLines,
     this.fontWeight,
     this.selectable = true,
+    this.overflow = TextOverflow.ellipsis,
   });
 
   @override
@@ -229,7 +239,7 @@ class TextBody2 extends StatelessWidget {
       maxLines: maxLines,
       fontWeight: fontWeight,
       selectable: selectable,
-      overflow: TextOverflow.ellipsis,
+      overflow: overflow,
     );
   }
 }
@@ -242,6 +252,7 @@ class AppTextButton extends StatelessWidget {
   final TextAlign? textAlign;
   final FontWeight? fontWeight;
   final bool selectable;
+  final TextOverflow? overflow;
 
   const AppTextButton(
     this.text, {
@@ -250,6 +261,7 @@ class AppTextButton extends StatelessWidget {
     this.textAlign,
     this.fontWeight,
     this.selectable = false, // Botões geralmente não são selecionáveis por padrão
+    this.overflow,
   });
 
   @override
@@ -261,6 +273,7 @@ class AppTextButton extends StatelessWidget {
       textAlign: textAlign,
       fontWeight: fontWeight,
       selectable: selectable,
+      overflow: overflow,
     );
   }
 }
@@ -273,6 +286,7 @@ class TextCaption extends StatelessWidget {
   final int? maxLines;
   final FontWeight? fontWeight;
   final bool selectable;
+  final TextOverflow? overflow;
 
   const TextCaption(
     this.text, {
@@ -282,6 +296,7 @@ class TextCaption extends StatelessWidget {
     this.maxLines,
     this.fontWeight,
     this.selectable = true,
+    this.overflow = TextOverflow.ellipsis,
   });
 
   @override
@@ -294,7 +309,7 @@ class TextCaption extends StatelessWidget {
       maxLines: maxLines,
       fontWeight: fontWeight,
       selectable: selectable,
-      overflow: TextOverflow.ellipsis,
+      overflow: overflow,
     );
   }
 }

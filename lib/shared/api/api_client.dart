@@ -10,14 +10,12 @@ class ApiClient {
   late final TokenService _tokenService;
   late final RefreshInterceptor _refreshInterceptor;
 
-  // GlobalKey para navegação (adicionar no main.dart)
   static final navigatorKey = GlobalKey<NavigatorState>();
 
   ApiClient() {
     print('🌐 [ApiClient] Inicializando...');
     _tokenService = getIt<TokenService>();
     
-    // Pegar URL da variável de ambiente se existir
     const String baseUrlEnv = String.fromEnvironment('API_URL');
     
     final options = BaseOptions(
@@ -34,26 +32,21 @@ class ApiClient {
         'Content-Type': 'application/json',
         'X-Requested-With': 'XMLHttpRequest'
       },
-      // 🔥 IMPORTANTE: Valida todos os status codes < 500 para tratar 401 no Cubit
-      validateStatus: (status) {
-        return status != null && status < 500;
-      },
     );
 
     _dio = Dio(options);
     
-    // Cria o interceptor de refresh
+    // Configura o interceptor de refresh (DEVE VIR ANTES DOS OUTROS)
     _refreshInterceptor = RefreshInterceptor(_dio, _tokenService);
     
-    // Adiciona os interceptores (ORDEM IMPORTA!)
-    _dio.interceptors.add(_refreshInterceptor); // Primeiro tenta refresh
-    _dio.interceptors.add(LogInterceptor(        // Depois log
+    _dio.interceptors.add(_refreshInterceptor);
+    _dio.interceptors.add(LogInterceptor(
       request: true,
       requestBody: true,
       responseBody: true,
       responseHeader: false,
     ));
-    print('🌐 [ApiClient] Configurado com validateStatus < 500');
+    print('🌐 [ApiClient] Configurado com RefreshInterceptor');
   }
   
   Future<Response> get(String path, {bool requiresAuth = true}) async {
