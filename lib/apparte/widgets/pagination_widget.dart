@@ -22,8 +22,10 @@ class PaginationWidget extends StatelessWidget {
     final theme = Theme.of(context);
     
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
       decoration: BoxDecoration(
+        color: theme.scaffoldBackgroundColor,
         border: Border(
           top: BorderSide(
             color: theme.brightness == Brightness.light
@@ -32,23 +34,16 @@ class PaginationWidget extends StatelessWidget {
           ),
         ),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Informações de total de itens
-          Expanded(
-            flex: 2,
-            child: TextCaption(
-              'Total: $totalItems registro(s)',
-              color: Colors.grey[600],
-            ),
-          ),
-
           // Navegação de páginas
-          Expanded(
-            flex: 3,
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 // Botão primeira página
                 _buildPageButton(
@@ -112,9 +107,17 @@ class PaginationWidget extends StatelessWidget {
               ],
             ),
           ),
+          
+          const SizedBox(height: 8),
 
-          // Espaço reservado para manter equilíbrio
-          const Expanded(flex: 2, child: SizedBox()),
+          // Informações de total de itens
+          Padding(
+            padding: const EdgeInsets.only(left: 4),
+            child: TextCaption(
+              'Total: $totalItems registro(s)',
+              color: Colors.grey[600],
+            ),
+          ),
         ],
       ),
     );

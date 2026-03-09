@@ -20,6 +20,7 @@ class GestoresListScreen extends StatefulWidget {
 class _GestoresListScreenState extends State<GestoresListScreen> {
   final TextEditingController _searchController = TextEditingController();
   Timer? _debounce;
+  bool _isSearching = false;
 
   @override
   void initState() {
@@ -50,151 +51,82 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final appBarColor = theme.appBarTheme.foregroundColor ?? 
+                       (theme.brightness == Brightness.dark ? Colors.white : Colors.black87);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Gestores'),
+        title: _isSearching
+            ? TextField(
+                controller: _searchController,
+                autofocus: true,
+                onChanged: _onSearchChanged,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: appBarColor,
+                ),
+                decoration: InputDecoration(
+                  hintText: 'Buscar por nome, email ou CPF...',
+                  hintStyle: theme.textTheme.titleMedium?.copyWith(
+                    color: appBarColor.withOpacity(0.6),
+                  ),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.only(left: 12, top: 8, bottom: 8),
+                ),
+              )
+            : const Text('Gestores'),
         actions: [
+          IconButton(
+            icon: Icon(_isSearching ? Icons.close : Icons.search),
+            onPressed: () {
+              setState(() {
+                _isSearching = !_isSearching;
+                if (!_isSearching) {
+                  _searchController.clear();
+                  context.read<GestoresCubit>().applyFilters(search: '');
+                }
+              });
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.filter_list_rounded),
             onPressed: () => _showFilters(context),
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Buscar por nome, email ou CPF',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          context.read<GestoresCubit>().applyFilters(search: '');
-                        },
-                      )
-                    : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+      body: BlocConsumer<GestoresCubit, GestoresState>(
+        listener: (context, state) {
+          if (state is GestorOperationSuccess) {
+            print('📋 [LIST] Operação bem-sucedida: ${state.message}');
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.green,
+                duration: const Duration(seconds: 2),
               ),
-              onChanged: _onSearchChanged,
+            );
+          } else if (state is GestoresError) {
+            print('📋 [LIST] Erro no Cubit: ${state.message}');
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+        builder: (context, state) {
+          print('📋 [LIST] Renderizando estado: $state');
+
+          return RefreshIndicator(
+            onRefresh: () async => _loadInitialData(),
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                _buildStateContent(context, state, theme),
+              ],
             ),
-          ),
-
-          Expanded(
-            child: BlocConsumer<GestoresCubit, GestoresState>(
-              listener: (context, state) {
-                if (state is GestorOperationSuccess) {
-                  print('📋 [LIST] Operação bem-sucedida: ${state.message}');
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(state.message),
-                      backgroundColor: Colors.green,
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                } else if (state is GestoresError) {
-                  print('📋 [LIST] Erro no Cubit: ${state.message}');
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(state.message),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              },
-              builder: (context, state) {
-                print('📋 [LIST] Renderizando estado: $state');
-
-                if (state is GestoresLoading && state is! GestoresLoaded) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (state is GestoresError && state is! GestoresLoaded) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.error_outline, size: 80, color: theme.colorScheme.error),
-                        const SizedBox(height: 16),
-                        TextBody1(state.message),
-                        const SizedBox(height: 24),
-                        ElevatedButton(
-                          onPressed: _loadInitialData,
-                          child: const Text('Tentar novamente'),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                if (state is GestoresLoaded) {
-                  if (state.gestores.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.people_outline, size: 100, color: Colors.grey[400]),
-                          const SizedBox(height: 16),
-                          const TextH3('Nenhum gestor encontrado'),
-                          const SizedBox(height: 8),
-                          TextBody2('Tente outros termos de busca ou filtros'),
-                        ],
-                      ),
-                    );
-                  }
-
-                  return Column(
-                    children: [
-                      Expanded(
-                        child: RefreshIndicator(
-                          onRefresh: () async => _loadInitialData(),
-                          child: ListView.separated(
-                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                            itemCount: state.gestores.length,
-                            separatorBuilder: (_, __) => const SizedBox(height: 8),
-                            itemBuilder: (context, index) {
-                              final gestor = state.gestores[index];
-                              return GestorCard(
-                                gestor: gestor,
-                                onTap: () => _navigateToDetail(context, gestor),
-                                onEdit: () => _navigateToEdit(context, gestor),
-                                onDelete: () => _confirmDelete(context, gestor),
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-
-                      PaginationWidget(
-                        currentPage: state.currentPage,
-                        totalPages: state.totalPages,
-                        totalItems: state.totalItems,
-                        onPageChanged: (page) {
-                          context.read<GestoresCubit>().goToPage(page);
-                        },
-                        isLoading: state is GestoresLoading,
-                      ),
-                    ],
-                  );
-                }
-
-                // Fallback para loading se não houver dados e estiver em transição
-                if (state is GestoresLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                return const SizedBox();
-              },
-            ),
-          ),
-        ],
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _navigateToCreate(context),
@@ -202,6 +134,104 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
         label: const Text('Novo Gestor'),
       ),
     );
+  }
+
+  Widget _buildStateContent(BuildContext context, GestoresState state, ThemeData theme) {
+    if (state is GestoresLoading && state is! GestoresLoaded) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.only(top: 40),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (state is GestoresError && state is! GestoresLoaded) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox(height: 40),
+            Icon(Icons.error_outline, size: 80, color: theme.colorScheme.error),
+            const SizedBox(height: 16),
+            TextBody1(state.message),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _loadInitialData,
+              child: const Text('Tentar novamente'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (state is GestoresLoaded) {
+      if (state.gestores.isEmpty) {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const SizedBox(height: 40),
+              Icon(Icons.people_outline, size: 100, color: Colors.grey[400]),
+              const SizedBox(height: 16),
+              const TextH3('Nenhum gestor encontrado'),
+              const SizedBox(height: 8),
+              TextBody2('Tente outros termos de busca ou filtros'),
+            ],
+          ),
+        );
+      }
+
+      return ListView.separated(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+        itemCount: state.gestores.length + 2,
+        separatorBuilder: (context, index) {
+          if (index < state.gestores.length - 1) {
+            return const SizedBox(height: 8);
+          }
+          return const SizedBox.shrink();
+        },
+        itemBuilder: (context, index) {
+          if (index < state.gestores.length) {
+            final gestor = state.gestores[index];
+            return GestorCard(
+              gestor: gestor,
+              onTap: () => _navigateToDetail(context, gestor),
+              onEdit: () => _navigateToEdit(context, gestor),
+              onDelete: () => _confirmDelete(context, gestor),
+            );
+          } else if (index == state.gestores.length) {
+            return Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: PaginationWidget(
+                currentPage: state.currentPage,
+                totalPages: state.totalPages,
+                totalItems: state.totalItems,
+                onPageChanged: (page) {
+                  context.read<GestoresCubit>().goToPage(page);
+                },
+                isLoading: state is GestoresLoading,
+              ),
+            );
+          } else {
+            return const SizedBox(height: 160);
+          }
+        },
+      );
+    }
+
+    if (state is GestoresLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.only(top: 40),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    return const SizedBox();
   }
 
   void _showFilters(BuildContext context) {
@@ -230,7 +260,6 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
         ),
       ),
     );
-    // Cubit recarrega sozinho no sucesso
   }
 
   void _navigateToEdit(BuildContext context, Gestor gestor) async {
@@ -245,7 +274,6 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
         ),
       ),
     );
-    // Cubit recarrega sozinho no sucesso
   }
 
   void _navigateToDetail(BuildContext context, Gestor gestor) {
