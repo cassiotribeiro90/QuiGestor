@@ -53,33 +53,19 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withOpacity(0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
+                      // LOGO MAIOR E SEM TEXTO ABAIXO
+                      Image.asset(
+                        'assets/images/quigestor.png',
+                        width: 280, // Aumentado para dar destaque
+                        height: 180,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) => Icon(
                           Icons.store_rounded, 
-                          size: 80, 
+                          size: 100, 
                           color: theme.colorScheme.primary
                         ),
                       ),
-                      const SizedBox(height: 24),
-                      Text(
-                        'QuiGestor',
-                        style: theme.textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.primary,
-                        ),
-                      ),
-                      Text(
-                        'Gestão Inteligente',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                      const SizedBox(height: 48),
+                      const SizedBox(height: 48), // Espaço maior após a logo
                       TextFormField(
                         controller: _emailController,
                         decoration: const InputDecoration(

@@ -5,13 +5,15 @@ class QuiGestorCard extends StatelessWidget {
   final VoidCallback? onTap;
   final EdgeInsetsGeometry? padding;
   final Color? color;
-  
+  final bool horizontalScroll;
+
   const QuiGestorCard({
     super.key,
     required this.child,
     this.onTap,
     this.padding,
     this.color,
+    this.horizontalScroll = false,
   });
 
   @override
@@ -33,10 +35,16 @@ class QuiGestorCard extends StatelessWidget {
                   : Colors.grey[800]!,
             ),
           ),
-          child: Padding(
-            padding: padding ?? const EdgeInsets.all(16),
-            child: child,
-          ),
+          child: horizontalScroll 
+            ? SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: padding ?? const EdgeInsets.all(16),
+                child: child,
+              )
+            : Padding(
+                padding: padding ?? const EdgeInsets.all(16),
+                child: child,
+              ),
         ),
       ),
     );

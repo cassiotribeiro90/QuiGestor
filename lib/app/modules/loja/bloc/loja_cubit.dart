@@ -11,7 +11,9 @@ class LojaCubit extends Cubit<LojaState> {
   Future<void> fetchLojas() async {
     emit(LojaLoading());
     try {
-      final response = await _apiClient.get('/lojas');
+      // 🔥 requiresAuth: true - envia token
+      final response = await _apiClient.get('/gestor/lojas');
+
       final List<dynamic> data = response.data;
       final lojas = data.map((json) => Loja.fromJson(json)).toList();
       emit(LojaLoaded(lojas));

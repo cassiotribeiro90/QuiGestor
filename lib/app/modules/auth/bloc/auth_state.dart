@@ -12,12 +12,12 @@ class AuthInitial extends AuthState {}
 class AuthLoading extends AuthState {}
 
 class AuthSuccess extends AuthState {
-  final String token;
+  final String accessToken;
   
-  const AuthSuccess({required this.token});
+  const AuthSuccess({required this.accessToken});
   
   @override
-  List<Object?> get props => [token];
+  List<Object?> get props => [accessToken];
 }
 
 class AuthError extends AuthState {

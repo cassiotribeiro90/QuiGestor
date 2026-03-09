@@ -1,5 +1,3 @@
-// lib/features/dashboard/bloc/dashboard_cubit.dart
-
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../../../shared/api/api_client.dart';
@@ -43,16 +41,18 @@ class DashboardCubit extends Cubit<DashboardState> {
   Future<void> fetchDashboard() async {
     emit(DashboardLoading());
 
+
     try {
+      // 🔥 requiresAuth: true (padrão) - envia token
       final response = await _apiClient.get('/gestor/dashboard');
 
       if (response.data['success'] == true) {
-        emit(DashboardLoaded(response.data['data']));
+        emit(DashboardLoaded(response.data['data'] ?? {}));
       } else {
         emit(DashboardError(response.data['message'] ?? 'Erro ao carregar dashboard'));
       }
     } catch (e) {
-      emit(DashboardError('Erro de conexão: $e'));
+      emit(const DashboardError('Erro de conexão'));
     }
   }
 }

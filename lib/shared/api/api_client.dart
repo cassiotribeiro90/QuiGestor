@@ -1,27 +1,21 @@
-import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../app/modules/auth/bloc/auth_cubit.dart';
 import '../../app/di/dependencies.dart';
+import '../services/token_service.dart';
 
 class ApiClient {
   late final Dio _dio;
+  late final TokenService _tokenService;
 
   ApiClient() {
-    const String baseUrlEnv = String.fromEnvironment('API_URL');
-    
-    // Se a variável de ambiente não estiver vazia, usamos ela como const.
-    // Caso contrário, usamos a lógica dinâmica, mas sem o 'const' no BaseOptions.
+    _tokenService = getIt<TokenService>();
     
     final options = BaseOptions(
-      baseUrl: baseUrlEnv.isNotEmpty 
-          ? baseUrlEnv 
-          : (kIsWeb 
-               ? 'http://localhost:8001/api/gestor'
-              : (defaultTargetPlatform == TargetPlatform.android 
-                  ? 'http://10.0.2.2:8001/api/gestor' 
-                  : 'http://localhost:8001/api/gestor')),
+      baseUrl: kIsWeb 
+          ? 'http://localhost:8001/api'
+          : (defaultTargetPlatform == TargetPlatform.android 
+              ? 'http://10.0.2.2:8001/api' 
+              : 'http://localhost:8001/api'),
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
       headers: {
@@ -31,51 +25,53 @@ class ApiClient {
     );
 
     _dio = Dio(options);
-    
-    _dio.interceptors.add(AuthInterceptor());
-    _dio.interceptors.add(LogInterceptor(responseBody: true, requestBody: true));
+
+    // 🛡️ INTERCEPTOR DE AUTENTICAÇÃO (O "Cérebro" do Sistema)
+    _dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) {
+        // Verifica a flag 'requiresAuth' nos extras (padrão: true)
+        final bool requiresAuth = options.extra['requiresAuth'] ?? true;
+        
+        if (requiresAuth) {
+          final token = _tokenService.getToken();
+          if (token != null && token.isNotEmpty) {
+            options.headers['Authorization'] = ['Bearer $token'];
+            debugPrint('🚀 [DIO] Header Authorization injetado com sucesso');
+          } else {
+            debugPrint('⚠️ [DIO] Requisição requer auth, mas TokenService retornou null/vazio');
+          }
+        }
+        return handler.next(options);
+      },
+      onError: (e, handler) {
+        if (e.response?.statusCode == 401) {
+          debugPrint('🚫 [DIO] Erro 401 detectado no interceptor');
+        }
+        return handler.next(e);
+      }
+    ));
+
+    _dio.interceptors.add(LogInterceptor(
+      requestHeader: true, 
+      requestBody: true,
+      responseBody: true,
+      responseHeader: false,
+    ));
   }
   
-  Future<Response> post(String path, {dynamic data}) => 
-      _dio.post(path, data: data);
-      
-  Future<Response> get(String path) => _dio.get(path);
-      
-  Future<Response> put(String path, {dynamic data}) => 
-      _dio.put(path, data: data);
-      
-  Future<Response> delete(String path) => _dio.delete(path);
-}
-
-class AuthInterceptor extends QueuedInterceptor {
-  @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
-    final prefs = getIt<SharedPreferences>();
-    final token = prefs.getString('access_token');
-    
-    if (token != null) {
-      options.headers['Authorization'] = 'Bearer $token';
-    }
-    
-    handler.next(options);
+  Future<Response> get(String path, {bool requiresAuth = true}) async {
+    return _dio.get(path, options: Options(extra: {'requiresAuth': requiresAuth}));
   }
   
-  @override
-  void onError(DioException err, ErrorInterceptorHandler handler) async {
-    if (err.requestOptions.path.contains('/login')) {
-      handler.next(err);
-      return;
-    }
-
-    if (err.response?.statusCode == 401) {
-      final prefs = getIt<SharedPreferences>();
-      await prefs.remove('access_token');
-      
-      try {
-        getIt<AuthCubit>().logout();
-      } catch (_) {}
-    }
-
-    handler.next(err);
+  Future<Response> post(String path, {dynamic data, bool requiresAuth = true}) async {
+    return _dio.post(path, data: data, options: Options(extra: {'requiresAuth': requiresAuth}));
+  }
+  
+  Future<Response> put(String path, {dynamic data, bool requiresAuth = true}) async {
+    return _dio.put(path, data: data, options: Options(extra: {'requiresAuth': requiresAuth}));
+  }
+  
+  Future<Response> delete(String path, {bool requiresAuth = true}) async {
+    return _dio.delete(path, options: Options(extra: {'requiresAuth': requiresAuth}));
   }
 }

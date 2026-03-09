@@ -1,5 +1,3 @@
-// lib/features/usuarios/bloc/usuario_cubit.dart
-
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../../shared/api/api_client.dart';
@@ -47,6 +45,7 @@ class UsuarioCubit extends Cubit<UsuarioState> {
     emit(UsuarioLoading());
 
     try {
+      // 🔥 requiresAuth: true (padrão) - envia token
       final response = await _apiClient.get('/gestor/gestor-usuarios');
 
       if (response.data['success'] == true) {

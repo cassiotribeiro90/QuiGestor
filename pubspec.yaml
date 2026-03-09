@@ -12,6 +12,7 @@ dependencies:
 
   # UI
   cupertino_icons: ^1.0.6
+  flutter_svg: ^2.0.9
 
   # Estado
   flutter_bloc: ^8.1.3
@@ -33,3 +34,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/images/        # Para PNGs, JPGs
+    - assets/svgs/

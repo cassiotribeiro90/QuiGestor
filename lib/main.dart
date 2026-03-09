@@ -5,7 +5,7 @@ import 'app/modules/auth/bloc/auth_cubit.dart';
 import 'app/modules/dashboard/bloc/dashboard_cubit.dart';
 import 'app/modules/theme/bloc/theme_cubit.dart';
 import 'app/modules/theme/bloc/theme_state.dart';
-import 'app/modules/usuarios/usuario_state.dart';
+import 'app/modules/home/bloc/home_cubit.dart';
 import 'app/routes/app_router.dart';
 import 'app/routes/app_routes.dart';
 import 'app/theme/app_theme.dart';
@@ -27,7 +27,7 @@ class QuiGestorApp extends StatelessWidget {
         BlocProvider<ThemeCubit>(create: (_) => getIt<ThemeCubit>()),
         BlocProvider<AuthCubit>(create: (_) => getIt<AuthCubit>()),
         BlocProvider<DashboardCubit>(create: (_) => getIt<DashboardCubit>()),
-        BlocProvider<UsuarioCubit>(create: (_) => getIt<UsuarioCubit>()),
+        BlocProvider<HomeCubit>(create: (_) => getIt<HomeCubit>()),
       ],
       child: BlocBuilder<ThemeCubit, ThemeState>(
         builder: (context, themeState) {

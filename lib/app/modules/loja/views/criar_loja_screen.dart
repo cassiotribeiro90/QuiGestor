@@ -43,7 +43,8 @@ class _CriarLojaScreenState extends State<CriarLojaScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await getIt<ApiClient>().post('/lojas', data: {
+      // 🔥 requiresAuth: true - envia token (padrão)
+      await getIt<ApiClient>().post('/gestor/lojas', data: {
         'nome': _nomeController.text,
         'descricao': _descricaoController.text,
         'endereco': _enderecoController.text,

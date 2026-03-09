@@ -1,5 +1,3 @@
-// lib/features/dashboard/bloc/dashboard_state.dart
-
 import 'package:equatable/equatable.dart';
 
 abstract class DashboardState extends Equatable {
