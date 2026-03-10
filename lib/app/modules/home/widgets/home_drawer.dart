@@ -6,9 +6,8 @@ class HomeDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('🎨 [HomeDrawer] Renderizando...');
     return const Drawer(
-      child: SideMenu(isCompact: false), // Usa o mesmo menu centralizado
+      child: SideMenu(isCompact: false), // Mesmo menu, mas dentro de um Drawer
     );
   }
 }

@@ -10,6 +10,8 @@ import 'gestor_detail_screen.dart';
 import '../../../../apparte/widgets/app_text.dart';
 import '../../../../apparte/widgets/pagination_widget.dart';
 import '../../../../app/theme/app_colors.dart';
+import '../../theme/bloc/theme_cubit.dart';
+import '../../theme/bloc/theme_state.dart';
 
 class GestoresListScreen extends StatefulWidget {
   const GestoresListScreen({super.key});
@@ -30,6 +32,7 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
   }
 
   void _loadInitialData() {
+    print('🔄 [GestoresList] Carregando dados iniciais...');
     context.read<GestoresCubit>().fetchGestores(page: 1);
   }
 
@@ -44,9 +47,25 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
       if (mounted) {
+        print('🔍 [GestoresList] Buscando por: $value');
         context.read<GestoresCubit>().applyFilters(search: value);
       }
     });
+  }
+
+  String _getFiltersSummary(GestoresCubit cubit) {
+    if (cubit.currentNivel == null && cubit.currentStatus == null) {
+      return 'Todos';
+    }
+
+    final nivel = cubit.currentNivel?.toUpperCase() ?? 'Todos';
+    final status = cubit.currentStatus == null 
+        ? 'Todos' 
+        : (cubit.currentStatus == 1 ? 'ATIVOS' : 'INATIVOS');
+
+    final summary = '$nivel, $status';
+    print('📊 [GestoresList] Resumo dos filtros: $summary');
+    return summary;
   }
 
   @override
@@ -74,7 +93,21 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
                   fillColor: Colors.transparent,
                 ),
               )
-            : const Text('Gestores'),
+            : BlocBuilder<GestoresCubit, GestoresState>(
+                builder: (context, state) {
+                  final cubit = context.read<GestoresCubit>();
+                  final summary = _getFiltersSummary(cubit);
+                  return Text(
+                    summary,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: appBarColor,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  );
+                },
+              ),
         actions: [
           IconButton(
             icon: Icon(_isSearching ? Icons.close : Icons.search, color: AppColors.iconPrimary),
@@ -92,11 +125,25 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
             icon: const Icon(Icons.filter_list_rounded, color: AppColors.iconPrimary),
             onPressed: () => _showFilters(context),
           ),
+          BlocBuilder<ThemeCubit, ThemeState>(
+            builder: (context, themeState) {
+              return IconButton(
+                icon: Icon(
+                  themeState.themeMode == ThemeMode.dark
+                      ? Icons.light_mode_outlined
+                      : Icons.dark_mode_outlined,
+                  color: AppColors.iconPrimary,
+                ),
+                onPressed: () => context.read<ThemeCubit>().toggleTheme(),
+              );
+            },
+          ),
         ],
       ),
       body: BlocConsumer<GestoresCubit, GestoresState>(
         listener: (context, state) {
           if (state is GestorOperationSuccess) {
+            print('✅ [GestoresList] Sucesso: ${state.message}');
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
@@ -105,6 +152,7 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
               ),
             );
           } else if (state is GestoresError) {
+            print('❌ [GestoresList] Erro: ${state.message}');
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
@@ -170,7 +218,7 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
       }
 
       return ListView.separated(
-        padding: EdgeInsets.zero,
+        padding: const EdgeInsets.all(16),
         itemCount: state.gestores.length + 1,
         separatorBuilder: (_, __) => const SizedBox.shrink(),
         itemBuilder: (context, index) {
@@ -180,7 +228,6 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
               gestor: gestor,
               onTap: () => _navigateToDetail(context, gestor),
               onEdit: () => _navigateToEdit(context, gestor),
-              onDelete: () => _confirmDelete(context, gestor),
             );
           } else {
             return Padding(
@@ -190,6 +237,7 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
                 totalPages: state.totalPages,
                 totalItems: state.totalItems,
                 onPageChanged: (page) {
+                  print('📄 [GestoresList] Mudando para página: $page');
                   context.read<GestoresCubit>().goToPage(page);
                 },
                 isLoading: state is GestoresLoading,
@@ -255,41 +303,5 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
         ),
       ),
     );
-  }
-
-  Future<void> _confirmDelete(BuildContext context, Gestor gestor) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirmar exclusão'),
-        content: Text('Deseja realmente excluir o gestor ${gestor.nome}?'),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text(
-                'Excluir',
-                style: TextStyle(color: AppColors.error, fontSize: 14),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              minimumSize: const Size(120, 44),
-            ),
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true && context.mounted) {
-      context.read<GestoresCubit>().deleteGestor(gestor.id);
-    }
   }
 }

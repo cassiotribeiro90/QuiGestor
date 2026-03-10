@@ -6,28 +6,25 @@ import '../../../routes/app_routes.dart';
 import '../../dashboard/views/DashboardScreen.dart';
 import '../../gestores/views/gestores_list_screen.dart';
 import '../../gestores/bloc/gestores_cubit.dart';
-import '../../debug/debug_screen.dart';
 import '../../../../shared/api/api_client.dart';
 
 class SideMenu extends StatelessWidget {
-  final bool isCompact; 
+  final bool isCompact;
   
   const SideMenu({super.key, this.isCompact = false});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final apiClient = ApiClient();
     
     return Container(
       width: isCompact ? 72 : 260,
       decoration: BoxDecoration(
-        color: theme.cardTheme.color,
+        color: theme.colorScheme.surface,
         border: Border(
           right: BorderSide(
-            color: theme.brightness == Brightness.light 
-                ? Colors.grey[200]! 
-                : Colors.grey[800]!,
+            color: theme.dividerColor,
+            width: 1,
           ),
         ),
       ),
@@ -36,7 +33,7 @@ class SideMenu extends StatelessWidget {
           // Header
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 32, 16, 16), // 🔥 Aumentado paddingTop de 16 para 32 (16+16)
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [theme.colorScheme.primary, theme.colorScheme.secondary],
@@ -76,23 +73,27 @@ class SideMenu extends StatelessWidget {
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-                _buildMenuItem(
-                  context,
-                  icon: Icons.dashboard_outlined,
-                  label: 'Dashboard',
-                  index: 0,
-                  content: const DashboardScreen(),
-                  isCompact: isCompact,
+                // 🔥 Adicionado padding superior de 12 para o Dashboard
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: _buildMenuItem(
+                    context,
+                    icon: Icons.dashboard_outlined,
+                    label: 'Dashboard',
+                    index: 0,
+                    content: const DashboardScreen(),
+                    isCompact: isCompact,
+                  ),
                 ),
                 
-                _buildSectionHeader('USUÁRIOS', isCompact),
+                _buildSectionHeader(context, 'USUÁRIOS', isCompact),
                 _buildMenuItem(
                   context,
                   icon: Icons.admin_panel_settings_outlined,
                   label: 'Gestores',
                   index: 1,
                   content: BlocProvider<GestoresCubit>(
-                    create: (context) => GestoresCubit(apiClient),
+                    create: (context) => GestoresCubit(ApiClient()),
                     child: const GestoresListScreen(),
                   ),
                   isCompact: isCompact,
@@ -114,7 +115,7 @@ class SideMenu extends StatelessWidget {
                   isCompact: isCompact,
                 ),
                 
-                _buildSectionHeader('LOJAS', isCompact),
+                _buildSectionHeader(context, 'LOJAS', isCompact),
                 _buildMenuItem(
                   context,
                   icon: Icons.store_mall_directory_outlined,
@@ -123,16 +124,8 @@ class SideMenu extends StatelessWidget {
                   content: const Center(child: Text('Lojas List Screen')),
                   isCompact: isCompact,
                 ),
-                _buildMenuItem(
-                  context,
-                  icon: Icons.category_outlined,
-                  label: 'Categorias',
-                  index: 5,
-                  content: const Center(child: Text('Categorias List Screen')),
-                  isCompact: isCompact,
-                ),
                 
-                _buildSectionHeader('PEDIDOS', isCompact),
+                _buildSectionHeader(context, 'PEDIDOS', isCompact),
                 _buildMenuItem(
                   context,
                   icon: Icons.receipt_outlined,
@@ -142,22 +135,13 @@ class SideMenu extends StatelessWidget {
                   isCompact: isCompact,
                 ),
                 
-                _buildSectionHeader('SISTEMA', isCompact),
+                _buildSectionHeader(context, 'SISTEMA', isCompact),
                 _buildMenuItem(
                   context,
                   icon: Icons.settings_outlined,
                   label: 'Configurações',
                   index: 10,
                   content: const Center(child: Text('Configurações Screen')),
-                  isCompact: isCompact,
-                ),
-                
-                _buildMenuItem(
-                  context,
-                  icon: Icons.bug_report_outlined,
-                  label: 'Debug Token',
-                  index: 99,
-                  content: const DebugScreen(),
                   isCompact: isCompact,
                 ),
               ],
@@ -167,7 +151,7 @@ class SideMenu extends StatelessWidget {
           // Logout
           Container(
             decoration: BoxDecoration(
-              border: Border(top: BorderSide(color: Colors.grey[300]!)),
+              border: Border(top: BorderSide(color: theme.dividerColor)),
             ),
             child: ListTile(
               leading: const Icon(Icons.logout_rounded, color: Colors.red),
@@ -184,13 +168,17 @@ class SideMenu extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionHeader(String title, bool isCompact) {
+  Widget _buildSectionHeader(BuildContext context, String title, bool isCompact) {
     if (isCompact) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
       child: Text(
         title,
-        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey),
+        style: TextStyle(
+          fontSize: 12, 
+          fontWeight: FontWeight.bold, 
+          color: Theme.of(context).disabledColor,
+        ),
       ),
     );
   }
@@ -203,16 +191,21 @@ class SideMenu extends StatelessWidget {
     required Widget content,
     required bool isCompact,
   }) {
+    // 🔥 NA WEB, NÃO PRECISA FECHAR DRAWER
     return ListTile(
       leading: Icon(icon),
       title: isCompact ? null : Text(label),
       dense: true,
       onTap: () {
+        // 🔥 NO MOBILE, FECHA O DRAWER SE ELE ESTIVER ABERTO
         try {
-          if (Scaffold.of(context).isDrawerOpen) {
+          if (Scaffold.of(context).hasDrawer && 
+              Scaffold.of(context).isDrawerOpen) {
             Navigator.pop(context);
           }
-        } catch (e) {}
+        } catch (e) {
+          // Ignora se não estiver num Scaffold com drawer
+        }
         context.read<HomeCubit>().navigateTo(index, label, content);
       },
     );

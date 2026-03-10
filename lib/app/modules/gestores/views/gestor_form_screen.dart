@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/gestores_cubit.dart';
 import '../models/gestor.dart';
 import '../../../../apparte/widgets/app_text.dart';
+import '../../../../app/theme/app_colors.dart';
 
 class GestorFormScreen extends StatefulWidget {
   final Gestor? gestor;
@@ -81,11 +82,50 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
     }
   }
 
+  Future<void> _delete() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmar exclusão'),
+        content: Text('Deseja realmente excluir o gestor ${widget.gestor?.nome}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(
+              'Excluir',
+              style: TextStyle(color: AppColors.error),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      print('🗑️ [FORM] Excluindo gestor ${widget.gestor?.id}');
+      final success = await context.read<GestoresCubit>().deleteGestor(widget.gestor!.id);
+      if (success && mounted) {
+        Navigator.pop(context, true);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(_isEditing ? 'Editar Gestor' : 'Novo Gestor'),
+        actions: [
+          if (_isEditing)
+            IconButton(
+              icon: const Icon(Icons.delete_outline, color: Colors.red),
+              onPressed: _delete,
+              tooltip: 'Excluir Gestor',
+            ),
+        ],
       ),
       body: BlocBuilder<GestoresCubit, GestoresState>(
         builder: (context, state) {
@@ -164,7 +204,7 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
                 const TextBody1('Nível de Acesso', fontWeight: FontWeight.bold),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
-                  value: _nivel,
+                  initialValue: _nivel,
                   decoration: const InputDecoration(
                     prefixIcon: Icon(Icons.security_outlined),
                   ),

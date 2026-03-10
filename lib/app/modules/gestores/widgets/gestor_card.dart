@@ -6,7 +6,6 @@ class GestorCard extends StatelessWidget {
   final Gestor gestor;
   final VoidCallback onTap;
   final VoidCallback onEdit;
-  final VoidCallback onDelete;
   final bool showDivider;
   final bool showNivelBadge;
 
@@ -15,7 +14,6 @@ class GestorCard extends StatelessWidget {
     required this.gestor,
     required this.onTap,
     required this.onEdit,
-    required this.onDelete,
     this.showDivider = true,
     this.showNivelBadge = false,
   });
@@ -84,28 +82,17 @@ class GestorCard extends StatelessWidget {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      IconButton(
-                        icon: Icon(
-                          Icons.edit_outlined,
-                          color: theme.disabledColor,
-                          size: 20,
+                      Container(
+                        margin: const EdgeInsets.only(right: 8),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary.withOpacity(0.1), // ← 10% de opacidade
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        onPressed: onEdit,
-                        visualDensity: VisualDensity.compact,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        icon: Icon(
-                          Icons.delete_outline,
-                          color: theme.colorScheme.error,
-                          size: 20,
+                        child: IconButton(
+                          icon: const Icon(Icons.edit_outlined, size: 20),
+                          color: theme.colorScheme.primary,
+                          onPressed: onEdit,
                         ),
-                        onPressed: onDelete,
-                        visualDensity: VisualDensity.compact,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
                       ),
                     ],
                   ),
