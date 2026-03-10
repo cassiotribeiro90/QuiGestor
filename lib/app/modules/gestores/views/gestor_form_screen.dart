@@ -7,8 +7,9 @@ import '../../../../app/theme/app_colors.dart';
 
 class GestorFormScreen extends StatefulWidget {
   final Gestor? gestor;
+  final VoidCallback? onSaved; // ← NOVO callback
 
-  const GestorFormScreen({super.key, this.gestor});
+  const GestorFormScreen({super.key, this.gestor, this.onSaved});
 
   @override
   State<GestorFormScreen> createState() => _GestorFormScreenState();
@@ -62,12 +63,9 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
       'status': _status,
     };
 
-    // 🔥 SÓ ADICIONA SENHA SE FOI PREENCHIDA
     if (_senhaController.text.isNotEmpty) {
       data['senha'] = _senhaController.text;
     }
-
-    print('📝 [FORM] Dados a enviar: $data');
 
     bool success;
     if (_isEditing) {
@@ -77,8 +75,11 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
     }
 
     if (success && mounted) {
-      print('📝 [FORM] Operação bem-sucedida, voltando...');
-      Navigator.pop(context, true);
+      if (widget.onSaved != null) {
+        widget.onSaved!(); // Volta para a lista
+      } else {
+        Navigator.pop(context, true); // Fallback
+      }
     }
   }
 
@@ -105,10 +106,13 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
     );
 
     if (confirm == true && mounted) {
-      print('🗑️ [FORM] Excluindo gestor ${widget.gestor?.id}');
       final success = await context.read<GestoresCubit>().deleteGestor(widget.gestor!.id);
       if (success && mounted) {
-        Navigator.pop(context, true);
+        if (widget.onSaved != null) {
+          widget.onSaved!();
+        } else {
+          Navigator.pop(context, true);
+        }
       }
     }
   }
@@ -204,7 +208,7 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
                 const TextBody1('Nível de Acesso', fontWeight: FontWeight.bold),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
-                  initialValue: _nivel,
+                  value: _nivel,
                   decoration: const InputDecoration(
                     prefixIcon: Icon(Icons.security_outlined),
                   ),

@@ -4,14 +4,23 @@ import '../../../../apparte/widgets/app_text.dart';
 
 class GestorDetailScreen extends StatelessWidget {
   final Gestor gestor;
+  final VoidCallback? onEdit; // ← NOVO callback
 
-  const GestorDetailScreen({super.key, required this.gestor});
+  const GestorDetailScreen({super.key, required this.gestor, this.onEdit});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Detalhes do Gestor'),
+        actions: [
+          if (onEdit != null)
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              onPressed: onEdit,
+              tooltip: 'Editar Gestor',
+            ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),

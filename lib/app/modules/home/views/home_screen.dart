@@ -1,47 +1,93 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../bloc/home_cubit.dart';
 import '../widgets/side_menu.dart';
-import '../widgets/home_drawer.dart';
 import '../../theme/bloc/theme_cubit.dart';
 import '../../theme/bloc/theme_state.dart';
 import '../../dashboard/views/DashboardScreen.dart';
-import '../../../../core/widgets/responsive_layout.dart';
+import '../../gestores/views/gestores_list_screen.dart';
+import '../../gestores/views/gestor_form_screen.dart';
+import '../../gestores/views/gestor_detail_screen.dart';
+import '../../gestores/models/gestor.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<HomeScreen> createState() => HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class HomeScreenState extends State<HomeScreen> {
+  // 🔥 Controlador simples de navegação interna
+  Widget _currentContent = const DashboardScreen();
+  String _currentTitle = 'Dashboard';
+  
+  // Pilha de navegação para voltar
+  final List<Map<String, dynamic>> _navigationStack = [];
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<HomeCubit>().navigateTo(0, 'Dashboard', const DashboardScreen());
+    _navigationStack.add({
+      'title': _currentTitle,
+      'content': _currentContent,
     });
+  }
+
+  void navigateTo(Widget content, String title) {
+    setState(() {
+      _currentContent = content;
+      _currentTitle = title;
+      _navigationStack.add({
+        'title': title,
+        'content': content,
+      });
+    });
+  }
+
+  void goBack() {
+    if (_navigationStack.length > 1) {
+      setState(() {
+        _navigationStack.removeLast();
+        final last = _navigationStack.last;
+        _currentContent = last['content'];
+        _currentTitle = last['title'];
+      });
+    }
+  }
+
+  // Métodos públicos para navegação (serão chamados pelos outros screens)
+  void openGestorForm({Gestor? gestor}) {
+    navigateTo(
+      GestorFormScreen(
+        gestor: gestor,
+        onSaved: () => goBack(), // Volta após salvar
+      ),
+      gestor == null ? 'Novo Gestor' : 'Editar Gestor',
+    );
+  }
+
+  void openGestorDetail(Gestor gestor) {
+    navigateTo(
+      GestorDetailScreen(
+        gestor: gestor,
+        onEdit: () => openGestorForm(gestor: gestor),
+      ),
+      'Detalhes do Gestor',
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<HomeCubit, HomeState>(
-      builder: (context, state) {
-        String title = 'QuiGestor';
-        Widget content = const DashboardScreen();
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // 🔥 MENU SEMPRE VISÍVEL PARA WEB > 600
+        final bool showSidebar = constraints.maxWidth > 600;
 
-        if (state is HomePageChanged) {
-          title = state.pageTitle;
-          content = state.pageContent;
-        }
-
-        // 🔥 USA O RESPONSIVE LAYOUT COM A NOVA LÓGICA
-        return ResponsiveLayout(
-          // Layout Mobile: AppBar com drawer (tradicional)
-          mobileLayout: Scaffold(
+        if (!showSidebar) {
+          // 📱 VERSÃO MOBILE (com drawer)
+          return Scaffold(
             appBar: AppBar(
-              title: Text(title),
+              title: Text(_currentTitle),
               actions: [
                 BlocBuilder<ThemeCubit, ThemeState>(
                   builder: (context, themeState) {
@@ -57,76 +103,57 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
-            drawer: const HomeDrawer(), // Drawer tradicional
-            body: content,
-          ),
-          
-          // Layout Web: Sidebar permanente + conteúdo centralizado
-          webLayout: Scaffold(
+            drawer: const SideMenu(), // Drawer para mobile
+            body: _currentContent,
+          );
+        } else {
+          // 💻 VERSÃO WEB (menu lateral sempre visível)
+          return Scaffold(
             body: Row(
               children: [
-                // Sidebar fixa (NUNCA SOME NA WEB)
-                const SideMenu(isCompact: false),
+                // Menu lateral fixo
+                const SideMenu(
+                  isCompact: false,
+                ),
                 
                 // Área de conteúdo
                 Expanded(
-                  child: Column(
-                    children: [
-                      // AppBar simplificada (só com título e ações)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).scaffoldBackgroundColor,
-                          border: Border(
-                            bottom: BorderSide(
-                              color: Theme.of(context).dividerColor,
-                            ),
-                          ),
+                  child: Scaffold(
+                    appBar: AppBar(
+                      title: Text(_currentTitle),
+                      leading: _navigationStack.length > 1
+                          ? IconButton(
+                              icon: const Icon(Icons.arrow_back_rounded),
+                              onPressed: goBack,
+                            )
+                          : null,
+                      actions: [
+                        BlocBuilder<ThemeCubit, ThemeState>(
+                          builder: (context, themeState) {
+                            return IconButton(
+                              icon: Icon(
+                                themeState.themeMode == ThemeMode.dark
+                                    ? Icons.light_mode_outlined
+                                    : Icons.dark_mode_outlined,
+                              ),
+                              onPressed: () => context.read<ThemeCubit>().toggleTheme(),
+                            );
+                          },
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              title,
-                              style: Theme.of(context).textTheme.titleLarge,
-                            ),
-                            Row(
-                              children: [
-                                BlocBuilder<ThemeCubit, ThemeState>(
-                                  builder: (context, themeState) {
-                                    return IconButton(
-                                      icon: Icon(
-                                        themeState.themeMode == ThemeMode.dark
-                                            ? Icons.light_mode_outlined
-                                            : Icons.dark_mode_outlined,
-                                      ),
-                                      onPressed: () => context.read<ThemeCubit>().toggleTheme(),
-                                    );
-                                  },
-                                ),
-                                // 🔥 SEM BOTÃO DE MENU - SIDEBAR SEMPRE VISÍVEL
-                              ],
-                            ),
-                          ],
-                        ),
+                      ],
+                    ),
+                    body: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 820),
+                        child: _currentContent,
                       ),
-                      
-                      // Conteúdo centralizado com largura máxima
-                      Expanded(
-                        child: Center(
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 1200),
-                            child: content,
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ],
             ),
-          ),
-        );
+          );
+        }
       },
     );
   }

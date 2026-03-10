@@ -12,6 +12,7 @@ import '../../../../apparte/widgets/pagination_widget.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../theme/bloc/theme_cubit.dart';
 import '../../theme/bloc/theme_state.dart';
+import '../../home/views/home_screen.dart';
 
 class GestoresListScreen extends StatefulWidget {
   const GestoresListScreen({super.key});
@@ -72,9 +73,10 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final appBarColor = theme.appBarTheme.foregroundColor ?? AppColors.textPrimary;
+    final bool isMobile = MediaQuery.of(context).size.width < 600;
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: isMobile ? AppBar(
         title: _isSearching
             ? TextField(
                 controller: _searchController,
@@ -139,34 +141,67 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
             },
           ),
         ],
-      ),
-      body: BlocConsumer<GestoresCubit, GestoresState>(
-        listener: (context, state) {
-          if (state is GestorOperationSuccess) {
-            print('✅ [GestoresList] Sucesso: ${state.message}');
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: AppColors.success,
-                duration: const Duration(seconds: 2),
+      ) : null,
+      body: Column(
+        children: [
+          if (!isMobile)
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: _onSearchChanged,
+                      decoration: InputDecoration(
+                        hintText: 'Buscar por nome, email ou CPF...',
+                        prefixIcon: const Icon(Icons.search),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  IconButton(
+                    icon: const Icon(Icons.filter_list_rounded),
+                    onPressed: () => _showFilters(context),
+                    tooltip: 'Filtros',
+                  ),
+                ],
               ),
-            );
-          } else if (state is GestoresError) {
-            print('❌ [GestoresList] Erro: ${state.message}');
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: AppColors.error,
-              ),
-            );
-          }
-        },
-        builder: (context, state) {
-          return RefreshIndicator(
-            onRefresh: () async => _loadInitialData(),
-            child: _buildStateContent(context, state, theme),
-          );
-        },
+            ),
+          Expanded(
+            child: BlocConsumer<GestoresCubit, GestoresState>(
+              listener: (context, state) {
+                if (state is GestorOperationSuccess) {
+                  print('✅ [GestoresList] Sucesso: ${state.message}');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(state.message),
+                      backgroundColor: AppColors.success,
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                } else if (state is GestoresError) {
+                  print('❌ [GestoresList] Erro: ${state.message}');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(state.message),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                }
+              },
+              builder: (context, state) {
+                return RefreshIndicator(
+                  onRefresh: () async => _loadInitialData(),
+                  child: _buildStateContent(context, state, theme),
+                );
+              },
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _navigateToCreate(context),
@@ -266,42 +301,57 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
     );
   }
 
-  void _navigateToCreate(BuildContext context) async {
-    final gestoresCubit = context.read<GestoresCubit>();
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => BlocProvider.value(
-          value: gestoresCubit,
-          child: const GestorFormScreen(),
+  void _navigateToCreate(BuildContext context) {
+    final homeState = context.findAncestorStateOfType<HomeScreenState>();
+    if (homeState != null) {
+      homeState.openGestorForm();
+    } else {
+      final gestoresCubit = context.read<GestoresCubit>();
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => BlocProvider.value(
+            value: gestoresCubit,
+            child: const GestorFormScreen(),
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
 
-  void _navigateToEdit(BuildContext context, Gestor gestor) async {
-    final gestoresCubit = context.read<GestoresCubit>();
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => BlocProvider.value(
-          value: gestoresCubit,
-          child: GestorFormScreen(gestor: gestor),
+  void _navigateToEdit(BuildContext context, Gestor gestor) {
+    final homeState = context.findAncestorStateOfType<HomeScreenState>();
+    if (homeState != null) {
+      homeState.openGestorForm(gestor: gestor);
+    } else {
+      final gestoresCubit = context.read<GestoresCubit>();
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => BlocProvider.value(
+            value: gestoresCubit,
+            child: GestorFormScreen(gestor: gestor),
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
 
   void _navigateToDetail(BuildContext context, Gestor gestor) {
-    final gestoresCubit = context.read<GestoresCubit>();
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => BlocProvider.value(
-          value: gestoresCubit,
-          child: GestorDetailScreen(gestor: gestor),
+    final homeState = context.findAncestorStateOfType<HomeScreenState>();
+    if (homeState != null) {
+      homeState.openGestorDetail(gestor);
+    } else {
+      final gestoresCubit = context.read<GestoresCubit>();
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => BlocProvider.value(
+            value: gestoresCubit,
+            child: GestorDetailScreen(gestor: gestor),
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
 }

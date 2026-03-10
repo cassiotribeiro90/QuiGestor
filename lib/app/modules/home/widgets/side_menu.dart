@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../bloc/home_cubit.dart';
 import '../../auth/bloc/auth_cubit.dart';
 import '../../../routes/app_routes.dart';
 import '../../dashboard/views/DashboardScreen.dart';
 import '../../gestores/views/gestores_list_screen.dart';
-import '../../gestores/bloc/gestores_cubit.dart';
-import '../../../../shared/api/api_client.dart';
+import '../views/home_screen.dart';
+import '../../theme/bloc/theme_cubit.dart';
+import '../../theme/bloc/theme_state.dart';
 
 class SideMenu extends StatelessWidget {
   final bool isCompact;
@@ -21,19 +21,13 @@ class SideMenu extends StatelessWidget {
       width: isCompact ? 72 : 260,
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        border: Border(
-          right: BorderSide(
-            color: theme.dividerColor,
-            width: 1,
-          ),
-        ),
       ),
       child: Column(
         children: [
           // Header
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(16, 32, 16, 16), // 🔥 Aumentado paddingTop de 16 para 32 (16+16)
+            padding: const EdgeInsets.fromLTRB(16, 32, 16, 16),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [theme.colorScheme.primary, theme.colorScheme.secondary],
@@ -73,14 +67,12 @@ class SideMenu extends StatelessWidget {
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-                // 🔥 Adicionado padding superior de 12 para o Dashboard
                 Padding(
                   padding: const EdgeInsets.only(top: 12),
                   child: _buildMenuItem(
                     context,
                     icon: Icons.dashboard_outlined,
                     label: 'Dashboard',
-                    index: 0,
                     content: const DashboardScreen(),
                     isCompact: isCompact,
                   ),
@@ -91,18 +83,13 @@ class SideMenu extends StatelessWidget {
                   context,
                   icon: Icons.admin_panel_settings_outlined,
                   label: 'Gestores',
-                  index: 1,
-                  content: BlocProvider<GestoresCubit>(
-                    create: (context) => GestoresCubit(ApiClient()),
-                    child: const GestoresListScreen(),
-                  ),
+                  content: const GestoresListScreen(),
                   isCompact: isCompact,
                 ),
                 _buildMenuItem(
                   context,
                   icon: Icons.storefront_outlined,
                   label: 'Lojistas',
-                  index: 2,
                   content: const Center(child: Text('Lojistas Screen')),
                   isCompact: isCompact,
                 ),
@@ -110,7 +97,6 @@ class SideMenu extends StatelessWidget {
                   context,
                   icon: Icons.people_outlined,
                   label: 'Clientes',
-                  index: 3,
                   content: const Center(child: Text('Clientes Screen')),
                   isCompact: isCompact,
                 ),
@@ -120,7 +106,6 @@ class SideMenu extends StatelessWidget {
                   context,
                   icon: Icons.store_mall_directory_outlined,
                   label: 'Todas as Lojas',
-                  index: 4,
                   content: const Center(child: Text('Lojas List Screen')),
                   isCompact: isCompact,
                 ),
@@ -130,7 +115,6 @@ class SideMenu extends StatelessWidget {
                   context,
                   icon: Icons.receipt_outlined,
                   label: 'Todos os Pedidos',
-                  index: 7,
                   content: const Center(child: Text('Pedidos Screen')),
                   isCompact: isCompact,
                 ),
@@ -140,7 +124,6 @@ class SideMenu extends StatelessWidget {
                   context,
                   icon: Icons.settings_outlined,
                   label: 'Configurações',
-                  index: 10,
                   content: const Center(child: Text('Configurações Screen')),
                   isCompact: isCompact,
                 ),
@@ -148,19 +131,29 @@ class SideMenu extends StatelessWidget {
             ),
           ),
           
+          // Theme Toggle
+          BlocBuilder<ThemeCubit, ThemeState>(
+            builder: (context, state) {
+              final isDark = state.themeMode == ThemeMode.dark;
+              return ListTile(
+                leading: Icon(
+                  isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+                  color: theme.colorScheme.primary,
+                ),
+                title: isCompact ? null : Text(isDark ? 'Tema Claro' : 'Tema Escuro'),
+                onTap: () => context.read<ThemeCubit>().toggleTheme(),
+              );
+            },
+          ),
+
           // Logout
-          Container(
-            decoration: BoxDecoration(
-              border: Border(top: BorderSide(color: theme.dividerColor)),
-            ),
-            child: ListTile(
-              leading: const Icon(Icons.logout_rounded, color: Colors.red),
-              title: isCompact ? null : const Text('Sair', style: TextStyle(color: Colors.red)),
-              onTap: () {
-                context.read<AuthCubit>().logout();
-                Navigator.pushReplacementNamed(context, Routes.LOGIN);
-              },
-            ),
+          ListTile(
+            leading: const Icon(Icons.logout_rounded, color: Colors.red),
+            title: isCompact ? null : const Text('Sair', style: TextStyle(color: Colors.red)),
+            onTap: () {
+              context.read<AuthCubit>().logout();
+              Navigator.pushReplacementNamed(context, Routes.LOGIN);
+            },
           ),
           SizedBox(height: MediaQuery.of(context).padding.bottom),
         ],
@@ -187,26 +180,26 @@ class SideMenu extends StatelessWidget {
     BuildContext context, {
     required IconData icon,
     required String label,
-    required int index,
     required Widget content,
     required bool isCompact,
   }) {
-    // 🔥 NA WEB, NÃO PRECISA FECHAR DRAWER
     return ListTile(
       leading: Icon(icon),
       title: isCompact ? null : Text(label),
       dense: true,
       onTap: () {
-        // 🔥 NO MOBILE, FECHA O DRAWER SE ELE ESTIVER ABERTO
+        // Fecha drawer se estiver aberto (Mobile)
         try {
-          if (Scaffold.of(context).hasDrawer && 
-              Scaffold.of(context).isDrawerOpen) {
+          if (Scaffold.of(context).isDrawerOpen) {
             Navigator.pop(context);
           }
-        } catch (e) {
-          // Ignora se não estiver num Scaffold com drawer
+        } catch (_) {}
+        
+        // 🔥 Acessa o HomeScreen e navega
+        final homeState = context.findAncestorStateOfType<HomeScreenState>();
+        if (homeState != null) {
+          homeState.navigateTo(content, label);
         }
-        context.read<HomeCubit>().navigateTo(index, label, content);
       },
     );
   }
