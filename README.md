@@ -1,208 +1,117 @@
-# 🏢 Yii Gestor - Backend do Sistema Qui
+# QuiGestor
 
-[![PHP Version](https://img.shields.io/badge/PHP-8.1%2B-purple)](https://php.net)
-[![Yii2 Version](https://img.shields.io/badge/Yii2-2.0.48-blue)](https://www.yiiframework.com)
-[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+Sistema de gestão inteligente para o ecossistema Qui. Aplicativo desenvolvido em Flutter para administração de lojas, gestores, lojistas e pedidos.
 
-Backend RESTful API desenvolvido em Yii2 para o ecossistema **Qui**, composto pelos aplicativos quiPede, quiManda e quiGestor.
+## 📱 Sobre o Projeto
 
-## 📋 Sobre o Projeto
+O QuiGestor é um aplicativo administrativo que permite gerenciar todo o ecossistema Qui de forma centralizada. Com ele é possível:
 
-O Yii Gestor é a API central que gerencia todo o ecossistema Qui, fornecendo endpoints seguros e eficientes para:
-
-- **👤 Gestão de usuários** (gestores, lojistas, clientes)
-- **🏪 Controle de lojas e produtos**
-- **📦 Gerenciamento de pedidos**
-- **📊 Relatórios e dashboards**
+- 👤 **Gerenciar Gestores** - CRUD completo de administradores do sistema
+- 🏪 **Gerenciar Lojistas** - Controle de usuários lojistas
+- 🛍️ **Gerenciar Lojas** - Cadastro e monitoramento de lojas
+- 📦 **Acompanhar Pedidos** - Visualização e gerenciamento de pedidos
+- 📊 **Dashboard** - Visão geral com métricas e indicadores
+- 🌓 **Tema Claro/Escuro** - Alternância de tema com persistência
 
 ## 🚀 Tecnologias Utilizadas
 
-- **Framework:** Yii2 PHP Framework
-- **Banco de Dados:** MySQL 8.0
-- **Autenticação:** JWT (JSON Web Tokens)
-- **Documentação:** OpenAPI 3.0 (Swagger)
-- **Ambiente:** Docker / Nginx / PHP-FPM
+- **Flutter** (3.x) - Framework principal
+- **Dio** - Cliente HTTP para requisições à API
+- **Flutter Bloc** - Gerenciamento de estado
+- **SharedPreferences** - Armazenamento local
+- **Equatable** - Comparação de objetos
 
-## 📁 Estrutura do Projeto
+## 📋 Pré-requisitos
 
-```
-yii-gestor/
-├── controllers/           # Controladores da API
-│   ├── api/               
-│   │   ├── gestor/        # Endpoints do Gestor
-│   │   └── app/           # Endpoints do App
-│   └── lojista/           # Endpoints do Lojista
-├── models/                 # Models do banco de dados
-├── migrations/             # Migrações do banco
-├── config/                 # Configurações do Yii2
-└── web/                    # Ponto de entrada
-    └── .htaccess           # Configuração do Apache
-```
+- Flutter SDK (versão 3.x)
+- Dart SDK (versão 3.x)
+- Backend QuiGestor API rodando (Yii2)
+- Android Studio / VS Code (opcional)
 
 ## 🔧 Instalação
 
-### Pré-requisitos
-- PHP 8.1 ou superior
-- MySQL 8.0
-- Composer
-- Apache/Nginx
-
-### Passo a Passo
-
+1. **Clone o repositório**
 ```bash
-# Clone o repositório
-git clone https://github.com/seu-usuario/yii-gestor.git
-cd yii-gestor
-
-# Instale as dependências
-composer install
-
-# Configure o banco de dados
-cp config/db.php.example config/db.php
-# Edite config/db.php com suas credenciais
-
-# Execute as migrações
-php yii migrate
-
-# Configure o servidor web (Apache/Nginx)
-# Aponte o document root para a pasta /web
-
-# Pronto! Acesse: http://localhost:8001
+git clone https://github.com/seu-usuario/quigestor.git
+cd quigestor
 ```
 
-## 📡 Endpoints da API
 
-### Autenticação
-
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| `POST` | `/api/gestor/gestor-usuarios/login` | Login de gestor |
-| `POST` | `/api/gestor/gestor-usuarios/create` | Criar novo gestor |
-| `POST` | `/lojista/auth-lojista/login` | Login de lojista |
-| `POST` | `/lojista/auth-lojista/create` | Criar novo lojista |
-
-### Gestão
-
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| `GET` | `/api/gestor/dashboard` | Dados do dashboard |
-| `GET` | `/api/gestor/gestor-usuarios` | Listar gestores |
-| `PUT` | `/api/gestor/gestor-usuarios/{id}` | Atualizar gestor |
-| `DELETE` | `/api/gestor/gestor-usuarios/{id}` | Deletar gestor |
-| `GET` | `/api/gestor/lojas` | Listar lojas |
-| `POST` | `/api/gestor/lojas` | Criar loja |
-
-## 🔐 Autenticação JWT
-
-A API utiliza JWT para autenticação. Após o login, o token deve ser enviado no header:
-
-```http
-Authorization: Bearer seu_token_jwt_aqui
-```
-
-## 📊 Exemplos de Requisições
-
-### Login de Gestor
-
+## 🏗️ Estrutura
 ```bash
-curl -X POST http://localhost:8001/api/gestor/gestor-usuarios/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "gestor@email.com",
-    "senha": "123456"
-  }'
+lib/
+├── app/
+│   ├── modules/           # Módulos funcionais
+│   │   ├── auth/          # Autenticação
+│   │   ├── dashboard/      # Dashboard principal
+│   │   ├── gestores/       # CRUD de gestores
+│   │   ├── home/           # Tela inicial com menu
+│   │   ├── loja/           # Gerenciamento de lojas
+│   │   ├── settings/       # Configurações
+│   │   ├── theme/          # Gerenciamento de tema
+│   │   └── usuarios/       # Gerenciamento de usuários
+│   ├── routes/             # Configuração de rotas
+│   └── theme/              # Temas e estilos globais
+├── apparte/                # Widgets reutilizáveis
+│   └── widgets/
+│       ├── app_text.dart       # Componentes de texto
+│       ├── gradient_button.dart # Botão gradiente
+│       ├── pagination_widget.dart # Componente de paginação
+│       └── quigestor_card.dart  # Card personalizado
+├── core/                   # Utilitários e widgets core
+├── shared/                 # Serviços compartilhados
+│   ├── api/                # Cliente HTTP e interceptors
+│   └── services/           # Serviços (token, etc)
+└── main.dart               # Ponto de entrada
 ```
 
-**Resposta:**
-```json
-{
-  "success": true,
-  "data": {
-    "id": 1,
-    "nome": "Gestor Teste",
-    "email": "gestor@email.com",
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "tipo": "admin"
-  }
-}
-```
 
-### Listar Gestores (com autenticação)
+## 🎨 Design System
 
-```bash
-curl -X GET http://localhost:8001/api/gestor/gestor-usuarios \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-```
+O QuiGestor segue um design minimalista com
 
-## 🗄️ Migrações
+    Cores principais:
 
-```bash
-# Criar nova migração
-php yii migrate/create create_nome_da_tabela
+        - primary: Roxo suave (#5E5CE6)
+        - secondary: Verde-água (#00C2A0)
+        - accent: Coral (#FF6B6B)
+        
+    Tipografia: Fonte Poppins
+    Componentes: Sem cards, apenas linhas divisórias (estilo WhatsApp)
 
-# Executar migrações pendentes
-php yii migrate
+    Responsivo: Layout adaptativo para web e mobile
 
-# Reverter última migração
-php yii migrate/down
-```
+## 🔐 Funcionalidades de Autenticação
 
-## 🐳 Docker (Opcional)
+    - Login com email e senha
+    - Token JWT com refresh automático
+    - Persistência de sessão
+    - Logout automático em caso de token inválido
+    - Interceptor para refresh token
 
-Caso prefira usar Docker:
+    📄 Módulo de Gestores (CRUD)
 
-```bash
-# Construir e iniciar os containers
-docker-compose up -d
+O módulo de gestores implementa:
 
-# Acessar o container
-docker-compose exec app bash
+    - Listagem com paginação e busca
+    - Filtros por nível (admin/comercial/suporte) e status (ativo/inativo)
+    - Criação de novos gestores
+    - Edição de gestores existentes
+    - Exclusão com confirmação
+    - Detalhes do gestor
 
-# Executar migrações
-docker-compose exec app php yii migrate
-```
+## 🌓 Tema Claro/Escuro
 
-## 🧪 Testes
+O aplicativo suporta alternância entre tema claro e escuro, com persistência da preferência do usuário via SharedPreferences.
+📱 Layout Responsivo
 
-```bash
-# Executar testes unitários
-php vendor/bin/codecept run unit
+    - Web: Menu lateral fixo com largura de 260px, conteúdo centralizado (max-width 1000px)
+    - Mobile: AppBar com drawer tradicional
+    - Breakpoint: 800px
 
-# Executar testes de API
-php vendor/bin/codecept run api
-```
 
-## 📚 Documentação da API
+📄 Licença
 
-A documentação completa da API está disponível em:
+Este projeto está sob a licença MIT. Veja o arquivo LICENSE para mais detalhes.
 
-- **Swagger UI:** `http://localhost:8001/docs`
-- **Postman Collection:** `/docs/postman_collection.json`
-
-## 🤝 Contribuindo
-
-1. Fork o projeto
-2. Crie sua feature branch (`git checkout -b feature/nova-feature`)
-3. Commit suas mudanças (`git commit -m 'Adiciona nova feature'`)
-4. Push para a branch (`git push origin feature/nova-feature`)
-5. Abra um Pull Request
-
-## 📝 Licença
-
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
-
-## ✨ Autores
-
-- **DeepSeek Team** - *Desenvolvimento inicial*
-- **Contribuidores** - *Melhorias e manutenção*
-
-## 📞 Suporte
-
-- **Issues:** [GitHub Issues](https://github.com/seu-usuario/yii-gestor/issues)
-- **Email:** [suporte@quigestor.com](mailto:suporte@quigestor.com)
-
----
-
-<p align="center">
-  Desenvolvido com ❤️ para o ecossistema Qui
-</p>
+### 👨‍💻 Autor Cassio.
