@@ -1,7 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../di/dependencies.dart';
 import '../../../shared/services/token_service.dart';
 
 class DebugScreen extends StatelessWidget {
@@ -9,7 +8,8 @@ class DebugScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tokenService = getIt<TokenService>();
+    // 🔥 Usando o Singleton manual TokenService() em vez de getIt
+    final tokenService = TokenService();
     
     return Scaffold(
       appBar: AppBar(title: const Text('Debug - Token')),

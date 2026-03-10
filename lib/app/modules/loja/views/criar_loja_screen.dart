@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import '../../../../shared/api/api_client.dart';
-import '../../../di/dependencies.dart';
 
 class CriarLojaScreen extends StatefulWidget {
   const CriarLojaScreen({super.key});
@@ -43,8 +42,8 @@ class _CriarLojaScreenState extends State<CriarLojaScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // 🔥 requiresAuth: true - envia token (padrão)
-      await getIt<ApiClient>().post('/gestor/lojas', data: {
+      // 🔥 Usando o Singleton manual ApiClient() em vez de getIt
+      await ApiClient().post('/gestor/lojas', data: {
         'nome': _nomeController.text,
         'descricao': _descricaoController.text,
         'endereco': _enderecoController.text,

@@ -32,40 +32,39 @@ class MainCardDash extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: cor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icone, color: cor, size: 22),
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: TextBody1(
-                  titulo,
-                  color: Colors.grey[600],
-                  maxLines: 1,
-                  textAlign: TextAlign.center,
-                  selectable: selectable, // REPASSAR
-                ),
-              ),
-            ],
+          // Ícone centralizado no topo
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: cor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icone, color: cor, size: 24),
           ),
+          const SizedBox(height: 8),
+          
+          // Título agora abaixo do ícone
+          TextBody1(
+            titulo,
+            color: Colors.grey[600],
+            maxLines: 1,
+            textAlign: TextAlign.center,
+            selectable: selectable,
+          ),
+          
           const SizedBox(height: 12),
+          
+          // Valor principal
           FittedBox(
             fit: BoxFit.scaleDown,
             child: TextH2(
               valor,
               color: Theme.of(context).textTheme.bodyLarge?.color,
               textAlign: TextAlign.center,
-              selectable: selectable, // REPASSAR
+              selectable: selectable,
             ),
           ),
+          
           if (subtitulo != null) ...[
             const SizedBox(height: 4),
             TextCaption(
@@ -73,7 +72,7 @@ class MainCardDash extends StatelessWidget {
               color: Colors.grey[600],
               maxLines: 1,
               textAlign: TextAlign.center,
-              selectable: selectable, // REPASSAR
+              selectable: selectable,
             ),
           ],
         ],

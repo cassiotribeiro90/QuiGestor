@@ -1,160 +1,96 @@
-import 'dart:async';
-import 'dart:math';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TokenService {
-  static const String _accessTokenKey = 'access_token';
-  static const String _refreshTokenKey = 'refresh_token';
-  static const String _tokenExpiresAtKey = 'token_expires_at';
+  // 🔥 Singleton manual
+  static final TokenService _instance = TokenService._internal();
+  factory TokenService() => _instance;
   
-  final SharedPreferences _prefs;
-  
-  bool _isRefreshing = false;
-  final List<Completer<bool>> _refreshCompleters = [];
+  static const String ACCESS_TOKEN_KEY = 'access_token';
+  static const String REFRESH_TOKEN_KEY = 'refresh_token';
+  static const String TOKEN_EXPIRES_KEY = 'token_expires_at';
+  static const String BASE_URL_KEY = 'base_url';
 
-  TokenService(this._prefs);
+  late final SharedPreferences _prefs;
 
-  Future<void> saveTokens(String accessToken, String? refreshToken, {int expiresIn = 7200}) async {
-    final cleanAccessToken = accessToken.trim().replaceAll('"', '');
-    await _prefs.setString(_accessTokenKey, cleanAccessToken);
-    
+  TokenService._internal();
+
+  // Método de inicialização (chamar no main)
+  static Future<void> initialize() async {
+    _instance._prefs = await SharedPreferences.getInstance();
+  }
+
+  /// Salva os tokens
+  Future<void> saveTokens(
+    String accessToken, 
+    String? refreshToken, {
+    int expiresIn = 900,
+  }) async {
+    await _prefs.setString(ACCESS_TOKEN_KEY, accessToken);
     if (refreshToken != null) {
-      final cleanRefreshToken = refreshToken.trim().replaceAll('"', '');
-      await _prefs.setString(_refreshTokenKey, cleanRefreshToken);
+      await _prefs.setString(REFRESH_TOKEN_KEY, refreshToken);
     }
-    
-    final expiresAt = DateTime.now().add(Duration(seconds: expiresIn)).millisecondsSinceEpoch;
-    await _prefs.setInt(_tokenExpiresAtKey, expiresAt);
-    
-    print('🔑 [TokenService] Tokens salvos - Access: ${cleanAccessToken.substring(0, min(20, cleanAccessToken.length))}...');
+    final expiresAt = DateTime.now().millisecondsSinceEpoch + (expiresIn * 1000);
+    await _prefs.setString(TOKEN_EXPIRES_KEY, expiresAt.toString());
   }
 
-  Future<void> clearTokens() async {
-    await _prefs.remove(_accessTokenKey);
-    await _prefs.remove(_refreshTokenKey);
-    await _prefs.remove(_tokenExpiresAtKey);
-    print('🔑 [TokenService] Tokens removidos');
-  }
-
-  String? getAccessToken() {
-    return _prefs.getString(_accessTokenKey);
-  }
-
-  String? getRefreshToken() {
-    return _prefs.getString(_refreshTokenKey);
-  }
-
-  bool hasToken() {
-    return getAccessToken() != null;
-  }
-
-  bool isTokenValid() {
-    final token = getAccessToken();
-    if (token == null) return false;
-    
-    final expiresAt = _prefs.getInt(_tokenExpiresAtKey);
-    if (expiresAt == null) return true;
-    
-    final now = DateTime.now().millisecondsSinceEpoch;
-    return now < expiresAt;
-  }
+  String? getAccessToken() => _prefs.getString(ACCESS_TOKEN_KEY);
+  String? getRefreshToken() => _prefs.getString(REFRESH_TOKEN_KEY);
 
   Map<String, String> getAuthHeader() {
     final token = getAccessToken();
-    if (token != null && token.isNotEmpty) {
-      return {'Authorization': 'Bearer $token'};
-    }
-    return {};
+    return token != null && token.isNotEmpty 
+        ? {'Authorization': 'Bearer $token'} 
+        : {};
   }
 
-  /// Tenta renovar o token usando o refresh_token
+  bool isTokenExpired() {
+    final expiresAtStr = _prefs.getString(TOKEN_EXPIRES_KEY);
+    if (expiresAtStr == null) return true;
+    final expiresAt = int.tryParse(expiresAtStr) ?? 0;
+    return DateTime.now().millisecondsSinceEpoch > expiresAt;
+  }
+
+  Future<void> clearTokens() async {
+    await _prefs.remove(ACCESS_TOKEN_KEY);
+    await _prefs.remove(REFRESH_TOKEN_KEY);
+    await _prefs.remove(TOKEN_EXPIRES_KEY);
+  }
+
+  Future<void> saveBaseUrl(String url) async {
+    await _prefs.setString(BASE_URL_KEY, url);
+  }
+
+  String? getBaseUrl() => _prefs.getString(BASE_URL_KEY);
+
   Future<bool> refreshToken(Dio dio) async {
-    if (_isRefreshing) {
-      print('🔄 [TokenService] Já está refrescando, adicionando à fila...');
-      final completer = Completer<bool>();
-      _refreshCompleters.add(completer);
-      return completer.future;
-    }
-
-    _isRefreshing = true;
-    print('🔄 [TokenService] Iniciando refresh token...');
-
     try {
-      final refreshTokenValue = getRefreshToken();
-      if (refreshTokenValue == null || refreshTokenValue.isEmpty) {
-        print('❌ [TokenService] Sem refresh token disponível');
-        await clearTokens();
-        return false;
-      }
+      final refreshToken = getRefreshToken();
+      if (refreshToken == null || refreshToken.isEmpty) return false;
 
-      print('🔄 [TokenService] Chamando endpoint de refresh...');
-      
       final tempDio = Dio(BaseOptions(
-        baseUrl: dio.options.baseUrl,
-        headers: {'Content-Type': 'application/json'},
+        baseUrl: getBaseUrl() ?? 'http://10.0.2.2:8001/api/gestor',
       ));
 
       final response = await tempDio.post(
-        '/gestor/gestor-usuarios/refresh',
-        data: {'refresh_token': refreshTokenValue},
-        options: Options(
-          extra: {'requiresAuth': false},
-        ),
+        '/gestor/gestor-usuarios/refresh-token',
+        data: {'refresh_token': refreshToken},
       );
-
-      print('🔄 [TokenService] Resposta do refresh: ${response.statusCode}');
-      print('🔄 [TokenService] Dados: ${response.data}');
 
       if (response.statusCode == 200 && response.data['success'] == true) {
         final data = response.data['data'];
-        final newAccessToken = data['access_token'];
-        final newRefreshToken = data['refresh_token'];
-        final expiresIn = data['expires_in'] ?? 7200;
+        final newAccessToken = data['access_token']?.toString() ?? '';
+        final newRefreshToken = data['refresh_token']?.toString();
+        final expiresIn = data['expires_in'] ?? 900;
 
-        await saveTokens(newAccessToken, newRefreshToken, expiresIn: expiresIn);
-        
-        print('✅ [TokenService] Token renovado com sucesso!');
-        
-        for (var completer in _refreshCompleters) {
-          completer.complete(true);
+        if (newAccessToken.isNotEmpty) {
+          await saveTokens(newAccessToken, newRefreshToken, expiresIn: expiresIn);
+          return true;
         }
-        _refreshCompleters.clear();
-        
-        return true;
-      } else {
-        print('❌ [TokenService] Falha no refresh: ${response.data['message']}');
-        await clearTokens();
-        
-        for (var completer in _refreshCompleters) {
-          completer.complete(false);
-        }
-        _refreshCompleters.clear();
-        
-        return false;
       }
-    } on DioException catch (e) {
-      print('❌ [TokenService] DioException no refresh: ${e.response?.statusCode} - ${e.response?.data}');
-      await clearTokens();
-      
-      for (var completer in _refreshCompleters) {
-        completer.complete(false);
-      }
-      _refreshCompleters.clear();
-      
       return false;
     } catch (e) {
-      print('❌ [TokenService] Erro no refresh: $e');
-      await clearTokens();
-      
-      for (var completer in _refreshCompleters) {
-        completer.complete(false);
-      }
-      _refreshCompleters.clear();
-      
       return false;
-    } finally {
-      _isRefreshing = false;
     }
   }
 }

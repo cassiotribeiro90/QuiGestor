@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import '../models/gestor.dart';
 import '../../../../apparte/widgets/app_text.dart';
-import '../../../../apparte/widgets/quigestor_card.dart';
 
 class GestorCard extends StatelessWidget {
   final Gestor gestor;
   final VoidCallback onTap;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final bool showDivider;
+  final bool showNivelBadge;
 
   const GestorCard({
     super.key,
@@ -15,118 +16,153 @@ class GestorCard extends StatelessWidget {
     required this.onTap,
     required this.onEdit,
     required this.onDelete,
+    this.showDivider = true,
+    this.showNivelBadge = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final nivelColor = _getNivelColor(context, gestor.nivel);
     
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: QuiGestorCard(
-        onTap: onTap,
-        child: Row(
-          children: [
-            CircleAvatar(
-              backgroundColor: theme.colorScheme.primaryContainer,
-              child: Text(
-                gestor.nome.substring(0, 1).toUpperCase(),
-                style: TextStyle(
-                  color: theme.colorScheme.onPrimaryContainer,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      children: [
+        if (showDivider)
+          const Divider(
+            height: 1,
+            indent: 0,
+          ),
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
                 children: [
-                  TextH3(gestor.nome),
-                  const SizedBox(height: 4),
-                  TextBody2(gestor.email),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(Icons.badge_outlined, size: 14, color: Colors.grey[600]),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: TextCaption(
-                          gestor.cpf ?? 'CPF não informado',
-                          color: Colors.grey[600],
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                  // Avatar com cor baseada no NÍVEL (igual à badge)
+                  Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: nivelColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Center(
+                      child: TextH2(
+                        gestor.nome.substring(0, 1).toUpperCase(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  
+                  // Informações
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextH3(
+                                gestor.nome,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            if (showNivelBadge) _buildNivelBadge(context, gestor.nivel),
+                          ],
                         ),
+                        const SizedBox(height: 4),
+                        TextBody2(
+                          gestor.email,
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  // Ações
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: Icon(
+                          Icons.edit_outlined,
+                          color: theme.disabledColor,
+                          size: 20,
+                        ),
+                        onPressed: onEdit,
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        icon: Icon(
+                          Icons.delete_outline,
+                          color: theme.colorScheme.error,
+                          size: 20,
+                        ),
+                        onPressed: onDelete,
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(Icons.phone_outlined, size: 14, color: Colors.grey[600]),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: TextCaption(
-                          gestor.telefone ?? 'Telefone não informado',
-                          color: Colors.grey[600],
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  _buildNivelBadge(context, gestor.nivel),
                 ],
               ),
             ),
-            Column(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined),
-                  onPressed: onEdit,
-                  visualDensity: VisualDensity.compact,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.red),
-                  onPressed: onDelete,
-                  visualDensity: VisualDensity.compact,
-                ),
-              ],
-            ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 
-  Widget _buildNivelBadge(BuildContext context, String nivel) {
-    Color color;
+  Color _getNivelColor(BuildContext context, String nivel) {
+    final theme = Theme.of(context);
     switch (nivel.toLowerCase()) {
       case 'admin':
-        color = Colors.purple;
+        return theme.colorScheme.primary;
+      case 'comercial':
+        return theme.colorScheme.secondary;
+      case 'suporte':
+        return theme.colorScheme.tertiary;
+      default:
+        return theme.disabledColor;
+    }
+  }
+
+  Widget _buildNivelBadge(BuildContext context, String nivel) {
+    final color = _getNivelColor(context, nivel);
+    String label;
+    
+    switch (nivel.toLowerCase()) {
+      case 'admin':
+        label = 'ADM';
         break;
       case 'comercial':
-        color = Colors.blue;
+        label = 'COM';
         break;
       case 'suporte':
-        color = Colors.orange;
+        label = 'SUP';
         break;
       default:
-        color = Colors.grey;
+        label = nivel.length > 3 ? nivel.substring(0, 3).toUpperCase() : nivel.toUpperCase();
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.5)),
+        borderRadius: BorderRadius.circular(4),
       ),
-      child: TextCaption(
-        nivel.toUpperCase(),
-        color: color,
-        fontWeight: FontWeight.bold,
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }

@@ -1,20 +1,21 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '../../app/di/dependencies.dart';
 import '../services/token_service.dart';
 import 'refresh_interceptor.dart';
 
 class ApiClient {
-  late final Dio _dio;
+  // 🔥 Singleton manual
+  static final ApiClient _instance = ApiClient._internal();
+  factory ApiClient() => _instance;
+  
   late final TokenService _tokenService;
-  late final RefreshInterceptor _refreshInterceptor;
+  late final Dio _dio;
+  
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-  static final navigatorKey = GlobalKey<NavigatorState>();
-
-  ApiClient() {
-    print('🌐 [ApiClient] Inicializando...');
-    _tokenService = getIt<TokenService>();
+  ApiClient._internal() {
+    _tokenService = TokenService();
     
     const String baseUrlEnv = String.fromEnvironment('API_URL');
     
@@ -22,51 +23,54 @@ class ApiClient {
       baseUrl: baseUrlEnv.isNotEmpty 
           ? baseUrlEnv 
           : (kIsWeb 
-               ? 'http://localhost:8001/api'
+               ? 'http://localhost:8001/api/'
               : (defaultTargetPlatform == TargetPlatform.android 
-                  ? 'http://10.0.2.2:8001/api' 
-                  : 'http://localhost:8001/api')),
+                  ? 'http://10.0.2.2:8001/api/'
+                  : 'http://localhost:8001/api/')),
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
       headers: {
         'Content-Type': 'application/json',
         'X-Requested-With': 'XMLHttpRequest'
-      },
+      }
     );
 
     _dio = Dio(options);
     
-    // Configura o interceptor de refresh (DEVE VIR ANTES DOS OUTROS)
-    _refreshInterceptor = RefreshInterceptor(_dio, _tokenService);
-    
-    _dio.interceptors.add(_refreshInterceptor);
-    _dio.interceptors.add(LogInterceptor(
-      request: true,
-      requestBody: true,
-      responseBody: true,
-      responseHeader: false,
+    _dio.interceptors.add(RefreshInterceptor(
+      dio: _dio,
+      tokenService: _tokenService,
+      navigatorKey: navigatorKey,
     ));
-    print('🌐 [ApiClient] Configurado com RefreshInterceptor');
+    
+    if (kDebugMode) {
+      _dio.interceptors.add(LogInterceptor(
+        responseBody: true, 
+        requestBody: true,
+        requestHeader: true,
+      ));
+    }
   }
   
-  Future<Response> get(String path, {bool requiresAuth = true, Map<String, dynamic>? queryParameters}) async {
-    print('🌐 [API] GET $path - requiresAuth: $requiresAuth - query: $queryParameters');
-    return _dio.get(
-      path, 
-      queryParameters: queryParameters,
-      options: Options(extra: {'requiresAuth': requiresAuth}),
-    );
-  }
-  
-  Future<Response> post(String path, {dynamic data, bool requiresAuth = true}) async {
-    return _dio.post(path, data: data, options: Options(extra: {'requiresAuth': requiresAuth}));
-  }
-  
-  Future<Response> put(String path, {dynamic data, bool requiresAuth = true}) async {
-    return _dio.put(path, data: data, options: Options(extra: {'requiresAuth': requiresAuth}));
-  }
-  
-  Future<Response> delete(String path, {bool requiresAuth = true}) async {
-    return _dio.delete(path, options: Options(extra: {'requiresAuth': requiresAuth}));
-  }
+  Future<Response> post(String path, {dynamic data, bool requiresAuth = true}) => 
+      _dio.post(path, data: data, options: Options(extra: {'requiresAuth': requiresAuth}));
+      
+  Future<Response> get(
+    String path, {
+    Map<String, dynamic>? queryParameters, 
+    bool requiresAuth = true
+  }) => _dio.get(
+    path, 
+    queryParameters: queryParameters,
+    options: Options(extra: {'requiresAuth': requiresAuth})
+  );
+      
+  Future<Response> put(String path, {dynamic data, bool requiresAuth = true}) => 
+      _dio.put(path, data: data, options: Options(extra: {'requiresAuth': requiresAuth}));
+      
+  Future<Response> delete(String path, {bool requiresAuth = true}) =>
+      _dio.delete(path, options: Options(extra: {'requiresAuth': requiresAuth}));
+
+  Dio get dio => _dio;
+  TokenService get tokenService => _tokenService;
 }

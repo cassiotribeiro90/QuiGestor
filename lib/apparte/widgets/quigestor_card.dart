@@ -21,49 +21,37 @@ class QuiGestorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final cardColor = color ?? theme.cardTheme.color ?? theme.colorScheme.surface;
+    // 🔥 AGORA É UM CONTAINER SIMPLES, SEM CARD
+    Widget content = Container(
+      color: color ?? Colors.transparent, // Sem cor de fundo por padrão
+      child: Padding(
+        padding: padding ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: child,
+      ),
+    );
 
-    Widget content;
     if (horizontalScroll && enableFade) {
       content = FadeHorizontalScroll(
-        fadeColor: cardColor,
-        child: Padding(
-          padding: padding ?? const EdgeInsets.all(16),
-          child: child,
-        ),
+        fadeColor: color ?? Colors.transparent,
+        child: content,
       );
     } else if (horizontalScroll) {
       content = SingleChildScrollView(
         scrollDirection: Axis.horizontal,
-        padding: padding ?? const EdgeInsets.all(16),
-        child: child,
-      );
-    } else {
-      content = Padding(
-        padding: padding ?? const EdgeInsets.all(16),
-        child: child,
+        child: content,
       );
     }
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          decoration: BoxDecoration(
-            color: cardColor,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: theme.brightness == Brightness.light 
-                  ? Colors.grey[200]! 
-                  : Colors.grey[800]!,
-            ),
-          ),
+    if (onTap != null) {
+      return Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
           child: content,
         ),
-      ),
-    );
+      );
+    }
+
+    return content;
   }
 }

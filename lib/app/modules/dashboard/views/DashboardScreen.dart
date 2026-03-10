@@ -5,6 +5,7 @@ import '../../../../apparte/widgets/main_card_dash.dart';
 import '../../../../apparte/widgets/app_text.dart';
 import '../bloc/dashboard_cubit.dart';
 import '../../../../core/widgets/responsive_layout.dart';
+import '../bloc/dashboard_state.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});

@@ -1,18 +1,13 @@
 import 'dart:math';
 import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../shared/api/api_client.dart';
-import '../../../../shared/services/token_service.dart';
 import 'auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
   final ApiClient _apiClient;
-  // ignore: unused_field
-  final SharedPreferences _prefs;
-  final TokenService _tokenService;
 
-  AuthCubit(this._apiClient, this._prefs, this._tokenService) : super(AuthInitial());
+  AuthCubit(this._apiClient) : super(AuthInitial());
 
   Future<void> login(String email, String senha) async {
     emit(AuthLoading());
@@ -43,15 +38,18 @@ class AuthCubit extends Cubit<AuthState> {
           
           print('📱 [LOGIN] Token recebido: ${accessToken.substring(0, displayLength)}...');
           
-          // Salva tokens usando o TokenService
-          await _tokenService.saveTokens(
+          // Salva tokens usando o TokenService via ApiClient
+          await _apiClient.tokenService.saveTokens(
             accessToken, 
             refreshToken, 
             expiresIn: expiresIn
           );
           
+          // Salva a base URL para o refresh token
+          await _apiClient.tokenService.saveBaseUrl(_apiClient.dio.options.baseUrl);
+          
           // Verifica se salvou
-          final savedToken = _tokenService.getAccessToken();
+          final savedToken = _apiClient.tokenService.getAccessToken();
           print('📱 [LOGIN] Token recuperado após salvar: ${savedToken != null ? 'OK' : 'FALHOU'}');
           
           emit(AuthSuccess(accessToken: accessToken));
@@ -92,15 +90,55 @@ class AuthCubit extends Cubit<AuthState> {
 
   Future<void> logout() async {
     print('📱 [LOGOUT] Iniciando logout...');
-    await _tokenService.clearTokens();
+    await _apiClient.tokenService.clearTokens();
     emit(AuthInitial());
   }
 
   Future<void> checkAuth() async {
-    final String? token = _tokenService.getAccessToken();
+    final String? token = _apiClient.tokenService.getAccessToken();
     if (token != null && token.isNotEmpty) {
-      emit(AuthSuccess(accessToken: token));
+      if (_apiClient.tokenService.isTokenExpired()) {
+        await _attemptRefresh();
+      } else {
+        emit(AuthSuccess(accessToken: token));
+      }
     } else {
+      emit(AuthInitial());
+    }
+  }
+
+  Future<void> _attemptRefresh() async {
+    final refreshToken = _apiClient.tokenService.getRefreshToken();
+    
+    if (refreshToken == null || refreshToken.isEmpty) {
+      emit(AuthInitial());
+      return;
+    }
+
+    try {
+      final response = await _apiClient.post(
+        '/gestor/gestor-usuarios/refresh-token',
+        data: {'refresh_token': refreshToken},
+        requiresAuth: false,
+      );
+
+      if (response.statusCode == 200 && response.data['success'] == true) {
+        final data = response.data['data'];
+        final newAccessToken = data['access_token']?.toString() ?? '';
+        final newRefreshToken = data['refresh_token']?.toString();
+        final expiresIn = data['expires_in'] ?? 7200;
+
+        await _apiClient.tokenService.saveTokens(
+          newAccessToken, 
+          newRefreshToken, 
+          expiresIn: expiresIn
+        );
+        
+        emit(AuthSuccess(accessToken: newAccessToken));
+      } else {
+        emit(AuthInitial());
+      }
+    } catch (e) {
       emit(AuthInitial());
     }
   }

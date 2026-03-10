@@ -1,35 +1,49 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'app/di/dependencies.dart';
 import 'app/modules/auth/bloc/auth_cubit.dart';
 import 'app/modules/dashboard/bloc/dashboard_cubit.dart';
 import 'app/modules/theme/bloc/theme_cubit.dart';
 import 'app/modules/theme/bloc/theme_state.dart';
 import 'app/modules/home/bloc/home_cubit.dart';
+import 'app/modules/gestores/bloc/gestores_cubit.dart';
+import 'app/modules/loja/bloc/loja_cubit.dart';
+import 'app/modules/usuarios/usuario_state.dart';
 import 'app/routes/app_router.dart';
 import 'app/routes/app_routes.dart';
 import 'app/theme/app_theme.dart';
 import 'shared/auth/auth_observer.dart';
 import 'shared/api/api_client.dart';
+import 'shared/services/token_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await setupDependencies();
-  runApp(const QuiGestorApp());
+  
+  // Inicializa o TokenService (SharedPreferences)
+  await TokenService.initialize();
+  
+  // ApiClient é singleton, a instância é criada automaticamente
+  final apiClient = ApiClient();
+  
+  runApp(QuiGestorApp(apiClient: apiClient));
 }
 
 class QuiGestorApp extends StatelessWidget {
-  const QuiGestorApp({super.key});
+  final ApiClient apiClient;
+  
+  const QuiGestorApp({super.key, required this.apiClient});
 
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider<ThemeCubit>(create: (_) => getIt<ThemeCubit>()),
-        BlocProvider<AuthCubit>(create: (_) => getIt<AuthCubit>()),
-        BlocProvider<DashboardCubit>(create: (_) => getIt<DashboardCubit>()),
-        BlocProvider<HomeCubit>(create: (_) => getIt<HomeCubit>()),
+        BlocProvider<ThemeCubit>(create: (_) => ThemeCubit()),
+        BlocProvider<AuthCubit>(create: (_) => AuthCubit(apiClient)),
+        BlocProvider<DashboardCubit>(create: (_) => DashboardCubit(apiClient)),
+        BlocProvider<HomeCubit>(create: (_) => HomeCubit()),
+        BlocProvider<GestoresCubit>(create: (_) => GestoresCubit(apiClient)),
+        BlocProvider<LojaCubit>(create: (_) => LojaCubit(apiClient)),
+        BlocProvider<UsuarioCubit>(create: (_) => UsuarioCubit(apiClient)),
       ],
       child: BlocBuilder<ThemeCubit, ThemeState>(
         builder: (context, themeState) {
@@ -50,7 +64,7 @@ class QuiGestorApp extends StatelessWidget {
             initialRoute: Routes.SPLASH,
             onGenerateRoute: AppRouter.onGenerateRoute,
             navigatorObservers: [AuthObserver()],
-            navigatorKey: ApiClient.navigatorKey, // Adicionado para o RefreshInterceptor
+            navigatorKey: ApiClient.navigatorKey,
           );
         },
       ),

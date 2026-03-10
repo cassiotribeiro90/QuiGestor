@@ -4,10 +4,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'theme_state.dart';
 
 class ThemeCubit extends Cubit<ThemeState> {
-  final SharedPreferences _prefs;
+  late final SharedPreferences _prefs;
   static const String _themeKey = 'theme_mode';
 
-  ThemeCubit(this._prefs) : super(ThemeState.initial()) {
+  ThemeCubit() : super(ThemeState.initial()) {
+    _init();
+  }
+
+  Future<void> _init() async {
+    _prefs = await SharedPreferences.getInstance();
     _loadTheme();
   }
 

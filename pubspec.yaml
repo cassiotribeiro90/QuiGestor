@@ -24,9 +24,6 @@ dependencies:
   # Armazenamento
   shared_preferences: ^2.2.2
 
-  # Injeção de dependência
-  get_it: ^7.6.7
-
 dev_dependencies:
   flutter_test:
     sdk: flutter

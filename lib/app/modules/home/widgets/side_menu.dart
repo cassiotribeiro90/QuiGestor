@@ -7,19 +7,20 @@ import '../../dashboard/views/DashboardScreen.dart';
 import '../../gestores/views/gestores_list_screen.dart';
 import '../../gestores/bloc/gestores_cubit.dart';
 import '../../debug/debug_screen.dart';
-import '../../../di/dependencies.dart';
+import '../../../../shared/api/api_client.dart';
 
 class SideMenu extends StatelessWidget {
-  final bool isCompact; // Para futura versão compacta (ícones apenas)
+  final bool isCompact; 
   
   const SideMenu({super.key, this.isCompact = false});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final apiClient = ApiClient();
     
     return Container(
-      width: isCompact ? 72 : 260, // Largura fixa: 260px normal, 72px compacto
+      width: isCompact ? 72 : 260,
       decoration: BoxDecoration(
         color: theme.cardTheme.color,
         border: Border(
@@ -91,7 +92,7 @@ class SideMenu extends StatelessWidget {
                   label: 'Gestores',
                   index: 1,
                   content: BlocProvider<GestoresCubit>(
-                    create: (context) => getIt<GestoresCubit>(),
+                    create: (context) => GestoresCubit(apiClient),
                     child: const GestoresListScreen(),
                   ),
                   isCompact: isCompact,
@@ -151,7 +152,6 @@ class SideMenu extends StatelessWidget {
                   isCompact: isCompact,
                 ),
                 
-                // 🔥 BOTÃO DE DEBUG
                 _buildMenuItem(
                   context,
                   icon: Icons.bug_report_outlined,
@@ -173,7 +173,6 @@ class SideMenu extends StatelessWidget {
               leading: const Icon(Icons.logout_rounded, color: Colors.red),
               title: isCompact ? null : const Text('Sair', style: TextStyle(color: Colors.red)),
               onTap: () {
-                print('🚪 [SideMenu] Solicitando logout...');
                 context.read<AuthCubit>().logout();
                 Navigator.pushReplacementNamed(context, Routes.LOGIN);
               },
@@ -207,17 +206,13 @@ class SideMenu extends StatelessWidget {
     return ListTile(
       leading: Icon(icon),
       title: isCompact ? null : Text(label),
-      dense: true, // Menu mais compacto sem linhas
+      dense: true,
       onTap: () {
-        print('Sidebar/Drawer -> Navegando para: $label (index: $index)');
-        // Se estiver dentro de um Drawer, fecha ele primeiro
         try {
           if (Scaffold.of(context).isDrawerOpen) {
             Navigator.pop(context);
           }
-        } catch (e) {
-          // Não está em um Scaffold com Drawer
-        }
+        } catch (e) {}
         context.read<HomeCubit>().navigateTo(index, label, content);
       },
     );
