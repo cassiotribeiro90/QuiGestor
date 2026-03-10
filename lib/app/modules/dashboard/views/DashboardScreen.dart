@@ -328,21 +328,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildWrapItem(BuildContext context, Widget child) {
     final isWeb = ResponsiveLayout.isWeb(context);
     final screenWidth = MediaQuery.of(context).size.width;
-    
-    // Cálculo da largura disponível considerando a Sidebar na Web
-    final availableWidth = isWeb ? (screenWidth - 260 - 32) : (screenWidth - 32);
-    
-    // Na Web (maxWidth 1000px), tentamos colocar 3 ou 4 cards por linha
-    // No Mobile, mantemos 2 por linha
-    final int itemsPerRow = isWeb ? (availableWidth > 800 ? 4 : 3) : 2;
-    
-    final itemWidth = (availableWidth - (itemsPerRow - 1) * 8) / itemsPerRow;
-    
-    // Limita a largura mínima para não quebrar o layout interno dos cards
-    final finalWidth = itemWidth.clamp(140.0, 400.0);
-    
+
+    // 🔥 Web: considera a sidebar de 260px
+    // 📱 Mobile: padding padrão de 16px de cada lado (32px total)
+    final availableWidth = isWeb
+        ? (screenWidth - 260 - 32)  // sidebar 260px + padding 32px
+        : (screenWidth - 32);        // apenas padding
+
+    // Log para debug (remover em produção)
+    print('📊 [Layout] Screen: $screenWidth, Available: $availableWidth, isWeb: $isWeb');
+
+    int itemsPerRow = 2;
+    double maxItemWidth;
+
+    if (isWeb) {
+      if (availableWidth > 850) {
+        itemsPerRow = 3;
+      } else if (availableWidth > 700) {
+        itemsPerRow = 3;
+      } else if (availableWidth > 500) {
+        itemsPerRow = 2;
+      } else {
+        itemsPerRow = 2;
+      }
+    } else {
+      // Mobile: 1 ou 2 cards
+      itemsPerRow = screenWidth > 500 ? 2 : 2;
+      maxItemWidth = 200;
+    }
+
+    final idealWidth = (availableWidth > 900 ? 220 : (availableWidth / itemsPerRow) - 32).toDouble();
+
+
+
     return SizedBox(
-      width: finalWidth,
+      width: idealWidth,
       child: child,
     );
   }
