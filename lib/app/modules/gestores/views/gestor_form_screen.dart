@@ -15,6 +15,8 @@ class GestorFormScreen extends StatefulWidget {
 
 class _GestorFormScreenState extends State<GestorFormScreen> {
   final _formKey = GlobalKey<FormState>();
+  
+  // Controllers
   late TextEditingController _nomeController;
   late TextEditingController _emailController;
   late TextEditingController _cpfController;
@@ -24,6 +26,8 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
   String _nivel = 'comercial';
   int _status = 1;
   bool _isEditing = false;
+  bool _isLoadingData = false;
+  bool _isSaving = false;
   bool _isDeleting = false;
 
   final List<Map<String, String>> _niveis = const [
@@ -37,16 +41,57 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
   void initState() {
     super.initState();
     _isEditing = widget.gestor != null;
-    _nomeController = TextEditingController(text: widget.gestor?.nome);
-    _emailController = TextEditingController(text: widget.gestor?.email);
-    _cpfController = TextEditingController(text: widget.gestor?.cpf);
-    _telefoneController = TextEditingController(text: widget.gestor?.telefone);
-    _senhaController = TextEditingController();
+    
+    // ✅ Inicializa controllers VAZIOS (conforme roteiro)
+    _inicializarControllersVazios();
     
     if (_isEditing) {
-      _nivel = widget.gestor!.nivel;
-      _status = widget.gestor!.status;
+      // ✅ Carrega dados completos do backend
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _carregarDadosCompletos();
+      });
     }
+  }
+
+  void _inicializarControllersVazios() {
+    _nomeController = TextEditingController();
+    _emailController = TextEditingController();
+    _cpfController = TextEditingController();
+    _telefoneController = TextEditingController();
+    _senhaController = TextEditingController();
+  }
+
+  Future<void> _carregarDadosCompletos() async {
+    setState(() => _isLoadingData = true);
+    
+    final gestorCompleto = await context.read<GestoresCubit>()
+        .fetchGestorDetalhado(widget.gestor!.id);
+    
+    if (gestorCompleto != null && mounted) {
+      setState(() {
+        _preencherControllers(gestorCompleto);
+      });
+    } else if (mounted) {
+      // Fallback: usa os dados da lista se falhar
+      _preencherControllers(widget.gestor!);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Alguns campos podem estar incompletos'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    }
+    
+    if (mounted) setState(() => _isLoadingData = false);
+  }
+
+  void _preencherControllers(Gestor gestor) {
+    _nomeController.text = gestor.nome;
+    _emailController.text = gestor.email;
+    _cpfController.text = gestor.cpf ?? '';
+    _telefoneController.text = gestor.telefone ?? '';
+    _nivel = gestor.nivel;
+    _status = gestor.status;
   }
 
   @override
@@ -61,6 +106,8 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isSaving = true);
 
     final data = {
       'nome': _nomeController.text.trim(),
@@ -86,9 +133,11 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
       if (widget.onSaved != null) {
         widget.onSaved!();
       } else {
-        Navigator.pop(context, true);
+        Navigator.pop(context, true); // ✅ Retorna true
       }
     }
+    
+    if (mounted) setState(() => _isSaving = false);
   }
 
   Future<void> _delete() async {
@@ -118,52 +167,38 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
 
     setState(() => _isDeleting = true);
 
-    try {
-      final success = await context.read<GestoresCubit>().deleteGestor(widget.gestor!.id);
-      
-      if (success && mounted) {
-        if (widget.onSaved != null) {
-          widget.onSaved!();
-        } else {
-          Navigator.pop(context, true);
-        }
+    final success = await context.read<GestoresCubit>().deleteGestor(widget.gestor!.id);
+    
+    if (success && mounted) {
+      if (widget.onSaved != null) {
+        widget.onSaved!();
+      } else {
+        Navigator.pop(context, true); // ✅ Retorna true
       }
-    } finally {
-      if (mounted) setState(() => _isDeleting = false);
     }
+    
+    if (mounted) setState(() => _isDeleting = false);
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isMobile = MediaQuery.of(context).size.width < 600;
     
-    return BlocBuilder<GestoresCubit, GestoresState>(
-      builder: (context, state) {
-        final isLoading = (state is GestoresLoading && state is! GestoresLoaded) || _isDeleting;
-
-        return Scaffold(
-          appBar: AppBar(
-            title: Text(_isEditing ? 'Editar Gestor' : 'Novo Gestor'),
-            centerTitle: false,
-            // ✅ Botão de voltar para mobile
-            leading: isMobile
-                ? IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    onPressed: () => Navigator.pop(context),
-                  )
-                : null,
-            actions: [
-              IconButton(
-                icon: isLoading 
-                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Icon(Icons.save_outlined),
-                onPressed: isLoading ? null : _save,
-                tooltip: 'Salvar',
-              ),
-            ],
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(_isEditing ? 'Editar Gestor' : 'Novo Gestor'),
+        actions: [
+          IconButton(
+            icon: _isSaving || _isLoadingData
+                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Icon(Icons.save_outlined),
+            onPressed: _isSaving || _isLoadingData ? null : _save,
           ),
-          body: Form(
+        ],
+      ),
+      body: _isLoadingData 
+        ? const Center(child: CircularProgressIndicator())
+        : Form(
             key: _formKey,
             child: ListView(
               padding: const EdgeInsets.all(20),
@@ -178,294 +213,162 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.primary.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                Icons.person_outline,
-                                color: theme.colorScheme.primary,
-                                size: 20,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              'Informações Pessoais',
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                        
+                        _buildSectionHeader(context, Icons.person_outline, 'Informações Pessoais'),
                         const SizedBox(height: 24),
-                        
                         TextFormField(
                           controller: _nomeController,
-                          decoration: InputDecoration(
-                            labelText: 'Nome completo *',
-                            prefixIcon: const Icon(Icons.person_outline, size: 20),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            filled: true,
-                            fillColor: theme.colorScheme.surface,
-                          ),
+                          decoration: _inputDecoration(theme, 'Nome completo *', Icons.person_outline),
                           validator: (value) => value == null || value.isEmpty ? 'Campo obrigatório' : null,
-                          enabled: !isLoading,
                         ),
-                        
                         const SizedBox(height: 16),
-                        
                         TextFormField(
                           controller: _emailController,
-                          decoration: InputDecoration(
-                            labelText: 'E-mail *',
-                            prefixIcon: const Icon(Icons.email_outlined, size: 20),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            filled: true,
-                            fillColor: theme.colorScheme.surface,
-                          ),
+                          decoration: _inputDecoration(theme, 'E-mail *', Icons.email_outlined),
                           keyboardType: TextInputType.emailAddress,
                           validator: (value) => value == null || value.isEmpty ? 'Campo obrigatório' : null,
-                          enabled: !isLoading,
                         ),
-                        
                         const SizedBox(height: 16),
-                        
                         Row(
                           children: [
                             Expanded(
                               child: TextFormField(
                                 controller: _cpfController,
-                                decoration: InputDecoration(
-                                  labelText: 'CPF',
-                                  prefixIcon: const Icon(Icons.badge_outlined, size: 20),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  filled: true,
-                                  fillColor: theme.colorScheme.surface,
-                                ),
+                                decoration: _inputDecoration(theme, 'CPF', Icons.badge_outlined),
                                 keyboardType: TextInputType.number,
-                                enabled: !isLoading,
                               ),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: TextFormField(
                                 controller: _telefoneController,
-                                decoration: InputDecoration(
-                                  labelText: 'Telefone',
-                                  prefixIcon: const Icon(Icons.phone_outlined, size: 20),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  filled: true,
-                                  fillColor: theme.colorScheme.surface,
-                                ),
+                                decoration: _inputDecoration(theme, 'Telefone', Icons.phone_outlined),
                                 keyboardType: TextInputType.phone,
-                                enabled: !isLoading,
                               ),
                             ),
                           ],
                         ),
-                        
                         const SizedBox(height: 20),
                         Divider(color: Colors.grey[300]),
                         const SizedBox(height: 16),
-                        
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.secondary.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                Icons.security_outlined,
-                                color: theme.colorScheme.secondary,
-                                size: 20,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              'Segurança e Acesso',
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                        
+                        _buildSectionHeader(context, Icons.security_outlined, 'Segurança e Acesso'),
                         const SizedBox(height: 24),
-                        
                         TextFormField(
                           controller: _senhaController,
-                          decoration: InputDecoration(
-                            labelText: _isEditing ? 'Nova senha (opcional)' : 'Senha *',
-                            prefixIcon: const Icon(Icons.lock_outline, size: 20),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            filled: true,
-                            fillColor: theme.colorScheme.surface,
-                            helperText: _isEditing 
-                                ? 'Deixe em branco para manter a senha atual'
-                                : 'Mínimo 6 caracteres',
+                          decoration: _inputDecoration(
+                            theme, 
+                            _isEditing ? 'Nova senha (opcional)' : 'Senha *', 
+                            Icons.lock_outline,
+                            helperText: _isEditing ? 'Mantenha vazio para não alterar' : 'Mínimo 6 caracteres',
                           ),
                           obscureText: true,
                           validator: (value) {
-                            if (!_isEditing && (value == null || value.isEmpty)) {
-                              return 'Campo obrigatório para novo gestor';
-                            }
-                            if (value != null && value.isNotEmpty && value.length < 6) {
-                              return 'Mínimo 6 caracteres';
-                            }
+                            if (!_isEditing && (value == null || value.isEmpty)) return 'Campo obrigatório';
+                            if (value != null && value.isNotEmpty && value.length < 6) return 'Mínimo 6 caracteres';
                             return null;
                           },
-                          enabled: !isLoading,
                         ),
-                        
                         const SizedBox(height: 20),
-                        
                         DropdownButtonFormField<String>(
                           value: _nivel,
-                          decoration: InputDecoration(
-                            labelText: 'Nível de Acesso *',
-                            prefixIcon: const Icon(Icons.security_outlined, size: 20),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            filled: true,
-                            fillColor: theme.colorScheme.surface,
-                          ),
-                          items: _niveis.map((nivel) {
-                            return DropdownMenuItem(
-                              value: nivel['value'],
-                              child: Text(nivel['label']!),
-                            );
-                          }).toList(),
-                          onChanged: isLoading ? null : (value) => setState(() => _nivel = value!),
+                          decoration: _inputDecoration(theme, 'Nível de Acesso *', Icons.security_outlined),
+                          items: _niveis.map((nivel) => DropdownMenuItem(value: nivel['value'], child: Text(nivel['label']!))).toList(),
+                          onChanged: (value) => setState(() => _nivel = value!),
                         ),
-                        
                         const SizedBox(height: 16),
-                        
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surface,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey[300]!),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                _status == 1 ? Icons.check_circle_outline : Icons.cancel_outlined,
-                                color: _status == 1 ? Colors.green : Colors.red,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'Gestor Ativo',
-                                      style: TextStyle(fontWeight: FontWeight.w500),
-                                    ),
-                                    Text(
-                                      'Define se o gestor pode acessar o sistema',
-                                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Switch(
-                                value: _status == 1,
-                                onChanged: isLoading ? null : (value) => setState(() => _status = value ? 1 : 0),
-                              ),
-                            ],
-                          ),
-                        ),
+                        _buildStatusToggle(theme),
                       ],
                     ),
                   ),
                 ),
-                
-                const SizedBox(height: 24),
-                
-                if (_isEditing)
-                  Center(
-                    child: TextButton.icon(
-                      onPressed: isLoading ? null : _delete,
-                      icon: _isDeleting
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.delete_outline, size: 18, color: Colors.red),
-                      label: Text(
-                        _isDeleting ? 'Excluindo...' : 'Excluir gestor',
-                        style: const TextStyle(
-                          color: Colors.red,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                      style: TextButton.styleFrom(
-                        backgroundColor: Colors.red.withOpacity(0.05),
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                      ),
-                    ),
-                  ),
-                
+                if (_isEditing) ...[
+                  const SizedBox(height: 24),
+                  _buildDeleteButton(),
+                ],
                 const SizedBox(height: 32),
-                
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton(
-                    onPressed: isLoading ? null : _save,
-                    style: ElevatedButton.styleFrom(
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      backgroundColor: theme.colorScheme.primary,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: isLoading
-                        ? const SizedBox(
-                            height: 24,
-                            width: 24,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                          )
-                        : Text(
-                            _isEditing ? 'ATUALIZAR GESTOR' : 'CRIAR GESTOR',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                  ),
-                ),
+                _buildSubmitButton(theme),
               ],
             ),
           ),
-        );
-      },
+    );
+  }
+
+  InputDecoration _inputDecoration(ThemeData theme, String label, IconData icon, {String? helperText}) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon, size: 20),
+      helperText: helperText,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      filled: true,
+      fillColor: theme.colorScheme.surface,
+    );
+  }
+
+  Widget _buildSectionHeader(BuildContext context, IconData icon, String title) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(color: theme.colorScheme.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+          child: Icon(icon, color: theme.colorScheme.primary, size: 20),
+        ),
+        const SizedBox(width: 12),
+        Text(title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+      ],
+    );
+  }
+
+  Widget _buildStatusToggle(ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[300]!),
+      ),
+      child: Row(
+        children: [
+          Icon(_status == 1 ? Icons.check_circle_outline : Icons.cancel_outlined, color: _status == 1 ? Colors.green : Colors.red),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Gestor Ativo', style: TextStyle(fontWeight: FontWeight.w500)),
+                Text('Define se o gestor pode acessar o sistema', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+              ],
+            ),
+          ),
+          Switch(value: _status == 1, onChanged: (value) => setState(() => _status = value ? 1 : 0)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDeleteButton() {
+    return Center(
+      child: TextButton.icon(
+        onPressed: _isDeleting ? null : _delete,
+        icon: _isDeleting ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.delete_outline, size: 18, color: Colors.red),
+        label: Text(_isDeleting ? 'Excluindo...' : 'Excluir gestor', style: const TextStyle(color: Colors.red)),
+        style: TextButton.styleFrom(backgroundColor: Colors.red.withOpacity(0.05), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))),
+      ),
+    );
+  }
+
+  Widget _buildSubmitButton(ThemeData theme) {
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: ElevatedButton(
+        onPressed: _isSaving || _isLoadingData ? null : _save,
+        style: ElevatedButton.styleFrom(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          backgroundColor: theme.colorScheme.primary,
+          foregroundColor: Colors.white,
+        ),
+        child: _isSaving ? const CircularProgressIndicator(color: Colors.white) : Text(_isEditing ? 'ATUALIZAR GESTOR' : 'CRIAR GESTOR'),
+      ),
     );
   }
 }

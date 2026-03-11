@@ -1,4 +1,7 @@
+// lojas/bloc/lojas_state.dart
+
 import 'package:equatable/equatable.dart';
+import '../../../../core/config/app_config.dart';
 import '../models/loja.dart';
 
 abstract class LojasState extends Equatable {
@@ -22,6 +25,13 @@ class LojasLoaded extends LojasState {
     required this.lojasFiltradas,
     this.pagination,
   });
+
+  // 🔥 GETTERS AUXILIARES PARA PAGINAÇÃO
+  int get currentPage => pagination?['page'] ?? 1;
+  int get totalPages => pagination?['total_pages'] ?? 1;
+  int get total => pagination?['total'] ?? 0;
+  int get perPage => pagination?['per_page'] ?? AppConfig.defaultPerPage;
+  bool get hasMorePages => currentPage < totalPages;
 
   @override
   List<Object?> get props => [lojas, lojasFiltradas, pagination];

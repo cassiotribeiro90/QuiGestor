@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'lojas_state.dart';
 import '../models/loja.dart';
 import '../../../../shared/api/api_client.dart';
+import '../../../../core/config/app_config.dart';
 
 class LojasCubit extends Cubit<LojasState> {
   final ApiClient _apiClient;
@@ -9,11 +10,34 @@ class LojasCubit extends Cubit<LojasState> {
   List<Loja> _todasLojas = [];
   Map<String, dynamic>? _ultimaPagination;
 
+  // ✅ FILTROS ATUAIS
+  String? _currentStatus;
+  bool? _currentDestaque;
+  String? _currentCategoria;
+  String? _currentSearch;
+
   LojasCubit(this._apiClient) : super(LojasInitial());
 
+  // ✅ GETTERS
+  String? get currentStatus => _currentStatus;
+  bool? get currentDestaque => _currentDestaque;
+  String? get currentCategoria => _currentCategoria;
+  String? get currentSearch => _currentSearch;
+
+  bool get hasMorePages {
+    if (_ultimaPagination == null) return false;
+    final currentPage = _ultimaPagination!['page'] as int;
+    final totalPages = _ultimaPagination!['total_pages'] as int;
+    return currentPage < totalPages;
+  }
+
+  int get currentPage => _ultimaPagination?['page'] ?? 1;
+  int get totalPages => _ultimaPagination?['total_pages'] ?? 1;
+
+  // 🔍 LISTAR LOJAS COM PAGINAÇÃO E FILTROS
   Future<void> fetchLojas({
     int page = 1,
-    int perPage = 10,
+    int? perPage,
     String? categoria,
     String? status,
     bool? verificado,
@@ -26,11 +50,13 @@ class LojasCubit extends Cubit<LojasState> {
         emit(LojasLoading());
       }
 
+      final itemsPerPage = perPage ?? AppConfig.defaultPerPage;
+
       final response = await _apiClient.get(
         '/gestor/lojas',
         queryParameters: {
           'page': page,
-          'per_page': perPage,
+          'per_page': itemsPerPage,
           if (categoria != null) 'categoria': categoria,
           if (status != null) 'status': status,
           if (verificado != null) 'verificado': verificado ? 1 : 0,
@@ -67,6 +93,30 @@ class LojasCubit extends Cubit<LojasState> {
     }
   }
 
+  // ✅ APLICAR FILTROS (versão unificada)
+  Future<void> applyFilters({
+    String? status,
+    bool? destaque,
+    String? categoria,
+    String? search,
+  }) async {
+    _currentStatus = status;
+    _currentDestaque = destaque;
+    _currentCategoria = categoria;
+    _currentSearch = search;
+    
+    await fetchLojas(
+      status: status,
+      destaque: destaque,
+      categoria: categoria,
+      search: search,
+    );
+  }
+
+  // ✅ WRAPPERS PARA FILTROS
+  void applySearch(String search) => applyFilters(search: search, status: _currentStatus, destaque: _currentDestaque, categoria: _currentCategoria);
+  
+  // ✅ BUSCAR LOJA DETALHADA
   Future<Loja?> fetchLojaDetalhada(int id) async {
     try {
       final response = await _apiClient.get('/gestor/lojas/$id');
@@ -96,6 +146,11 @@ class LojasCubit extends Cubit<LojasState> {
   }
 
   void limparFiltros() {
+    _currentStatus = null;
+    _currentDestaque = null;
+    _currentCategoria = null;
+    _currentSearch = null;
+    
     if (_todasLojas.isEmpty) return;
 
     emit(LojasLoaded(
@@ -103,6 +158,11 @@ class LojasCubit extends Cubit<LojasState> {
       lojasFiltradas: _todasLojas,
       pagination: _ultimaPagination,
     ));
+  }
+
+  void clearFilters() {
+    limparFiltros();
+    fetchLojas();
   }
 
   Future<bool> createLoja(Map<String, dynamic> data) async {
@@ -117,7 +177,7 @@ class LojasCubit extends Cubit<LojasState> {
       if (response.statusCode == 201 && response.data['success'] == true) {
         final novaLoja = Loja.fromJson(response.data['data']);
 
-        await fetchLojas();
+        await refreshList();
 
         emit(LojaOperationSuccess(
           message: 'Loja criada com sucesso',
@@ -147,7 +207,7 @@ class LojasCubit extends Cubit<LojasState> {
       if (response.statusCode == 200 && response.data['success'] == true) {
         final lojaAtualizada = Loja.fromJson(response.data['data']);
 
-        await fetchLojas();
+        await refreshList();
 
         emit(LojaOperationSuccess(
           message: 'Loja atualizada com sucesso',
@@ -198,16 +258,11 @@ class LojasCubit extends Cubit<LojasState> {
   }
 
   Future<void> refreshList() async {
-    await fetchLojas();
+    await fetchLojas(
+      status: _currentStatus,
+      destaque: _currentDestaque,
+      categoria: _currentCategoria,
+      search: _currentSearch,
+    );
   }
-
-  bool get hasMorePages {
-    if (_ultimaPagination == null) return false;
-    final currentPage = _ultimaPagination!['page'] as int;
-    final totalPages = _ultimaPagination!['total_pages'] as int;
-    return currentPage < totalPages;
-  }
-
-  int get currentPage => _ultimaPagination?['page'] ?? 1;
-  int get totalPages => _ultimaPagination?['total_pages'] ?? 1;
 }

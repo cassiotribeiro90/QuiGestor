@@ -4,9 +4,7 @@ import '../widgets/side_menu.dart';
 import '../../theme/bloc/theme_cubit.dart';
 import '../../theme/bloc/theme_state.dart';
 import '../../dashboard/views/DashboardScreen.dart';
-import '../../gestores/views/gestores_list_screen.dart';
 import '../../gestores/views/gestor_form_screen.dart';
-import '../../gestores/views/gestor_detail_screen.dart';
 import '../../gestores/models/gestor.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -63,16 +61,6 @@ class HomeScreenState extends State<HomeScreen> {
         onSaved: () => goBack(), // Volta após salvar
       ),
       gestor == null ? 'Novo Gestor' : 'Editar Gestor',
-    );
-  }
-
-  void openGestorDetail(Gestor gestor) {
-    navigateTo(
-      GestorDetailScreen(
-        gestor: gestor,
-        onEdit: () => openGestorForm(gestor: gestor),
-      ),
-      'Detalhes do Gestor',
     );
   }
 

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:dio/dio.dart';
+import '../../../../core/config/app_config.dart';
 import '../../../../shared/api/api_client.dart';
 import '../models/gestor.dart';
 
@@ -19,21 +19,17 @@ class GestoresLoading extends GestoresState {}
 
 class GestoresLoaded extends GestoresState {
   final List<Gestor> gestores;
-  final int currentPage;
-  final int totalPages;
-  final int totalItems;
-  final Map<String, dynamic> appliedFilters;
+  final List<Gestor> gestoresFiltrados;
+  final Map<String, dynamic>? pagination;
 
   const GestoresLoaded({
     required this.gestores,
-    required this.currentPage,
-    required this.totalPages,
-    required this.totalItems,
-    required this.appliedFilters,
+    required this.gestoresFiltrados,
+    this.pagination,
   });
 
   @override
-  List<Object?> get props => [gestores, currentPage, totalPages, totalItems, appliedFilters];
+  List<Object?> get props => [gestores, gestoresFiltrados, pagination];
 }
 
 class GestoresError extends GestoresState {
@@ -45,79 +41,83 @@ class GestoresError extends GestoresState {
   List<Object?> get props => [message];
 }
 
-class GestorDetailLoaded extends GestoresState {
-  final Gestor gestor;
+class GestorOperationSuccess extends GestoresState {
+  final String message;
+  final Gestor? gestor;
 
-  const GestorDetailLoaded(this.gestor);
+  const GestorOperationSuccess({required this.message, this.gestor});
 
   @override
-  List<Object?> get props => [gestor];
+  List<Object?> get props => [message, gestor];
 }
 
-class GestorOperationSuccess extends GestoresLoaded {
-  final String message;
-  final Gestor? operatonGestor;
-
-  const GestorOperationSuccess({
-    required this.message,
-    this.operatonGestor,
-    required super.gestores,
-    required super.currentPage,
-    required super.totalPages,
-    required super.totalItems,
-    required super.appliedFilters,
-  });
-
-  @override
-  List<Object?> get props => [message, operatonGestor, ...super.props];
+class GestorOperationLoading extends GestoresState {
+  const GestorOperationLoading();
 }
 
 // ========== CUBIT ==========
 class GestoresCubit extends Cubit<GestoresState> {
   final ApiClient _apiClient;
-  
-  String _currentSearch = '';
+
+  List<Gestor> _todosGestores = [];
+  Map<String, dynamic>? _ultimaPagination;
+
+  // ✅ FILTROS ATUAIS
   String? _currentNivel;
   int? _currentStatus;
+  String? _currentSearch;
 
   GestoresCubit(this._apiClient) : super(GestoresInitial());
 
-  Future<void> fetchGestores({int page = 1}) async {
-    // Só emite loading total se não houver dados anteriores
-    if (state is! GestoresLoaded) {
-      emit(GestoresLoading());
-    }
+  // ✅ GETTERS
+  String? get currentNivel => _currentNivel;
+  int? get currentStatus => _currentStatus;
+  String? get currentSearch => _currentSearch;
 
+  // 🔍 LISTAR GESTORES COM PAGINAÇÃO E FILTROS
+  Future<void> fetchGestores({
+    int page = 1,
+    int perPage = AppConfig.defaultPerPage,
+    String? nivel,
+    int? status,
+    String? search,
+    bool isLoadMore = false,
+  }) async {
     try {
-      final queryParams = <String, dynamic>{
-        'page': page,
-        'per_page': 10,
-      };
-
-      if (_currentSearch.isNotEmpty) queryParams['search'] = _currentSearch;
-      if (_currentNivel != null) queryParams['nivel'] = _currentNivel;
-      if (_currentStatus != null) queryParams['status'] = _currentStatus;
+      if (!isLoadMore) {
+        emit(GestoresLoading());
+      }
 
       final response = await _apiClient.get(
         '/gestor/gestor-usuarios',
-        queryParameters: queryParams,
+        queryParameters: {
+          'page': page,
+          'per_page': perPage,
+          if (nivel != null) 'nivel': nivel,
+          if (status != null) 'status': status,
+          if (search != null && search.isNotEmpty) 'search': search,
+        },
       );
 
       if (response.data['success'] == true) {
-        final data = response.data['data'];
-        final List<dynamic> items = data['items'] ?? [];
-        final pagination = data['pagination'] ?? {};
-        
+        final items = List<Map<String, dynamic>>.from(response.data['data']['items']);
+        final pagination = response.data['data']['pagination'];
+
+        final novosGestores = items.map((json) => Gestor.fromJson(json)).toList();
+
+        if (isLoadMore && state is GestoresLoaded) {
+          final currentState = state as GestoresLoaded;
+          _todosGestores = [...currentState.gestores, ...novosGestores];
+        } else {
+          _todosGestores = novosGestores;
+        }
+
+        _ultimaPagination = pagination;
+
         emit(GestoresLoaded(
-          gestores: items.map((json) => Gestor.fromJson(json)).toList(),
-          currentPage: pagination['page'] ?? 1,
-          totalPages: pagination['total_pages'] ?? 1,
-          totalItems: pagination['total'] ?? 0,
-          appliedFilters: {
-            'search': _currentSearch,
-            'nivel': _currentNivel,
-            'status': _currentStatus,
-          },
+          gestores: _todosGestores,
+          gestoresFiltrados: _todosGestores,
+          pagination: pagination,
         ));
       } else {
         emit(GestoresError(response.data['message'] ?? 'Erro ao carregar gestores'));
@@ -127,125 +127,101 @@ class GestoresCubit extends Cubit<GestoresState> {
     }
   }
 
-  void applyFilters({String? search, String? nivel, int? status}) {
-    if (search != null) _currentSearch = search;
-    if (nivel != null) _currentNivel = nivel;
-    if (status != null) _currentStatus = status;
-    fetchGestores(page: 1);
+  // ✅ FILTRAR GESTORES LOCALMENTE (para busca instantânea)
+  void filtrarGestores(String search) {
+    if (_todosGestores.isEmpty) return;
+
+    final filtradas = _todosGestores.where((g) {
+      return g.nome.toLowerCase().contains(search.toLowerCase()) ||
+          g.email.toLowerCase().contains(search.toLowerCase()) ||
+          (g.cpf?.contains(search) ?? false);
+    }).toList();
+
+    emit(GestoresLoaded(
+      gestores: _todosGestores,
+      gestoresFiltrados: filtradas,
+      pagination: _ultimaPagination,
+    ));
   }
 
-  void applySearch(String search) => applyFilters(search: search);
-  void applyNivel(String? nivel) { _currentNivel = nivel; fetchGestores(page: 1); }
-  void applyStatus(int? status) { _currentStatus = status; fetchGestores(page: 1); }
+  // ✅ LIMPAR FILTROS (voltar à lista completa)
+  void limparFiltros() {
+    if (_todosGestores.isEmpty) return;
 
-  void clearFilters() {
-    _currentSearch = '';
+    emit(GestoresLoaded(
+      gestores: _todosGestores,
+      gestoresFiltrados: _todosGestores,
+      pagination: _ultimaPagination,
+    ));
+  }
+
+  // ✅ APLICAR FILTROS (versão unificada)
+  Future<void> applyFilters({
+    String? nivel,
+    int? status,
+    String? search,
+  }) async {
+    _currentNivel = nivel;
+    _currentStatus = status;
+    _currentSearch = search;
+
+    await fetchGestores(
+      nivel: nivel,
+      status: status,
+      search: search,
+    );
+  }
+
+  // ✅ WRAPPERS PARA FILTROS
+  Future<void> applyNivel(String? nivel) => applyFilters(
+      nivel: nivel,
+      status: _currentStatus,
+      search: _currentSearch
+  );
+
+  Future<void> applyStatus(int? status) => applyFilters(
+      status: status,
+      nivel: _currentNivel,
+      search: _currentSearch
+  );
+
+  Future<void> applySearch(String search) => applyFilters(
+      search: search,
+      nivel: _currentNivel,
+      status: _currentStatus
+  );
+
+  // ✅ LIMPAR FILTROS (versão Future)
+  Future<void> clearFilters() async {
     _currentNivel = null;
     _currentStatus = null;
-    fetchGestores(page: 1);
+    _currentSearch = null;
+    await fetchGestores();
   }
 
-  void goToPage(int page) => fetchGestores(page: page);
-
-  String get currentSearch => _currentSearch;
-  String? get currentNivel => _currentNivel;
-  int? get currentStatus => _currentStatus;
-
+  // ➕ CRIAR GESTOR
   Future<bool> createGestor(Map<String, dynamic> data) async {
-    try {
-      emit(GestoresLoading());
-      final response = await _apiClient.post('/gestor/gestor-usuarios/create', data: data);
+    emit(const GestorOperationLoading());
 
-      if (response.data['success'] == true) {
-        await fetchGestores(page: 1);
-        if (state is GestoresLoaded) {
-          final s = state as GestoresLoaded;
-          emit(GestorOperationSuccess(
-            message: 'Gestor criado com sucesso',
-            gestores: s.gestores,
-            currentPage: s.currentPage,
-            totalPages: s.totalPages,
-            totalItems: s.totalItems,
-            appliedFilters: s.appliedFilters,
-          ));
-        }
+    try {
+      final response = await _apiClient.post(
+        '/gestor/gestor-usuarios/create',
+        data: data,
+      );
+
+      if (response.statusCode == 201 && response.data['success'] == true) {
+        final novoGestor = Gestor.fromJson(response.data['data']);
+
+        await refreshList();
+
+        emit(GestorOperationSuccess(
+          message: 'Gestor criado com sucesso',
+          gestor: novoGestor,
+        ));
+
         return true;
       } else {
         emit(GestoresError(response.data['message'] ?? 'Erro ao criar gestor'));
-        return false;
-      }
-    } on DioException catch (e) {
-      emit(GestoresError(e.response?.data?['message'] ?? 'Erro de conexão'));
-      return false;
-    } catch (e) {
-      emit(GestoresError('Erro inesperado: $e'));
-      return false;
-    }
-  }
-
-  Future<bool> updateGestor(int id, Map<String, dynamic> data) async {
-    try {
-      final currentState = state; // Preserva estado antes do loading
-      emit(GestoresLoading());
-      
-      final response = await _apiClient.put('/gestor/gestor-usuarios/update/$id', data: data);
-
-      if (response.data['success'] == true) {
-        int pageToReload = 1;
-        if (currentState is GestoresLoaded) pageToReload = currentState.currentPage;
-        
-        await fetchGestores(page: pageToReload);
-        
-        if (state is GestoresLoaded) {
-          final s = state as GestoresLoaded;
-          emit(GestorOperationSuccess(
-            message: 'Gestor atualizado com sucesso',
-            gestores: s.gestores,
-            currentPage: s.currentPage,
-            totalPages: s.totalPages,
-            totalItems: s.totalItems,
-            appliedFilters: s.appliedFilters,
-          ));
-        }
-        return true;
-      } else {
-        emit(GestoresError(response.data['message'] ?? 'Erro ao atualizar gestor'));
-        return false;
-      }
-    } on DioException catch (e) {
-      emit(GestoresError(e.response?.data?['message'] ?? 'Erro de conexão'));
-      return false;
-    } catch (e) {
-      emit(GestoresError('Erro inesperado: $e'));
-      return false;
-    }
-  }
-
-  Future<bool> deleteGestor(int id) async {
-    try {
-      final currentState = state;
-      emit(GestoresLoading());
-      final response = await _apiClient.post('/gestor/gestor-usuarios/delete/$id');
-      if (response.data['success'] == true) {
-        int pageToReload = 1;
-        if (currentState is GestoresLoaded) {
-          pageToReload = currentState.gestores.length == 1 && currentState.currentPage > 1 ? currentState.currentPage - 1 : currentState.currentPage;
-        }
-        await fetchGestores(page: pageToReload);
-        if (state is GestoresLoaded) {
-          final s = state as GestoresLoaded;
-          emit(GestorOperationSuccess(
-            message: 'Gestor deletado com sucesso',
-            gestores: s.gestores,
-            currentPage: s.currentPage,
-            totalPages: s.totalPages,
-            totalItems: s.totalItems,
-            appliedFilters: s.appliedFilters,
-          ));
-        }
-        return true;
-      } else {
-        emit(GestoresError(response.data['message'] ?? 'Erro ao deletar gestor'));
         return false;
       }
     } catch (e) {
@@ -254,8 +230,104 @@ class GestoresCubit extends Cubit<GestoresState> {
     }
   }
 
-  /// 🔄 Recarrega a lista de gestores
-  Future<void> refreshList() async {
-    await fetchGestores();
+  // ✏️ ATUALIZAR GESTOR
+  Future<bool> updateGestor(int id, Map<String, dynamic> data) async {
+    emit(const GestorOperationLoading());
+
+    try {
+      final response = await _apiClient.post(
+        '/gestor/gestor-usuarios/update/$id',
+        data: data,
+      );
+
+      if (response.statusCode == 200 && response.data['success'] == true) {
+        final gestorAtualizado = Gestor.fromJson(response.data['data']);
+
+        await refreshList();
+
+        emit(GestorOperationSuccess(
+          message: 'Gestor atualizado com sucesso',
+          gestor: gestorAtualizado,
+        ));
+
+        return true;
+      } else {
+        emit(GestoresError(response.data['message'] ?? 'Erro ao atualizar gestor'));
+        return false;
+      }
+    } catch (e) {
+      emit(GestoresError('Erro de conexão: $e'));
+      return false;
+    }
   }
+
+  // 🗑️ DELETAR GESTOR
+  Future<bool> deleteGestor(int id) async {
+    emit(const GestorOperationLoading());
+
+    try {
+      final response = await _apiClient.post(
+        '/gestor/gestor-usuarios/delete/$id',
+      );
+
+      if (response.statusCode == 200 && response.data['success'] == true) {
+        _todosGestores = _todosGestores.where((g) => g.id != id).toList();
+
+        emit(GestoresLoaded(
+          gestores: _todosGestores,
+          gestoresFiltrados: _todosGestores,
+          pagination: _ultimaPagination,
+        ));
+
+        emit(const GestorOperationSuccess(
+          message: 'Gestor removido com sucesso',
+        ));
+
+        return true;
+      } else {
+        emit(GestoresError(response.data['message'] ?? 'Erro ao remover gestor'));
+        return false;
+      }
+    } catch (e) {
+      emit(GestoresError('Erro de conexão: $e'));
+      return false;
+    }
+  }
+
+  // 🔍 BUSCAR GESTOR DETALHADO
+  Future<Gestor?> fetchGestorDetalhado(int id) async {
+    try {
+      final response = await _apiClient.get('/gestor/gestor-usuarios/$id');
+
+      if (response.data['success'] == true) {
+        return Gestor.fromJson(response.data['data']);
+      } else {
+        emit(GestoresError(response.data['message'] ?? 'Erro ao carregar gestor'));
+        return null;
+      }
+    } catch (e) {
+      emit(GestoresError('Erro de conexão: $e'));
+      return null;
+    }
+  }
+
+  // 🔄 RECARREGAR LISTA (mantendo filtros atuais)
+  Future<void> refreshList() async {
+    await fetchGestores(
+      nivel: _currentNivel,
+      status: _currentStatus,
+      search: _currentSearch,
+    );
+  }
+
+  // ✅ GETTERS DE PAGINAÇÃO
+  bool get hasMorePages {
+    if (_ultimaPagination == null) return false;
+    final currentPage = _ultimaPagination!['page'] as int;
+    final totalPages = _ultimaPagination!['total_pages'] as int;
+    return currentPage < totalPages;
+  }
+
+  int get currentPage => _ultimaPagination?['page'] ?? 1;
+  int get totalPages => _ultimaPagination?['total_pages'] ?? 1;
 }
