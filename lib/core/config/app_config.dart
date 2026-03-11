@@ -1,3 +1,3 @@
 class AppConfig {
-  static const int defaultPerPage = 20;
+  static const int defaultPerPage = 10;
 }
