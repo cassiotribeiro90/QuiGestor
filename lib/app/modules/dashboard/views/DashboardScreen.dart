@@ -102,6 +102,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Row(
+                    children: [
+                      Icon(Icons.analytics, color: theme.colorScheme.primary),
+                      const SizedBox(width: 8),
+                      TextH2(
+                        'Lojas e Pedidos',
+                        color: theme.colorScheme.primary,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
                   // === CARDS DE RESUMO USANDO WRAP ===
                   Wrap(
                     spacing: 8,

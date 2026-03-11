@@ -4,6 +4,7 @@ import '../../auth/bloc/auth_cubit.dart';
 import '../../../routes/app_routes.dart';
 import '../../dashboard/views/DashboardScreen.dart';
 import '../../gestores/views/gestores_list_screen.dart';
+import '../../lojas/views/lojas_list_screen.dart';
 import '../views/home_screen.dart';
 import '../../theme/bloc/theme_cubit.dart';
 import '../../theme/bloc/theme_state.dart';
@@ -106,7 +107,7 @@ class SideMenu extends StatelessWidget {
                   context,
                   icon: Icons.store_mall_directory_outlined,
                   label: 'Todas as Lojas',
-                  content: const Center(child: Text('Lojas List Screen')),
+                  content: const LojasListScreen(),
                   isCompact: isCompact,
                 ),
                 

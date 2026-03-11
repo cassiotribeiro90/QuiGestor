@@ -8,6 +8,7 @@ import 'app/modules/theme/bloc/theme_state.dart';
 import 'app/modules/home/bloc/home_cubit.dart';
 import 'app/modules/gestores/bloc/gestores_cubit.dart';
 import 'app/modules/loja/bloc/loja_cubit.dart';
+import 'app/modules/lojas/bloc/lojas_cubit.dart';
 import 'app/modules/usuarios/usuario_state.dart';
 import 'app/routes/app_router.dart';
 import 'app/routes/app_routes.dart';
@@ -43,6 +44,7 @@ class QuiGestorApp extends StatelessWidget {
         BlocProvider<HomeCubit>(create: (_) => HomeCubit()),
         BlocProvider<GestoresCubit>(create: (_) => GestoresCubit(apiClient)),
         BlocProvider<LojaCubit>(create: (_) => LojaCubit(apiClient)),
+        BlocProvider<LojasCubit>(create: (_) => LojasCubit(apiClient)),
         BlocProvider<UsuarioCubit>(create: (_) => UsuarioCubit(apiClient)),
       ],
       child: BlocBuilder<ThemeCubit, ThemeState>(

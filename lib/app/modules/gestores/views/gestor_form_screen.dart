@@ -7,7 +7,7 @@ import '../../../../app/theme/app_colors.dart';
 
 class GestorFormScreen extends StatefulWidget {
   final Gestor? gestor;
-  final VoidCallback? onSaved; // ← NOVO callback
+  final VoidCallback? onSaved;
 
   const GestorFormScreen({super.key, this.gestor, this.onSaved});
 
@@ -76,9 +76,9 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
 
     if (success && mounted) {
       if (widget.onSaved != null) {
-        widget.onSaved!(); // Volta para a lista
+        widget.onSaved!();
       } else {
-        Navigator.pop(context, true); // Fallback
+        Navigator.pop(context, true);
       }
     }
   }
@@ -119,23 +119,24 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_isEditing ? 'Editar Gestor' : 'Novo Gestor'),
-        actions: [
-          if (_isEditing)
-            IconButton(
-              icon: const Icon(Icons.delete_outline, color: Colors.red),
-              onPressed: _delete,
-              tooltip: 'Excluir Gestor',
-            ),
-        ],
-      ),
-      body: BlocBuilder<GestoresCubit, GestoresState>(
-        builder: (context, state) {
-          final isLoading = state is GestoresLoading;
+    return BlocBuilder<GestoresCubit, GestoresState>(
+      builder: (context, state) {
+        final isLoading = state is GestoresLoading;
 
-          return Form(
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(_isEditing ? 'Editar Gestor' : 'Novo Gestor'),
+            actions: [
+              IconButton(
+                icon: isLoading 
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.save_outlined),
+                onPressed: isLoading ? null : _save,
+                tooltip: 'Salvar',
+              ),
+            ],
+          ),
+          body: Form(
             key: _formKey,
             child: ListView(
               padding: const EdgeInsets.all(20),
@@ -239,11 +240,31 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
                       ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
                       : Text(_isEditing ? 'Atualizar Gestor' : 'Criar Gestor'),
                 ),
+                if (_isEditing) ...[
+                  const SizedBox(height: 32),
+                  Center(
+                    child: TextButton.icon(
+                      onPressed: isLoading ? null : _delete,
+                      icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
+                      label: const Text(
+                        'Excluir gestor',
+                        style: TextStyle(color: Colors.red, fontSize: 14),
+                      ),
+                      style: TextButton.styleFrom(
+                        backgroundColor: Colors.red.withOpacity(0.05),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }
