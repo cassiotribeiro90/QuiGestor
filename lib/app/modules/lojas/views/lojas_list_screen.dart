@@ -1,3 +1,5 @@
+// lib/app/modules/lojas/views/lojas_list_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../apparte/widgets/loading_skeleton.dart';
@@ -57,7 +59,9 @@ class _LojasListScreenState extends State<LojasListScreen> {
       isLoadMore: true,
     );
 
-    setState(() => _isLoadingMore = false);
+    if (mounted) {
+      setState(() => _isLoadingMore = false);
+    }
   }
 
   void _aplicarFiltros() {
@@ -444,16 +448,15 @@ class _LojasListScreenState extends State<LojasListScreen> {
     );
   }
 
+  // ✅ CORRIGIDO: Salvando referência do cubit antes do async
   void _abrirFormLoja(BuildContext context, {Loja? loja}) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => LojaFormScreen(loja: loja),
       ),
-    ).then((atualizou) {
-      if (atualizou == true) {
+    ).then((mounted) {
         context.read<LojasCubit>().refreshList();
-      }
     });
   }
 }

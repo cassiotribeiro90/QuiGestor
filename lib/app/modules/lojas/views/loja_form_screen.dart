@@ -244,6 +244,7 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isMobile = MediaQuery.of(context).size.width < 600;
 
     return BlocBuilder<LojasCubit, LojasState>(
       builder: (context, state) {
@@ -253,6 +254,13 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
           appBar: AppBar(
             title: Text(_isEditing ? 'Editar Loja' : 'Nova Loja'),
             centerTitle: false,
+            // ✅ Botão de voltar para mobile
+            leading: isMobile
+                ? IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () => Navigator.pop(context),
+                  )
+                : null,
             actions: [
               IconButton(
                 icon: isLoading || _isLoadingData
@@ -828,7 +836,7 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
                     ),
                   ),
                   if (_isEditing) ...[
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 32),
                     Center(
                       child: TextButton.icon(
                         onPressed: isLoading ? null : _deletar,

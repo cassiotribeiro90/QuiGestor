@@ -253,4 +253,9 @@ class GestoresCubit extends Cubit<GestoresState> {
       return false;
     }
   }
+
+  /// 🔄 Recarrega a lista de gestores
+  Future<void> refreshList() async {
+    await fetchGestores();
+  }
 }

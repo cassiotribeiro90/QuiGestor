@@ -315,7 +315,11 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
             child: const GestorFormScreen(),
           ),
         ),
-      );
+      ).then((atualizou) {
+        if (atualizou == true && mounted) {
+          context.read<GestoresCubit>().refreshList();
+        }
+      });;
     }
   }
 
