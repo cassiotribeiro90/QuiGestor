@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../apparte/widgets/loading_skeleton.dart';
-import '../../../../apparte/widgets/quigestor_card.dart';
-import '../../../../core/config/app_config.dart';
-import '../bloc/gestores_cubit.dart';
-import '../models/gestor.dart';
-import 'gestor_form_screen.dart';
+import 'package:quigestor/apparte/widgets/loading_skeleton.dart';
+import 'package:quigestor/apparte/widgets/quigestor_card.dart';
+import 'package:quigestor/core/config/app_config.dart';
+import 'package:quigestor/app/modules/gestores/bloc/gestores_cubit.dart';
+import 'package:quigestor/app/modules/gestores/bloc/gestores_state.dart';
+import 'package:quigestor/app/modules/gestores/models/gestor.dart';
+import 'package:quigestor/app/modules/gestores/views/gestor_form_screen.dart';
 
 class GestoresListScreen extends StatefulWidget {
   const GestoresListScreen({super.key});
@@ -23,11 +24,15 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
   String? _filtroNivel;
   int? _filtroStatus;
 
+  bool _hasMorePages = true;
+  int _currentPage = 1;
+  static const int _perPage = AppConfig.defaultPerPage;
+
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    context.read<GestoresCubit>().fetchGestores(perPage: AppConfig.defaultPerPage);
+    _carregarGestores();
   }
 
   @override
@@ -37,41 +42,75 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
     super.dispose();
   }
 
+  void _carregarGestores() {
+    _resetPagination();
+    context.read<GestoresCubit>().fetchGestores(perPage: _perPage);
+  }
+
+  void _resetPagination() {
+    _currentPage = 1;
+    _hasMorePages = true;
+    _isLoadingMore = false;
+  }
+
   void _onScroll() {
+    if (!_hasMorePages || _isLoadingMore) return;
+
+    if (_scrollController.position.maxScrollExtent < 100 && _hasMorePages) {
+      _loadMore();
+      return;
+    }
+
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
-      final cubit = context.read<GestoresCubit>();
-      if (cubit.hasMorePages && !_isLoadingMore) {
-        _loadMore();
-      }
+      _loadMore();
     }
   }
 
   Future<void> _loadMore() async {
-    setState(() => _isLoadingMore = true);
+    if (_isLoadingMore || !_hasMorePages) return;
 
-    final currentPage = context.read<GestoresCubit>().currentPage;
+    setState(() {
+      _isLoadingMore = true;
+      _currentPage++;
+    });
+
     await context.read<GestoresCubit>().fetchGestores(
-      page: currentPage + 1,
-      perPage: AppConfig.defaultPerPage,
+      page: _currentPage,
+      perPage: _perPage,
       isLoadMore: true,
     );
 
     if (mounted) {
-      setState(() => _isLoadingMore = false);
+      setState(() {
+        _isLoadingMore = false;
+      });
     }
   }
 
-  void _aplicarFiltros() {
-    final search = _searchController.text;
+  Future<void> _onRefresh() async {
+    _searchController.clear();
+    setState(() {
+      _filtroNivel = null;
+      _filtroStatus = null;
+      _showFiltros = false;
+      _resetPagination();
+    });
+    
+    await context.read<GestoresCubit>().fetchGestores(perPage: _perPage);
+  }
 
+  void _aplicarFiltros() {
+    _resetPagination();
+    
+    final search = _searchController.text;
     if (search.isNotEmpty) {
       context.read<GestoresCubit>().applySearch(search);
     } else {
       context.read<GestoresCubit>().fetchGestores(
         nivel: _filtroNivel,
         status: _filtroStatus,
-        perPage: AppConfig.defaultPerPage,
+        perPage: _perPage,
       );
     }
   }
@@ -137,6 +176,7 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
                     ),
                   ),
                   onChanged: (value) {
+                    _resetPagination();
                     if (value.isEmpty) {
                       context.read<GestoresCubit>().clearFilters();
                     } else {
@@ -206,6 +246,8 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
                 backgroundColor: Colors.green,
               ),
             );
+          } else if (state is GestoresLoaded) {
+            _hasMorePages = state.hasMorePages;
           }
         },
         builder: (context, state) {
@@ -228,21 +270,12 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.people_outline,
-                      size: 100,
-                      color: Colors.grey[400],
-                    ),
+                    Icon(Icons.people_outline, size: 100, color: Colors.grey[400]),
                     const SizedBox(height: 16),
-                    Text(
-                      'Nenhum gestor encontrado',
-                      style: theme.textTheme.titleMedium,
-                    ),
+                    Text('Nenhum gestor encontrado', style: theme.textTheme.titleMedium),
                     const SizedBox(height: 8),
                     Text(
-                      state.gestores.isEmpty
-                          ? 'Comece criando um gestor'
-                          : 'Tente outros filtros de busca',
+                      state.gestores.isEmpty ? 'Comece criando um gestor' : 'Tente outros filtros de busca',
                       style: TextStyle(color: Colors.grey[600]),
                     ),
                     if (state.gestores.isEmpty) ...[
@@ -259,7 +292,7 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
             }
 
             return RefreshIndicator(
-              onRefresh: () => context.read<GestoresCubit>().refreshList(),
+              onRefresh: _onRefresh,
               child: ListView.builder(
                 controller: _scrollController,
                 padding: const EdgeInsets.all(16),
@@ -310,17 +343,11 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
                                     Expanded(
                                       child: Text(
                                         gestor.nome,
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                       ),
                                     ),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                       decoration: BoxDecoration(
                                         color: _getStatusColor(gestor.status).withOpacity(0.1),
                                         borderRadius: BorderRadius.circular(12),
@@ -339,46 +366,23 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
                                 const SizedBox(height: 4),
                                 Row(
                                   children: [
-                                    Icon(
-                                      Icons.email_outlined,
-                                      size: 14,
-                                      color: Colors.grey[600],
-                                    ),
+                                    Icon(Icons.email_outlined, size: 14, color: Colors.grey[600]),
                                     const SizedBox(width: 4),
-                                    Text(
-                                      gestor.email,
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 13,
-                                      ),
-                                    ),
+                                    Text(gestor.email, style: TextStyle(color: Colors.grey[600], fontSize: 13)),
                                   ],
                                 ),
                                 const SizedBox(height: 2),
                                 Row(
                                   children: [
-                                    Icon(
-                                      Icons.security_outlined,
-                                      size: 14,
-                                      color: Colors.grey[600],
-                                    ),
+                                    Icon(Icons.security_outlined, size: 14, color: Colors.grey[600]),
                                     const SizedBox(width: 4),
-                                    Text(
-                                      gestor.nivel,
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 13,
-                                      ),
-                                    ),
+                                    Text(gestor.nivel, style: TextStyle(color: Colors.grey[600], fontSize: 13)),
                                   ],
                                 ),
                               ],
                             ),
                           ),
-                          Icon(
-                            Icons.chevron_right_rounded,
-                            color: Colors.grey[400],
-                          ),
+                          Icon(Icons.chevron_right_rounded, color: Colors.grey[400]),
                         ],
                       ),
                     ),
@@ -387,7 +391,6 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
               ),
             );
           }
-
           return const SizedBox();
         },
       ),
@@ -401,14 +404,12 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
 
   void _abrirFormGestor(BuildContext context, {Gestor? gestor}) {
     final cubit = context.read<GestoresCubit>();
-
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => GestorFormScreen(gestor: gestor),
-      ),
+      MaterialPageRoute(builder: (_) => GestorFormScreen(gestor: gestor)),
     ).then((atualizou) {
       if (atualizou == true) {
+        _resetPagination();
         cubit.refreshList();
       }
     });

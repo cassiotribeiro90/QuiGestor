@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/gestores_cubit.dart';
 import '../../../../apparte/widgets/app_text.dart';
+import '../bloc/gestores_state.dart';
 
 class GestorFilters extends StatelessWidget {
   const GestorFilters({super.key});

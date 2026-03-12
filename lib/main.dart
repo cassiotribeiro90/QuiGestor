@@ -1,37 +1,31 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'app/modules/auth/bloc/auth_cubit.dart';
-import 'app/modules/dashboard/bloc/dashboard_cubit.dart';
-import 'app/modules/theme/bloc/theme_cubit.dart';
-import 'app/modules/theme/bloc/theme_state.dart';
-import 'app/modules/home/bloc/home_cubit.dart';
-import 'app/modules/gestores/bloc/gestores_cubit.dart';
-import 'app/modules/loja/bloc/loja_cubit.dart';
-import 'app/modules/lojas/bloc/lojas_cubit.dart';
-import 'app/modules/usuarios/usuario_state.dart';
-import 'app/routes/app_router.dart';
-import 'app/routes/app_routes.dart';
-import 'app/theme/app_theme.dart';
-import 'shared/auth/auth_observer.dart';
-import 'shared/api/api_client.dart';
-import 'shared/services/token_service.dart';
+import 'package:quigestor/app/modules/auth/bloc/auth_cubit.dart';
+import 'package:quigestor/app/modules/dashboard/bloc/dashboard_cubit.dart';
+import 'package:quigestor/app/modules/theme/bloc/theme_cubit.dart';
+import 'package:quigestor/app/modules/theme/bloc/theme_state.dart';
+import 'package:quigestor/app/modules/home/bloc/home_cubit.dart';
+import 'package:quigestor/app/modules/gestores/bloc/gestores_cubit.dart';
+import 'package:quigestor/app/modules/loja/bloc/loja_cubit.dart';
+import 'package:quigestor/app/modules/lojas/bloc/lojas_cubit.dart';
+import 'package:quigestor/app/modules/usuarios/usuario_state.dart';
+import 'package:quigestor/app/routes/app_router.dart';
+import 'package:quigestor/app/routes/app_routes.dart';
+import 'package:quigestor/app/theme/app_theme.dart';
+import 'package:quigestor/shared/auth/auth_observer.dart';
+import 'package:quigestor/shared/api/api_client.dart';
+import 'package:quigestor/shared/services/token_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Inicializa o TokenService (SharedPreferences)
   await TokenService.initialize();
-  
-  // ApiClient é singleton, a instância é criada automaticamente
   final apiClient = ApiClient();
-  
   runApp(QuiGestorApp(apiClient: apiClient));
 }
 
 class QuiGestorApp extends StatelessWidget {
   final ApiClient apiClient;
-  
   const QuiGestorApp({super.key, required this.apiClient});
 
   @override

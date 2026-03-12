@@ -89,7 +89,9 @@ class LojasCubit extends Cubit<LojasState> {
         emit(LojasError(response.data['message'] ?? 'Erro ao carregar lojas'));
       }
     } catch (e) {
-      emit(LojasError('Erro de conexão: $e'));
+      if (!isLoadMore) {
+        emit(LojasError('Erro de conexão: $e'));
+      }
     }
   }
 
@@ -106,6 +108,7 @@ class LojasCubit extends Cubit<LojasState> {
     _currentSearch = search;
     
     await fetchLojas(
+      page: 1, // 🔥 RESETA PARA PÁGINA 1 AO APLICAR FILTROS
       status: status,
       destaque: destaque,
       categoria: categoria,
@@ -259,6 +262,7 @@ class LojasCubit extends Cubit<LojasState> {
 
   Future<void> refreshList() async {
     await fetchLojas(
+      page: 1, // 🔥 RESETA PARA PÁGINA 1 AO REFRESCAR
       status: _currentStatus,
       destaque: _currentDestaque,
       categoria: _currentCategoria,

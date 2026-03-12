@@ -60,6 +60,12 @@ class _LojasListScreenState extends State<LojasListScreen> {
     // 🔥 VERIFICA SE PODE CARREGAR MAIS
     if (!_hasMorePages || _isLoadingMore) return;
 
+    // 🔥 SE TIVER POUCOS ITENS, DISPARA AUTOMATICAMENTE
+    if (_scrollController.position.maxScrollExtent < 100 && _hasMorePages) {
+      _loadMore();
+      return;
+    }
+
     // 🔥 VERIFICA SE CHEGOU PERTO DO FINAL
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
@@ -265,11 +271,9 @@ class _LojasListScreenState extends State<LojasListScreen> {
             );
           } else if (state is LojasLoaded) {
             // 🔥 ATUALIZA O ESTADO DE PAGINAÇÃO QUANDO RECEBE DADOS
-            if (state.pagination != null) {
-              _hasMorePages = state.currentPage < state.totalPages;
-              print('📊 Paginação - Página ${state.currentPage} de ${state.totalPages}');
-              print('📊 Mais páginas? $_hasMorePages');
-            }
+            _hasMorePages = state.hasMorePages;
+            print('📊 Paginação - Página ${state.currentPage} de ${state.totalPages}');
+            print('📊 Mais páginas? $_hasMorePages');
           }
         },
         builder: (context, state) {
