@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:quigestor/core/config/app_config.dart';
+import 'package:quigestor/app/app_config.dart';
 import 'package:quigestor/app/modules/gestores/models/gestor.dart';
 
 abstract class GestoresState extends Equatable {

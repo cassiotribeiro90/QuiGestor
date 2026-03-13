@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/lojas_cubit.dart';
-import '../bloc/lojas_state.dart';
 import '../../../../apparte/widgets/app_text.dart';
+import '../../../../apparte/widgets/filter_option.dart';
+import '../../../../apparte/widgets/filter_section_widget.dart';
 
 class LojaFilters extends StatefulWidget {
   const LojaFilters({super.key});
@@ -12,10 +13,73 @@ class LojaFilters extends StatefulWidget {
 }
 
 class _LojaFiltersState extends State<LojaFilters> {
-  String? _categoria;
-  String? _status;
-  bool? _verificado;
-  bool? _destaque;
+  late FilterSectionModel _statusSection;
+  late FilterSectionModel _categoriaSection;
+  late FilterSectionModel _outrosSection;
+
+  @override
+  void initState() {
+    super.initState();
+    final cubit = context.read<LojasCubit>();
+    final filterOptions = cubit.filterOptions ?? {};
+
+    // STATUS
+    final List<dynamic> statusData = filterOptions['status'] ?? [];
+    _statusSection = FilterSectionModel(
+      id: 'status',
+      title: 'STATUS',
+      isRadio: false,
+      options: statusData.map((s) => FilterOptionModel(
+        value: s['value'].toString(),
+        label: s['label'].toString(),
+        count: s['count'],
+        selected: cubit.currentStatusList.contains(s['value'].toString()),
+      )).toList(),
+    );
+
+    // CATEGORIAS
+    final List<dynamic> categoriasData = filterOptions['categorias'] ?? [];
+    _categoriaSection = FilterSectionModel(
+      id: 'categorias',
+      title: 'CATEGORIAS',
+      isRadio: false,
+      options: categoriasData.map((c) => FilterOptionModel(
+        value: c['value'].toString(),
+        label: c['label'].toString(),
+        count: c['count'],
+        selected: cubit.currentCategorias.contains(c['value'].toString()),
+      )).toList(),
+    );
+
+    // OUTROS (Destaque, Verificado)
+    _outrosSection = FilterSectionModel(
+      id: 'outros',
+      title: 'OUTROS',
+      isRadio: false,
+      options: [
+        FilterOptionModel(
+          value: 'destaque',
+          label: 'Destaque',
+          emoji: '⭐',
+          count: filterOptions['destaque'],
+          selected: cubit.currentDestaque == true,
+        ),
+        FilterOptionModel(
+          value: 'verificado',
+          label: 'Verificado',
+          emoji: '✅',
+          count: filterOptions['verificado'],
+          selected: cubit.currentVerificado == true,
+        ),
+      ],
+    );
+  }
+
+  void _handleOptionTap(FilterSectionModel section, String value) {
+    setState(() {
+      section.toggleOption(value);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +90,7 @@ class _LojaFiltersState extends State<LojaFilters> {
         left: 20,
         right: 20,
         top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+        bottom: MediaQuery.of(context).padding.bottom + 20,
       ),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
@@ -39,126 +103,81 @@ class _LojaFiltersState extends State<LojaFilters> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              TextH2(
-                'Filtros',
-                color: theme.colorScheme.onSurface,
-              ),
-              TextButton(
-                onPressed: () {
-                  context.read<LojasCubit>().fetchLojas();
-                  Navigator.pop(context);
-                },
-                style: TextButton.styleFrom(
-                  foregroundColor: theme.colorScheme.secondary,
-                ),
-                child: const Text('Limpar'),
+              const TextH2('Filtrar Lojas'),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.pop(context),
               ),
             ],
           ),
           const SizedBox(height: 20),
           
-          TextBody1(
-            'Status',
-            fontWeight: FontWeight.w600,
-            color: theme.colorScheme.onSurface,
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _buildFilterChip(
-                label: 'Todos',
-                isSelected: _status == null,
-                onSelected: (_) => setState(() => _status = null),
+          Flexible(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  FilterSectionWidget(
+                    section: _statusSection,
+                    onOptionTap: (val) => _handleOptionTap(_statusSection, val),
+                  ),
+                  const SizedBox(height: 20),
+                  
+                  FilterSectionWidget(
+                    section: _categoriaSection,
+                    onOptionTap: (val) => _handleOptionTap(_categoriaSection, val),
+                  ),
+                  const SizedBox(height: 20),
+
+                  FilterSectionWidget(
+                    section: _outrosSection,
+                    onOptionTap: (val) => _handleOptionTap(_outrosSection, val),
+                  ),
+                ],
               ),
-              _buildFilterChip(
-                label: 'Ativo',
-                isSelected: _status == 'ativo',
-                onSelected: (_) => setState(() => _status = 'ativo'),
-              ),
-              _buildFilterChip(
-                label: 'Fechado',
-                isSelected: _status == 'fechado',
-                onSelected: (_) => setState(() => _status = 'fechado'),
-              ),
-              _buildFilterChip(
-                label: 'Revisão',
-                isSelected: _status == 'revisao',
-                onSelected: (_) => setState(() => _status = 'revisao'),
-              ),
-            ],
-          ),
-          
-          const SizedBox(height: 24),
-          
-          TextBody1(
-            'Outros',
-            fontWeight: FontWeight.w600,
-            color: theme.colorScheme.onSurface,
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              FilterChip(
-                label: const Text('Verificado'),
-                selected: _verificado == true,
-                onSelected: (val) => setState(() => _verificado = val ? true : null),
-              ),
-              FilterChip(
-                label: const Text('Destaque'),
-                selected: _destaque == true,
-                onSelected: (val) => setState(() => _destaque = val ? true : null),
-              ),
-            ],
+            ),
           ),
           
           const SizedBox(height: 32),
           
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                context.read<LojasCubit>().fetchLojas(
-                  status: _status,
-                  verificado: _verificado,
-                  destaque: _destaque,
-                );
-                Navigator.pop(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.colorScheme.secondary,
-                foregroundColor: theme.colorScheme.onSecondary,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+          Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: () {
+                    context.read<LojasCubit>().clearFilters();
+                    Navigator.pop(context);
+                  },
+                  child: const Text('limpar'),
                 ),
               ),
-              child: const Text(
-                'Aplicar Filtros',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    final outros = _outrosSection.getSelectedValues();
+                    context.read<LojasCubit>().applyFilters(
+                      status: _statusSection.getSelectedValues(),
+                      categorias: _categoriaSection.getSelectedValues(),
+                      destaque: outros.contains('destaque') ? true : null,
+                      verificado: outros.contains('verificado') ? true : null,
+                    );
+                    Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: theme.colorScheme.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text('APLICAR'),
+                ),
               ),
-            ),
+            ],
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildFilterChip({
-    required String label,
-    required bool isSelected,
-    required Function(bool) onSelected,
-  }) {
-    final theme = Theme.of(context);
-    return FilterChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: onSelected,
-      selectedColor: theme.colorScheme.secondary.withOpacity(0.2),
-      checkmarkColor: theme.colorScheme.secondary,
     );
   }
 }

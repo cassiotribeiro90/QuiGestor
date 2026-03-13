@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
-class LojaCardSkeleton extends StatelessWidget {
-  const LojaCardSkeleton({super.key});
+class CardSkeleton extends StatelessWidget {
+  final double height;
+  const CardSkeleton({super.key, this.height = 100});
 
   @override
   Widget build(BuildContext context) {
@@ -9,7 +10,7 @@ class LojaCardSkeleton extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     return Container(
-      height: 100,
+      height: height,
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       decoration: BoxDecoration(
         color: isDark 
@@ -29,5 +30,23 @@ class LojaCardSkeleton extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class LojaCardSkeleton extends StatelessWidget {
+  const LojaCardSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const CardSkeleton();
+  }
+}
+
+class CategoriaCardSkeleton extends StatelessWidget {
+  const CategoriaCardSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const CardSkeleton(height: 80);
   }
 }

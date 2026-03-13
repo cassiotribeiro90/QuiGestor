@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../shared/api/api_client.dart';
+import '../../../app_config.dart';
 import 'auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
@@ -16,7 +17,7 @@ class AuthCubit extends Cubit<AuthState> {
       print('📱 [LOGIN] Tentando login com email: $email');
       
       final response = await _apiClient.post(
-        '/gestor/gestor-usuarios/login', 
+        AppConfig.LOGIN, 
         data: {'email': email, 'senha': senha},
         requiresAuth: false,
       );
@@ -24,9 +25,7 @@ class AuthCubit extends Cubit<AuthState> {
       print('📱 [LOGIN] Status code: ${response.statusCode}');
       print('📱 [LOGIN] Dados: ${response.data}');
 
-      // 🔥 Verifica tanto o status code quanto o campo success
       if (response.statusCode == 200 && response.data['success'] == true) {
-        // Login bem-sucedido
         final data = response.data['data'];
         final String accessToken = data['access_token']?.toString() ?? '';
         final String? refreshToken = data['refresh_token']?.toString();
@@ -38,17 +37,14 @@ class AuthCubit extends Cubit<AuthState> {
           
           print('📱 [LOGIN] Token recebido: ${accessToken.substring(0, displayLength)}...');
           
-          // Salva tokens usando o TokenService via ApiClient
           await _apiClient.tokenService.saveTokens(
             accessToken, 
             refreshToken, 
             expiresIn: expiresIn
           );
           
-          // Salva a base URL para o refresh token
           await _apiClient.tokenService.saveBaseUrl(_apiClient.dio.options.baseUrl);
           
-          // Verifica se salvou
           final savedToken = _apiClient.tokenService.getAccessToken();
           print('📱 [LOGIN] Token recuperado após salvar: ${savedToken != null ? 'OK' : 'FALHOU'}');
           
@@ -58,13 +54,11 @@ class AuthCubit extends Cubit<AuthState> {
           emit(const AuthError(message: 'Token não recebido'));
         }
       } 
-      // 🔥 Se for 401 ou success = false, trata como erro de credenciais
       else if (response.statusCode == 401 || response.data['success'] == false) {
         final message = response.data['message'] ?? 'Email ou senha inválidos';
         print('📱 [LOGIN] Falha: $message');
         emit(AuthError(message: message));
       } 
-      // Outros erros
       else {
         final message = response.data['message'] ?? 'Erro no login';
         print('📱 [LOGIN] Erro inesperado no status code: ${response.statusCode} - $message');
@@ -72,7 +66,6 @@ class AuthCubit extends Cubit<AuthState> {
       }
       
     } on DioException catch (e) {
-      // 🔥 Se mesmo assim cair em exceção, trata aqui
       print('📱 [LOGIN] DioException: ${e.response?.statusCode} - ${e.response?.data}');
       
       if (e.response?.statusCode == 401) {
@@ -117,7 +110,7 @@ class AuthCubit extends Cubit<AuthState> {
 
     try {
       final response = await _apiClient.post(
-        '/gestor/gestor-usuarios/refresh-token',
+        AppConfig.REFRESH_TOKEN,
         data: {'refresh_token': refreshToken},
         requiresAuth: false,
       );

@@ -9,6 +9,7 @@ import 'package:quigestor/app/modules/home/bloc/home_cubit.dart';
 import 'package:quigestor/app/modules/gestores/bloc/gestores_cubit.dart';
 import 'package:quigestor/app/modules/loja/bloc/loja_cubit.dart';
 import 'package:quigestor/app/modules/lojas/bloc/lojas_cubit.dart';
+import 'package:quigestor/app/modules/categorias/bloc/categorias_cubit.dart';
 import 'package:quigestor/app/modules/usuarios/usuario_state.dart';
 import 'package:quigestor/app/routes/app_router.dart';
 import 'package:quigestor/app/routes/app_routes.dart';
@@ -39,6 +40,7 @@ class QuiGestorApp extends StatelessWidget {
         BlocProvider<GestoresCubit>(create: (_) => GestoresCubit(apiClient)),
         BlocProvider<LojaCubit>(create: (_) => LojaCubit(apiClient)),
         BlocProvider<LojasCubit>(create: (_) => LojasCubit(apiClient)),
+        BlocProvider<CategoriasCubit>(create: (_) => CategoriasCubit(apiClient)),
         BlocProvider<UsuarioCubit>(create: (_) => UsuarioCubit(apiClient)),
       ],
       child: BlocBuilder<ThemeCubit, ThemeState>(

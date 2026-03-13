@@ -1,88 +1,65 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../bloc/gestores_cubit.dart';
 import '../../../../apparte/widgets/app_text.dart';
 import '../../../../apparte/widgets/filter_option.dart';
 import '../../../../apparte/widgets/filter_section_widget.dart';
+import '../bloc/categorias_cubit.dart';
 
-class GestorFilters extends StatefulWidget {
-  const GestorFilters({super.key});
+class CategoriaFilters extends StatefulWidget {
+  const CategoriaFilters({super.key});
 
   @override
-  State<GestorFilters> createState() => _GestorFiltersState();
+  State<CategoriaFilters> createState() => _CategoriaFiltersState();
 }
 
-class _GestorFiltersState extends State<GestorFilters> {
-  late FilterSectionModel _nivelSection;
+class _CategoriaFiltersState extends State<CategoriaFilters> {
   late FilterSectionModel _statusSection;
+  late FilterSectionModel _destaqueSection;
 
   @override
   void initState() {
     super.initState();
-    final cubit = context.read<GestoresCubit>();
-    final counts = cubit.getFilterCounts();
+    final cubit = context.read<CategoriasCubit>();
+    final filterOptions = cubit.filterOptions ?? {};
 
-    _nivelSection = FilterSectionModel(
-      id: 'nivel',
-      title: 'NÍVEL',
-      isRadio: false, // Múltipla escolha (Checkbox)
-      options: [
-        FilterOptionModel(
-          value: 'admin',
-          label: 'Admin',
-          emoji: '👤',
-          count: counts['nivel']?['admin'],
-          selected: cubit.currentNiveis.contains('admin'),
-        ),
-        FilterOptionModel(
-          value: 'comercial',
-          label: 'Comercial',
-          emoji: '💼',
-          count: counts['nivel']?['comercial'],
-          selected: cubit.currentNiveis.contains('comercial'),
-        ),
-        FilterOptionModel(
-          value: 'suporte',
-          label: 'Suporte',
-          emoji: '🛠️',
-          count: counts['nivel']?['suporte'],
-          selected: cubit.currentNiveis.contains('suporte'),
-        ),
-        FilterOptionModel(
-          value: 'financeiro',
-          label: 'Financeiro',
-          emoji: '💰',
-          count: counts['nivel']?['financeiro'],
-          selected: cubit.currentNiveis.contains('financeiro'),
-        ),
-      ],
-    );
-
+    // STATUS (Ativo/Inativo)
     _statusSection = FilterSectionModel(
-      id: 'status',
+      id: 'ativo',
       title: 'STATUS',
-      isRadio: true, // Única escolha (Radio)
+      isRadio: true, // Única escolha para simplificar
       options: [
         FilterOptionModel(
           value: '1',
           label: 'Ativo',
           emoji: '✅',
-          count: counts['status']?[1],
-          selected: cubit.currentStatusList.contains(1),
+          selected: cubit.currentAtivo == true,
         ),
         FilterOptionModel(
           value: '0',
           label: 'Inativo',
           emoji: '❌',
-          count: counts['status']?[0],
-          selected: cubit.currentStatusList.contains(0),
+          selected: cubit.currentAtivo == false,
+        ),
+      ],
+    );
+
+    // DESTAQUE
+    _destaqueSection = FilterSectionModel(
+      id: 'destaque',
+      title: 'DESTAQUE',
+      isRadio: true,
+      options: [
+        FilterOptionModel(
+          value: '1',
+          label: 'Sim',
+          emoji: '⭐',
+          selected: cubit.currentDestaque == true,
         ),
         FilterOptionModel(
-          value: '2',
-          label: 'Bloqueado',
-          emoji: '🔒',
-          count: counts['status']?[2],
-          selected: cubit.currentStatusList.contains(2),
+          value: '0',
+          label: 'Não',
+          emoji: '⚪',
+          selected: cubit.currentDestaque == false,
         ),
       ],
     );
@@ -113,19 +90,27 @@ class _GestorFiltersState extends State<GestorFilters> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const TextH2('Filtrar Gestores'),
-          const SizedBox(height: 20),
-          
-          FilterSectionWidget(
-            section: _nivelSection,
-            onOptionTap: (val) => _handleOptionTap(_nivelSection, val),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const TextH2('Filtrar Categorias'),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
           ),
-          
           const SizedBox(height: 20),
           
           FilterSectionWidget(
             section: _statusSection,
             onOptionTap: (val) => _handleOptionTap(_statusSection, val),
+          ),
+          const SizedBox(height: 20),
+          
+          FilterSectionWidget(
+            section: _destaqueSection,
+            onOptionTap: (val) => _handleOptionTap(_destaqueSection, val),
           ),
           
           const SizedBox(height: 32),
@@ -135,7 +120,7 @@ class _GestorFiltersState extends State<GestorFilters> {
               Expanded(
                 child: TextButton(
                   onPressed: () {
-                    context.read<GestoresCubit>().clearFilters();
+                    context.read<CategoriasCubit>().clearFilters();
                     Navigator.pop(context);
                   },
                   child: const Text('limpar'),
@@ -145,9 +130,12 @@ class _GestorFiltersState extends State<GestorFilters> {
               Expanded(
                 child: ElevatedButton(
                   onPressed: () {
-                    context.read<GestoresCubit>().applyFilters(
-                      niveis: _nivelSection.getSelectedValues(),
-                      status: _statusSection.getSelectedValues().map(int.parse).toList(),
+                    final statusVal = _statusSection.getSelectedValues().firstOrNull;
+                    final destaqueVal = _destaqueSection.getSelectedValues().firstOrNull;
+                    
+                    context.read<CategoriasCubit>().applyFilters(
+                      ativo: statusVal == '1' ? true : (statusVal == '0' ? false : null),
+                      destaque: destaqueVal == '1' ? true : (destaqueVal == '0' ? false : null),
                     );
                     Navigator.pop(context);
                   },

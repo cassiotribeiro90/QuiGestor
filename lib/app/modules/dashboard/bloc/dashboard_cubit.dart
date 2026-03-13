@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'dashboard_state.dart';
 import '../../../../shared/api/api_client.dart';
+import '../../../app_config.dart';
 
 class DashboardCubit extends Cubit<DashboardState> {
   final ApiClient _apiClient;
@@ -10,7 +11,7 @@ class DashboardCubit extends Cubit<DashboardState> {
   Future<void> fetchDashboard() async {
     emit(DashboardLoading());
     try {
-      final response = await _apiClient.get('/gestor/dashboard');
+      final response = await _apiClient.get(AppConfig.DASHBOARD);
       if (response.data['success'] == true) {
         emit(DashboardLoaded(response.data['data']));
       } else {

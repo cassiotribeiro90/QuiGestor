@@ -83,7 +83,7 @@ class FilterButton extends StatelessWidget {
               decoration: BoxDecoration(
                 color: AppColors.primary,
                 shape: BoxShape.circle,
-                border: const Border.all(color: AppColors.background, width: 2),
+                border: Border.all(color: AppColors.background, width: 2),
               ),
               constraints: const BoxConstraints(
                 minWidth: 20,

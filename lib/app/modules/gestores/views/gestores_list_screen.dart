@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:quigestor/apparte/widgets/loading_skeleton.dart';
 import 'package:quigestor/apparte/widgets/quigestor_card.dart';
-import 'package:quigestor/core/config/app_config.dart';
+import 'package:quigestor/app/app_config.dart';
 import 'package:quigestor/app/modules/gestores/bloc/gestores_cubit.dart';
 import 'package:quigestor/app/modules/gestores/bloc/gestores_state.dart';
 import 'package:quigestor/app/modules/gestores/models/gestor.dart';
 import 'package:quigestor/app/modules/gestores/views/gestor_form_screen.dart';
+import 'package:quigestor/app/modules/gestores/widgets/gestor_filters.dart';
 
 class GestoresListScreen extends StatefulWidget {
   const GestoresListScreen({super.key});
@@ -20,10 +21,6 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
   final ScrollController _scrollController = ScrollController();
 
   bool _isLoadingMore = false;
-  bool _showFiltros = false;
-  String? _filtroNivel;
-  int? _filtroStatus;
-
   bool _hasMorePages = true;
   int _currentPage = 1;
   static const int _perPage = AppConfig.defaultPerPage;
@@ -90,47 +87,17 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
 
   Future<void> _onRefresh() async {
     _searchController.clear();
-    setState(() {
-      _filtroNivel = null;
-      _filtroStatus = null;
-      _showFiltros = false;
-      _resetPagination();
-    });
-    
+    _resetPagination();
     await context.read<GestoresCubit>().fetchGestores(perPage: _perPage);
   }
 
-  void _aplicarFiltros() {
-    _resetPagination();
-    
-    final search = _searchController.text;
-    if (search.isNotEmpty) {
-      context.read<GestoresCubit>().applySearch(search);
-    } else {
-      context.read<GestoresCubit>().fetchGestores(
-        nivel: _filtroNivel,
-        status: _filtroStatus,
-        perPage: _perPage,
-      );
-    }
-  }
-
-  Color _getStatusColor(int status) {
-    switch (status) {
-      case 1: return Colors.green;
-      case 0: return Colors.grey;
-      case 2: return Colors.red;
-      default: return Colors.grey;
-    }
-  }
-
-  String _getStatusLabel(int status) {
-    switch (status) {
-      case 1: return 'Ativo';
-      case 0: return 'Inativo';
-      case 2: return 'Bloqueado';
-      default: return 'Desconhecido';
-    }
+  void _showFilters() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const GestorFilters(),
+    );
   }
 
   @override
@@ -140,93 +107,39 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Gestores'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.filter_alt_outlined),
+            onPressed: _showFilters,
+          ),
+        ],
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(120),
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: 'Buscar gestores por nome, email...',
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: Icon(
-                            _showFiltros ? Icons.filter_list_off : Icons.filter_list,
-                          ),
-                          onPressed: () {
-                            setState(() => _showFiltros = !_showFiltros);
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.clear),
-                          onPressed: () {
-                            _searchController.clear();
-                            context.read<GestoresCubit>().clearFilters();
-                          },
-                        ),
-                      ],
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onChanged: (value) {
-                    _resetPagination();
-                    if (value.isEmpty) {
-                      context.read<GestoresCubit>().clearFilters();
-                    } else {
-                      context.read<GestoresCubit>().applySearch(value);
-                    }
-                  },
+          preferredSize: const Size.fromHeight(80),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Buscar gestores por nome, email...',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                          context.read<GestoresCubit>().applySearch('');
+                        },
+                      )
+                    : null,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              if (_showFiltros)
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  child: Row(
-                    children: [
-                      FilterChip(
-                        label: const Text('Admin'),
-                        selected: _filtroNivel == 'admin',
-                        onSelected: (selected) {
-                          setState(() {
-                            _filtroNivel = selected ? 'admin' : null;
-                          });
-                          _aplicarFiltros();
-                        },
-                      ),
-                      const SizedBox(width: 8),
-                      FilterChip(
-                        label: const Text('Comercial'),
-                        selected: _filtroNivel == 'comercial',
-                        onSelected: (selected) {
-                          setState(() {
-                            _filtroNivel = selected ? 'comercial' : null;
-                          });
-                          _aplicarFiltros();
-                        },
-                      ),
-                      const SizedBox(width: 8),
-                      FilterChip(
-                        label: const Text('Ativo'),
-                        selected: _filtroStatus == 1,
-                        onSelected: (selected) {
-                          setState(() {
-                            _filtroStatus = selected ? 1 : null;
-                          });
-                          _aplicarFiltros();
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-            ],
+              onChanged: (value) {
+                _resetPagination();
+                context.read<GestoresCubit>().applySearch(value);
+              },
+            ),
           ),
         ),
       ),
@@ -413,5 +326,23 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
         cubit.refreshList();
       }
     });
+  }
+
+  Color _getStatusColor(int status) {
+    switch (status) {
+      case 1: return Colors.green;
+      case 0: return Colors.grey;
+      case 2: return Colors.red;
+      default: return Colors.grey;
+    }
+  }
+
+  String _getStatusLabel(int status) {
+    switch (status) {
+      case 1: return 'Ativo';
+      case 0: return 'Inativo';
+      case 2: return 'Bloqueado';
+      default: return 'Desconhecido';
+    }
   }
 }
