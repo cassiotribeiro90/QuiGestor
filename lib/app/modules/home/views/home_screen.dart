@@ -5,13 +5,17 @@ import '../widgets/side_menu.dart';
 import '../../theme/bloc/theme_cubit.dart';
 import '../../theme/bloc/theme_state.dart';
 import '../../dashboard/views/DashboardScreen.dart';
+import '../../gestores/views/gestores_list_screen.dart';
 import '../../gestores/views/gestor_form_screen.dart';
 import '../../gestores/models/gestor.dart';
+import '../../lojas/views/lojas_list_screen.dart';
 import '../../lojas/views/loja_form_screen.dart';
 import '../../lojas/models/loja.dart';
 import '../../lojas/bloc/lojas_cubit.dart';
 import '../../gestores/bloc/gestores_cubit.dart';
 import '../../categorias/bloc/categorias_cubit.dart';
+import '../../produtos/views/produtos_list_screen.dart';
+import '../../produtos/bloc/produtos_cubit.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -86,9 +90,7 @@ class HomeScreenState extends State<HomeScreen> {
       setState(() {
         _navigationStack.removeLast();
         final last = _navigationStack.last;
-
-        // Recriamos o conteúdo ao voltar para garantir o refresh dos dados
-        _currentContent = _buildPageContent(last['title'], last['content']);
+        _currentContent = last['content'];
         _currentTitle = last['title'];
       });
     }
@@ -98,14 +100,14 @@ class HomeScreenState extends State<HomeScreen> {
     setState(() {
       _currentContent = _buildPageContent(title, content);
       _currentTitle = title;
-      _navigationStack.add({'title': title, 'content': content});
+      _navigationStack.add({'title': title, 'content': _currentContent});
     });
   }
 
   Widget _buildPageContent(String title, Widget content) {
     final apiClient = context.read<ApiClient>();
     
-    if (title == 'Todas as Lojas') {
+    if (content is LojasListScreen) {
       return BlocProvider(
         key: ValueKey('lojas_${DateTime.now().millisecondsSinceEpoch}'),
         create: (_) => LojasCubit(apiClient)..fetchLojas(perPage: 10),
@@ -113,7 +115,7 @@ class HomeScreenState extends State<HomeScreen> {
       );
     }
     
-    if (title == 'Gestores') {
+    if (content is GestoresListScreen) {
       return BlocProvider(
         key: ValueKey('gestores_${DateTime.now().millisecondsSinceEpoch}'),
         create: (_) => GestoresCubit(apiClient)..fetchGestores(perPage: 10),
@@ -125,6 +127,28 @@ class HomeScreenState extends State<HomeScreen> {
       return BlocProvider(
         key: ValueKey('categorias_${DateTime.now().millisecondsSinceEpoch}'),
         create: (_) => CategoriasCubit(apiClient)..fetchCategorias(),
+        child: content,
+      );
+    }
+
+    if (content is ProdutosListScreen) {
+      return BlocProvider(
+        key: ValueKey('produtos_${content.lojaId}_${DateTime.now().millisecondsSinceEpoch}'),
+        create: (_) => ProdutosCubit(apiClient, content.lojaId)..fetchProdutos(),
+        child: content,
+      );
+    }
+
+    if (content is LojaFormScreen) {
+      return BlocProvider.value(
+        value: context.read<LojasCubit>(),
+        child: content,
+      );
+    }
+
+    if (content is GestorFormScreen) {
+      return BlocProvider.value(
+        value: context.read<GestoresCubit>(),
         child: content,
       );
     }
@@ -143,6 +167,13 @@ class HomeScreenState extends State<HomeScreen> {
     navigateTo(
       LojaFormScreen(loja: loja, onSaved: goBack),
       loja == null ? 'Nova Loja' : 'Editar Loja',
+    );
+  }
+
+  void openProdutosList({required int lojaId, required String lojaNome}) {
+    navigateTo(
+      ProdutosListScreen(lojaId: lojaId, lojaNome: lojaNome),
+      'Cardápio - $lojaNome',
     );
   }
 }

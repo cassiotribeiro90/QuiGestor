@@ -24,6 +24,7 @@ class Loja {
   final String? whatsapp;
   final String? email;
   final String? instagram;
+  final int totalProdutos;
   
   // Novos campos de endereço
   final String? cep;
@@ -56,6 +57,7 @@ class Loja {
     this.whatsapp,
     this.email,
     this.instagram,
+    this.totalProdutos = 0,
     this.cep,
     this.logradouro,
     this.numero,
@@ -88,6 +90,7 @@ class Loja {
       whatsapp: json['whatsapp'],
       email: json['email'],
       instagram: json['instagram'],
+      totalProdutos: json['total_produtos'] ?? 0,
       cep: json['cep'],
       logradouro: json['logradouro'],
       numero: json['numero'],
@@ -121,6 +124,7 @@ class Loja {
       'whatsapp': whatsapp,
       'email': email,
       'instagram': instagram,
+      'total_produtos': totalProdutos,
       'cep': cep,
       'logradouro': logradouro,
       'numero': numero,

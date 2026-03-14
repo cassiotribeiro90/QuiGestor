@@ -6,7 +6,7 @@ import 'package:quigestor/app/app_config.dart';
 import 'package:quigestor/app/modules/gestores/bloc/gestores_cubit.dart';
 import 'package:quigestor/app/modules/gestores/bloc/gestores_state.dart';
 import 'package:quigestor/app/modules/gestores/models/gestor.dart';
-import 'package:quigestor/app/modules/gestores/views/gestor_form_screen.dart';
+import 'package:quigestor/app/modules/home/views/home_screen.dart';
 import 'package:quigestor/app/modules/gestores/widgets/gestor_filters.dart';
 
 class GestoresListScreen extends StatefulWidget {
@@ -46,11 +46,6 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
 
   void _onScroll() {
     if (!_hasMorePages || _isLoadingMore) return;
-
-    if (_scrollController.position.maxScrollExtent < 100 && _hasMorePages) {
-      _loadMore();
-      return;
-    }
 
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
@@ -310,16 +305,10 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
   }
 
   void _abrirFormGestor(BuildContext context, {Gestor? gestor}) {
-    final cubit = context.read<GestoresCubit>();
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => GestorFormScreen(gestor: gestor)),
-    ).then((atualizou) {
-      if (atualizou == true) {
-        _resetPagination();
-        cubit.refreshList();
-      }
-    });
+    final homeState = context.findAncestorStateOfType<HomeScreenState>();
+    if (homeState != null) {
+      homeState.openGestorForm(gestor: gestor);
+    }
   }
 
   Color _getStatusColor(int status) {

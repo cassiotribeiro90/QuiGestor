@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../home/views/home_screen.dart';
 import '../bloc/lojas_cubit.dart';
 import '../models/loja.dart';
 
@@ -198,7 +199,11 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
     }
 
     if (success && mounted) {
-      Navigator.pop(context, true); // ✅ Retorna true
+      if (widget.onSaved != null) {
+        widget.onSaved!();
+      } else {
+        Navigator.pop(context, true);
+      }
     }
     
     if (mounted) setState(() => _isSaving = false);
@@ -228,10 +233,25 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
     final success = await context.read<LojasCubit>().deleteLoja(widget.loja!.id);
     
     if (success && mounted) {
-      Navigator.pop(context, true); // ✅ Retorna true
+      if (widget.onSaved != null) {
+        widget.onSaved!();
+      } else {
+        Navigator.pop(context, true);
+      }
     }
     
     if (mounted) setState(() => _isDeleting = false);
+  }
+
+  void _abrirCardapio(BuildContext context) {
+    // ✅ Navegação correta usando o HomeScreenState para manter o menu lateral
+    final homeState = context.findAncestorStateOfType<HomeScreenState>();
+    if (homeState != null) {
+      homeState.openProdutosList(
+        lojaId: widget.loja!.id,
+        lojaNome: widget.loja!.nome,
+      );
+    }
   }
 
   @override
@@ -370,6 +390,97 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
                     ),
                   ),
                 ),
+                
+                // ===== SEÇÃO PRODUTOS/CARDÁPIO =====
+                if (_isEditing) ...[
+                  const SizedBox(height: 24),
+                  Card(
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Título da seção
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(
+                                  Icons.restaurant_menu,
+                                  color: theme.colorScheme.primary,
+                                  size: 20,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Produtos / Cardápio',
+                                      style: theme.textTheme.titleMedium?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Gerencie os produtos e itens do cardápio desta loja',
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          
+                          const SizedBox(height: 20),
+                          
+                          // Botão para acessar cardápio
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: () => _abrirCardapio(context),
+                              icon: const Icon(Icons.restaurant_menu_outlined),
+                              label: const Text('Gerenciar Cardápio'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: theme.colorScheme.primary,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                          ),
+                          
+                          const SizedBox(height: 8),
+                          
+                          // Informação adicional
+                          Center(
+                            child: Text(
+                              'Você será redirecionado para a gestão completa do cardápio',
+                              style: TextStyle(
+                                color: Colors.grey[500],
+                                fontSize: 11,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+
                 if (_isEditing) ...[
                   const SizedBox(height: 24),
                   _buildDeleteButton(),
@@ -425,7 +536,7 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
     return Center(
       child: TextButton.icon(
         onPressed: _isDeleting ? null : _deletar,
-        icon: _isDeleting ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.delete_outline, color: Colors.red),
+        icon: _isDeleting ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.delete_outline, size: 18, color: Colors.red),
         label: Text(_isDeleting ? 'Excluindo...' : 'Excluir loja', style: const TextStyle(color: Colors.red)),
         style: TextButton.styleFrom(backgroundColor: Colors.red.withOpacity(0.05), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))),
       ),
