@@ -114,74 +114,78 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   const SizedBox(height: 16),
                   // === CARDS DE RESUMO USANDO WRAP ===
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      _buildWrapItem(
-                        context,
-                        MainCardDash(
-                          titulo: 'Lojas',
-                          valor: '${lojas['total']}',
-                          icone: Icons.store,
-                          cor: Colors.blue,
+                  Center(
+                    child: Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        _buildWrapItem(
+                          context,
+                          MainCardDash(
+                            titulo: 'Lojas',
+                            valor: '${lojas['total']}',
+                            icone: Icons.store,
+                            cor: Colors.blue,
+                          ),
                         ),
-                      ),
-                      _buildWrapItem(
-                        context,
-                        MainCardDash(
-                          titulo: 'Lojas Ativas',
-                          valor: '${lojas['ativas']}',
-                          icone: Icons.check_circle_outline,
-                          cor: Colors.indigo,
+                        _buildWrapItem(
+                          context,
+                          MainCardDash(
+                            titulo: 'Lojas Ativas',
+                            valor: '${lojas['ativas']}',
+                            icone: Icons.check_circle_outline,
+                            cor: Colors.indigo,
+                          ),
                         ),
-                      ),
-                      _buildWrapItem(
-                        context,
-                        MainCardDash(
-                          titulo: 'Pedidos Hoje',
-                          valor: '${pedidos['hoje']}',
-                          icone: Icons.today,
-                          cor: Colors.green,
+                        _buildWrapItem(
+                          context,
+                          MainCardDash(
+                            titulo: 'Pedidos Hoje',
+                            valor: '${pedidos['hoje']}',
+                            icone: Icons.today,
+                            cor: Colors.green,
+                          ),
                         ),
-                      ),
-                      _buildWrapItem(
-                        context,
-                        MainCardDash(
-                          titulo: 'Esta Semana',
-                          valor: '${pedidos['semana']}',
-                          icone: Icons.calendar_view_week,
-                          cor: Colors.orange,
+                        _buildWrapItem(
+                          context,
+                          MainCardDash(
+                            titulo: 'Esta Semana',
+                            valor: '${pedidos['semana']}',
+                            icone: Icons.calendar_view_week,
+                            cor: Colors.orange,
+                          ),
                         ),
-                      ),
-                      _buildWrapItem(
-                        context,
-                        MainCardDash(
-                          titulo: 'Este Mês',
-                          valor: '${pedidos['mes']}',
-                          icone: Icons.calendar_month,
-                          cor: Colors.purple,
+                        _buildWrapItem(
+                          context,
+                          MainCardDash(
+                            titulo: 'Este Mês',
+                            valor: '${pedidos['mes']}',
+                            icone: Icons.calendar_month,
+                            cor: Colors.purple,
+                          ),
                         ),
-                      ),
-                      _buildWrapItem(
-                        context,
-                        MainCardDash(
-                          titulo: 'Este Ano',
-                          valor: '${pedidos['ano']}',
-                          icone: Icons.calendar_today,
-                          cor: Colors.teal,
+                        _buildWrapItem(
+                          context,
+                          MainCardDash(
+                            titulo: 'Este Ano',
+                            valor: '${pedidos['ano']}',
+                            icone: Icons.calendar_today,
+                            cor: Colors.teal,
+                          ),
                         ),
-                      ),
-                      _buildWrapItem(
-                        context,
-                        MainCardDash(
-                          titulo: 'Total Acumulado',
-                          valor: '${pedidos['total']}',
-                          icone: Icons.history,
-                          cor: Colors.brown,
+                        _buildWrapItem(
+                          context,
+                          MainCardDash(
+                            titulo: 'Total Acumulado',
+                            valor: '${pedidos['total']}',
+                            icone: Icons.history,
+                            cor: Colors.brown,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
 
                   const SizedBox(height: 24),
@@ -346,34 +350,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ? (screenWidth - 260 - 32)  // sidebar 260px + padding 32px
         : (screenWidth - 32);        // apenas padding
 
-    // Log para debug (remover em produção)
-    print('📊 [Layout] Screen: $screenWidth, Available: $availableWidth, isWeb: $isWeb');
-
     int itemsPerRow = 2;
-    double maxItemWidth;
-
     if (isWeb) {
       if (availableWidth > 850) {
+        itemsPerRow = 4;
+      } else if (availableWidth > 600) {
         itemsPerRow = 3;
-      } else if (availableWidth > 700) {
-        itemsPerRow = 3;
-      } else if (availableWidth > 500) {
-        itemsPerRow = 2;
       } else {
         itemsPerRow = 2;
       }
     } else {
-      // Mobile: 1 ou 2 cards
-      itemsPerRow = screenWidth > 500 ? 2 : 2;
-      maxItemWidth = 200;
+      itemsPerRow = availableWidth > 500 ? 3 : 2;
     }
 
-    final idealWidth = (availableWidth > 900 ? 220 : (availableWidth / itemsPerRow) - 32).toDouble();
-
-
+    final spacing = 12.0;
+    final totalSpacing = (itemsPerRow - 1) * spacing;
+    final itemWidth = (availableWidth - totalSpacing) / itemsPerRow;
 
     return SizedBox(
-      width: idealWidth,
+      width: itemWidth,
       child: child,
     );
   }

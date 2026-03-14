@@ -99,7 +99,7 @@ class CategoriaCard extends StatelessWidget {
                     Text(
                       categoria.descricao!,
                       maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      overflow: TextOverflow.fade,
                       style: TextStyle(
                         color: Colors.grey[600],
                         fontSize: 13,

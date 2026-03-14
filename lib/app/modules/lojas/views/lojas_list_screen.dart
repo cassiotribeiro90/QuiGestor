@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:quigestor/apparte/widgets/app_text.dart';
 import '../../../../apparte/widgets/loading_skeleton.dart';
 import '../../../../apparte/widgets/quigestor_card.dart';
 import '../../../app_config.dart';
@@ -68,10 +69,10 @@ class _LojasListScreenState extends State<LojasListScreen> {
     });
 
     await context.read<LojasCubit>().fetchLojas(
-      page: _currentPage,
-      perPage: _perPage,
-      isLoadMore: true,
-    );
+          page: _currentPage,
+          perPage: _perPage,
+          isLoadMore: true,
+        );
 
     if (mounted) {
       setState(() {
@@ -184,10 +185,13 @@ class _LojasListScreenState extends State<LojasListScreen> {
                       color: Colors.grey[400],
                     ),
                     const SizedBox(height: 16),
-                    Text('Nenhuma loja encontrada', style: theme.textTheme.titleMedium),
+                    Text('Nenhuma loja encontrada',
+                        style: theme.textTheme.titleMedium),
                     const SizedBox(height: 8),
                     Text(
-                      state.lojas.isEmpty ? 'Comece criando uma loja' : 'Tente outros filtros de busca',
+                      state.lojas.isEmpty
+                          ? 'Comece criando uma loja'
+                          : 'Tente outros filtros de busca',
                       style: TextStyle(color: Colors.grey[600]),
                     ),
                   ],
@@ -199,7 +203,7 @@ class _LojasListScreenState extends State<LojasListScreen> {
               onRefresh: _onRefresh,
               child: ListView.builder(
                 controller: _scrollController,
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(0),
                 itemCount: lojas.length + (_isLoadingMore ? 1 : 0),
                 itemBuilder: (context, index) {
                   if (index == lojas.length) {
@@ -275,7 +279,8 @@ class _LojasListScreenState extends State<LojasListScreen> {
                                         ),
                                         decoration: BoxDecoration(
                                           color: Colors.amber.withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
                                         ),
                                         child: const Text(
                                           '⭐',
@@ -288,7 +293,8 @@ class _LojasListScreenState extends State<LojasListScreen> {
                                         vertical: 4,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: loja.statusColor.withOpacity(0.1),
+                                        color:
+                                            loja.statusColor.withOpacity(0.1),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Text(
@@ -311,27 +317,24 @@ class _LojasListScreenState extends State<LojasListScreen> {
                                       color: Colors.grey[600],
                                     ),
                                     const SizedBox(width: 4),
-                                    Text(
+                                    TextBody2(
                                       loja.categoria,
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 13,
-                                      ),
                                     ),
-                                    const SizedBox(width: 12),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
                                     Icon(
                                       Icons.location_on_outlined,
                                       size: 14,
                                       color: Colors.grey[600],
                                     ),
                                     const SizedBox(width: 4),
-                                    Text(
+                                    TextBody2(
                                       '${loja.cidade}/${loja.uf}',
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 13,
-                                      ),
-                                    ),
+                                      maxLines: 1,
+                                    )
                                   ],
                                 ),
                                 const SizedBox(height: 2),
@@ -343,12 +346,8 @@ class _LojasListScreenState extends State<LojasListScreen> {
                                       color: Colors.grey[600],
                                     ),
                                     const SizedBox(width: 4),
-                                    Text(
+                                    TextBody3(
                                       '${loja.tempoEntregaMin}-${loja.tempoEntregaMax} min',
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 13,
-                                      ),
                                     ),
                                     const SizedBox(width: 12),
                                     Icon(

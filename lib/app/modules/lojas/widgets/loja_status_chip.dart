@@ -1,5 +1,5 @@
-// lojas/widgets/loja_status_chip.dart
 import 'package:flutter/material.dart';
+import '../../../../apparte/widgets/app_text.dart';
 
 class LojaStatusChip extends StatelessWidget {
   final String status;
@@ -29,18 +29,15 @@ class LojaStatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: _getStatusColor().withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
       ),
-      child: Text(
+      child: TextBody3(
         _getStatusLabel(),
-        style: TextStyle(
-          color: _getStatusColor(),
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
+        color: _getStatusColor(),
+        fontWeight: FontWeight.w600,
       ),
     );
   }

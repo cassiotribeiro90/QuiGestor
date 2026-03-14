@@ -30,6 +30,11 @@ class AppTextStyles {
     fontWeight: FontWeight.normal,
   );
 
+  static const TextStyle body3 = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.normal,
+  );
+
   static const TextStyle button = TextStyle(
     fontSize: 16,
     fontWeight: FontWeight.w600,

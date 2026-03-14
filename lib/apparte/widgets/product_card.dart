@@ -48,7 +48,7 @@ class ProductCard extends StatelessWidget {
                     title,
                     style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                     maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    overflow: TextOverflow.fade,
                   ),
                   if (subtitle != null) ...[
                     const SizedBox(height: 4),
@@ -56,7 +56,7 @@ class ProductCard extends StatelessWidget {
                       subtitle!,
                       style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                       maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                      overflow: TextOverflow.fade,
                     ),
                   ],
                   if (price != null) ...[

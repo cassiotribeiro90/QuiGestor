@@ -152,4 +152,16 @@ class Loja {
       default: return Colors.grey;
     }
   }
+
+  /// Extrai apenas o emoji do texto da categoria (ex: "Pizzarias 🍕" -> "🍕")
+  String get categoriaEmoji {
+    final regex = RegExp(r'(\p{Emoji})', unicode: true);
+    final match = regex.firstMatch(categoria);
+    return match?.group(0) ?? '🏪';
+  }
+  
+  /// Nome da categoria sem o emoji (ex: "Pizzarias 🍕" -> "Pizzarias")
+  String get categoriaNome {
+    return categoria.replaceAll(RegExp(r'\p{Emoji}', unicode: true), '').trim();
+  }
 }

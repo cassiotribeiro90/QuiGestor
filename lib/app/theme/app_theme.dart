@@ -3,6 +3,12 @@ import 'app_colors.dart';
 import 'app_text_styles.dart';
 
 class AppTheme {
+  static const List<String> _fontFallback = [
+    'Roboto',
+    'Apple Color Emoji',
+    'Segoe UI Emoji',
+  ];
+
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
@@ -16,6 +22,7 @@ class AppTheme {
       ),
       scaffoldBackgroundColor: AppColors.background,
       fontFamily: AppTextStyles.fontFamily,
+      fontFamilyFallback: _fontFallback,
       
       textTheme: const TextTheme(
         displayLarge: TextStyle(color: AppColors.textPrimary),
@@ -115,6 +122,7 @@ class AppTheme {
       ),
       scaffoldBackgroundColor: AppColors.backgroundDark,
       fontFamily: AppTextStyles.fontFamily,
+      fontFamilyFallback: _fontFallback,
 
       textTheme: const TextTheme(
         displayLarge: TextStyle(color: Colors.white),

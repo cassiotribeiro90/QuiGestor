@@ -46,6 +46,8 @@ class AppText extends StatelessWidget {
         effectiveColor = theme.textTheme.bodyLarge?.color;
       } else if (style == AppTextStyles.body2) {
         effectiveColor = theme.textTheme.bodyMedium?.color;
+      } else if (style == AppTextStyles.body3) {
+        effectiveColor = theme.textTheme.bodySmall?.color;
       } else if (style == AppTextStyles.caption) {
         effectiveColor = theme.textTheme.bodySmall?.color;
       } else if (style == AppTextStyles.button) {
@@ -58,6 +60,7 @@ class AppText extends StatelessWidget {
       fontSize: fontSize,
       fontWeight: fontWeight,
       fontFamily: AppTextStyles.fontFamily,
+      overflow: TextOverflow.fade,
     );
 
     if (_isSelectable) {
@@ -65,15 +68,15 @@ class AppText extends StatelessWidget {
         text,
         style: baseStyle,
         textAlign: textAlign,
-        maxLines: maxLines,
+        maxLines: maxLines ?? 1,
       );
     } else {
       return Text(
         text,
         style: baseStyle,
         textAlign: textAlign,
-        maxLines: maxLines,
-        overflow: overflow,
+        maxLines: maxLines ?? 1,
+        overflow: overflow ?? TextOverflow.fade,
       );
     }
   }
@@ -107,7 +110,7 @@ class TextH1 extends StatelessWidget {
       maxLines: maxLines,
       fontWeight: fontWeight,
       selectable: selectable,
-      overflow: TextOverflow.ellipsis,
+      overflow: TextOverflow.fade,
     );
   }
 }
@@ -140,7 +143,7 @@ class TextH2 extends StatelessWidget {
       maxLines: maxLines,
       fontWeight: fontWeight,
       selectable: selectable,
-      overflow: TextOverflow.ellipsis,
+      overflow: TextOverflow.fade,
     );
   }
 }
@@ -173,7 +176,7 @@ class TextH3 extends StatelessWidget {
       maxLines: maxLines,
       fontWeight: fontWeight,
       selectable: selectable,
-      overflow: TextOverflow.ellipsis,
+      overflow: TextOverflow.fade,
     );
   }
 }
@@ -206,7 +209,7 @@ class TextBody1 extends StatelessWidget {
       maxLines: maxLines,
       fontWeight: fontWeight,
       selectable: selectable,
-      overflow: TextOverflow.ellipsis,
+      overflow: TextOverflow.fade,
     );
   }
 }
@@ -239,7 +242,40 @@ class TextBody2 extends StatelessWidget {
       maxLines: maxLines,
       fontWeight: fontWeight,
       selectable: selectable,
-      overflow: TextOverflow.ellipsis,
+      overflow: TextOverflow.fade,
+    );
+  }
+}
+
+class TextBody3 extends StatelessWidget {
+  final String text;
+  final Color? color;
+  final TextAlign? textAlign;
+  final int? maxLines;
+  final FontWeight? fontWeight;
+  final bool selectable;
+
+  const TextBody3(
+    this.text, {
+    super.key,
+    this.color,
+    this.textAlign,
+    this.maxLines,
+    this.fontWeight,
+    this.selectable = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AppText(
+      text,
+      style: AppTextStyles.body3,
+      color: color,
+      textAlign: textAlign,
+      maxLines: maxLines,
+      fontWeight: fontWeight,
+      selectable: selectable,
+      overflow: TextOverflow.fade,
     );
   }
 }
@@ -269,6 +305,7 @@ class AppTextButton extends StatelessWidget {
       textAlign: textAlign,
       fontWeight: fontWeight,
       selectable: selectable,
+      overflow: TextOverflow.fade,
     );
   }
 }
@@ -301,7 +338,7 @@ class TextCaption extends StatelessWidget {
       maxLines: maxLines,
       fontWeight: fontWeight,
       selectable: selectable,
-      overflow: TextOverflow.ellipsis,
+      overflow: TextOverflow.fade,
     );
   }
 }
