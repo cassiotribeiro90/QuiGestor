@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../../../apparte/widgets/quigestor_card.dart';
 import '../../../../apparte/widgets/app_text.dart';
@@ -31,37 +32,73 @@ class LojaCardItem extends StatelessWidget {
     }
   }
 
+  /// Ajusta a URL apenas se detectar localhost ou 10.0.2.2,
+  /// garantindo compatibilidade entre Emulador Android e Web/iOS.
+  String _ajustarUrl(String url) {
+    if (url.isEmpty) return url;
+
+    // Se não for uma URL de desenvolvimento local, retorna sem mexer
+    if (!url.contains('localhost') && !url.contains('10.0.2.2')) {
+      return url;
+    }
+
+    final bool isAndroid = !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+
+    if (isAndroid) {
+      return url.replaceAll('localhost', '10.0.2.2');
+    } else {
+      return url.replaceAll('10.0.2.2', 'localhost');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final statusColor = _getStatusColor();
+    final String? logoUrl = (loja.logo != null && loja.logo!.isNotEmpty) 
+        ? _ajustarUrl(loja.logo!) 
+        : null;
 
     return Padding(
-      // 🔥 Padding externo reduzido: 12px em vez de 16px
       padding: const EdgeInsets.only(bottom: 12),
       child: QuiGestorCard(
         onTap: onTap,
-        // 🔥 Padding interno do card reduzido: 12px em vez de 16px
         padding: const EdgeInsets.all(12),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ========== EMOJI/ÍCONE DA CATEGORIA ==========
+            // ========== LOGO OU EMOJI DA CATEGORIA ==========
             Container(
-              width: 48, // 🔥 Reduzido de 56px para 48px
+              width: 48,
               height: 48,
               decoration: BoxDecoration(
                 color: statusColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10), // 🔥 Reduzido de 12px para 10px
+                borderRadius: BorderRadius.circular(10),
               ),
               child: Center(
-                child: AppText(
-                  loja.categoriaEmoji, // 🔥 Agora extrai só o emoji!
-                  fontSize: 24, // 🔥 Aumentado para destacar o emoji
-                ),
+                child: logoUrl != null
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          logoUrl,
+                          width: 48,
+                          height: 48,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            debugPrint('❌ Erro de imagem [${loja.nome}]: $logoUrl');
+                            return AppText(
+                              loja.categoriaEmoji,
+                              fontSize: 24,
+                            );
+                          },
+                        ),
+                      )
+                    : AppText(
+                        loja.categoriaEmoji,
+                        fontSize: 24,
+                      ),
               ),
             ),
             
-            // 🔥 Espaço reduzido: 12px em vez de 16px
             const SizedBox(width: 12),
 
             // ========== INFORMAÇÕES DA LOJA ==========
@@ -69,24 +106,22 @@ class LojaCardItem extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Linha 1: Nome + Status + Destaque
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // Nome da loja
                       Expanded(
                         child: TextH3(
                           loja.nome,
+                          maxLines: 1,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       
-                      // Badge de destaque (se for destaque)
                       if (loja.destaque) ...[
                         Container(
                           margin: const EdgeInsets.only(right: 4),
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 6, // 🔥 Reduzido
+                            horizontal: 6,
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
@@ -100,36 +135,29 @@ class LojaCardItem extends StatelessWidget {
                         ),
                       ],
                       
-                      // Badge de status (usando o chip separado)
                       LojaStatusChip(status: loja.status),
                     ],
                   ),
                   
-                  // 🔥 Espaço reduzido: 4px em vez de 8px
                   const SizedBox(height: 4),
 
-                  // Linha 2: Categoria (sem emoji) + Cidade
                   Row(
                     children: [
-                      // Ícone de categoria
                       Icon(
                         Icons.category_outlined,
-                        size: 13, // 🔥 Reduzido
+                        size: 13,
                         color: Colors.grey[600],
                       ),
                       const SizedBox(width: 4),
-                      
-                      // Nome da categoria (sem emoji)
                       Expanded(
                         child: TextBody3(
-                          loja.categoriaNome, // 🔥 Novo getter
+                          loja.categoriaNome,
                           color: Colors.grey[600],
                         ),
                       ),
                       
                       const SizedBox(width: 8),
                       
-                      // Ícone de localização
                       Icon(
                         Icons.location_on_outlined,
                         size: 13,
@@ -137,7 +165,6 @@ class LojaCardItem extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       
-                      // Cidade/UF
                       TextBody3(
                         '${loja.cidade}/${loja.uf}',
                         color: Colors.grey[600],
@@ -145,37 +172,29 @@ class LojaCardItem extends StatelessWidget {
                     ],
                   ),
                   
-                  // 🔥 Espaço reduzido: 2px em vez de 4px
                   const SizedBox(height: 2),
 
-                  // Linha 3: Tempo de entrega + Pedido mínimo
                   Row(
                     children: [
-                      // Ícone de tempo
                       Icon(
                         Icons.access_time_outlined,
                         size: 13,
                         color: Colors.grey[600],
                       ),
                       const SizedBox(width: 4),
-                      
-                      // Tempo de entrega
                       TextBody3(
                         _formatarTempoEntrega(),
                         color: Colors.grey[600],
                       ),
                       
-                      const SizedBox(width: 12), // 🔥 Reduzido de 16px para 12px
+                      const SizedBox(width: 12),
                       
-                      // Ícone de dinheiro
                       Icon(
                         Icons.attach_money_outlined,
                         size: 13,
                         color: Colors.grey[600],
                       ),
                       const SizedBox(width: 4),
-                      
-                      // Pedido mínimo
                       TextBody3(
                         'R\$ ${loja.pedidoMinimo.toStringAsFixed(2)}',
                         color: Colors.grey[600],
@@ -187,14 +206,12 @@ class LojaCardItem extends StatelessWidget {
               ),
             ),
             
-            // ========== SETA DE NAVEGAÇÃO ==========
             Padding(
-              // 🔥 Ajuste fino na posição da seta
               padding: const EdgeInsets.only(left: 8),
               child: Icon(
                 Icons.chevron_right_rounded,
                 color: Colors.grey[400],
-                size: 20, // 🔥 Reduzido de 24px para 20px
+                size: 20,
               ),
             ),
           ],

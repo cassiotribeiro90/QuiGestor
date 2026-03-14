@@ -5,8 +5,9 @@ import '../models/loja.dart';
 
 class LojaFormScreen extends StatefulWidget {
   final Loja? loja;
+  final VoidCallback? onSaved;
 
-  const LojaFormScreen({super.key, this.loja});
+  const LojaFormScreen({super.key, this.loja, this.onSaved});
 
   @override
   State<LojaFormScreen> createState() => _LojaFormScreenState();

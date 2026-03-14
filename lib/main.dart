@@ -31,40 +31,43 @@ class QuiGestorApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider<ThemeCubit>(create: (_) => ThemeCubit()),
-        BlocProvider<AuthCubit>(create: (_) => AuthCubit(apiClient)),
-        BlocProvider<DashboardCubit>(create: (_) => DashboardCubit(apiClient)),
-        BlocProvider<HomeCubit>(create: (_) => HomeCubit()),
-        BlocProvider<GestoresCubit>(create: (_) => GestoresCubit(apiClient)),
-        BlocProvider<LojaCubit>(create: (_) => LojaCubit(apiClient)),
-        BlocProvider<LojasCubit>(create: (_) => LojasCubit(apiClient)),
-        BlocProvider<CategoriasCubit>(create: (_) => CategoriasCubit(apiClient)),
-        BlocProvider<UsuarioCubit>(create: (_) => UsuarioCubit(apiClient)),
-      ],
-      child: BlocBuilder<ThemeCubit, ThemeState>(
-        builder: (context, themeState) {
-          return MaterialApp(
-            title: 'QuiGestor',
-            debugShowCheckedModeBanner: false,
-            theme: AppTheme.lightTheme,
-            darkTheme: AppTheme.darkTheme,
-            themeMode: themeState.themeMode,
-            scrollBehavior: const MaterialScrollBehavior().copyWith(
-              dragDevices: {
-                PointerDeviceKind.mouse,
-                PointerDeviceKind.touch,
-                PointerDeviceKind.stylus,
-                PointerDeviceKind.unknown,
-              },
-            ),
-            initialRoute: Routes.SPLASH,
-            onGenerateRoute: AppRouter.onGenerateRoute,
-            navigatorObservers: [AuthObserver()],
-            navigatorKey: ApiClient.navigatorKey,
-          );
-        },
+    return RepositoryProvider.value(
+      value: apiClient,
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider<ThemeCubit>(create: (_) => ThemeCubit()),
+          BlocProvider<AuthCubit>(create: (_) => AuthCubit(apiClient)),
+          BlocProvider<DashboardCubit>(create: (_) => DashboardCubit(apiClient)),
+          BlocProvider<HomeCubit>(create: (_) => HomeCubit()),
+          BlocProvider<GestoresCubit>(create: (_) => GestoresCubit(apiClient)),
+          BlocProvider<LojaCubit>(create: (_) => LojaCubit(apiClient)),
+          BlocProvider<LojasCubit>(create: (_) => LojasCubit(apiClient)),
+          BlocProvider<CategoriasCubit>(create: (_) => CategoriasCubit(apiClient)),
+          BlocProvider<UsuarioCubit>(create: (_) => UsuarioCubit(apiClient)),
+        ],
+        child: BlocBuilder<ThemeCubit, ThemeState>(
+          builder: (context, themeState) {
+            return MaterialApp(
+              title: 'QuiGestor',
+              debugShowCheckedModeBanner: false,
+              theme: AppTheme.lightTheme,
+              darkTheme: AppTheme.darkTheme,
+              themeMode: themeState.themeMode,
+              scrollBehavior: const MaterialScrollBehavior().copyWith(
+                dragDevices: {
+                  PointerDeviceKind.mouse,
+                  PointerDeviceKind.touch,
+                  PointerDeviceKind.stylus,
+                  PointerDeviceKind.unknown,
+                },
+              ),
+              initialRoute: Routes.SPLASH,
+              onGenerateRoute: AppRouter.onGenerateRoute,
+              navigatorObservers: [AuthObserver()],
+              navigatorKey: ApiClient.navigatorKey,
+            );
+          },
+        ),
       ),
     );
   }

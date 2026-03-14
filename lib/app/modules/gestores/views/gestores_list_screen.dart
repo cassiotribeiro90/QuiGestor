@@ -29,7 +29,6 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    _carregarGestores();
   }
 
   @override
@@ -37,11 +36,6 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
     _searchController.dispose();
     _scrollController.dispose();
     super.dispose();
-  }
-
-  void _carregarGestores() {
-    _resetPagination();
-    context.read<GestoresCubit>().fetchGestores(perPage: _perPage);
   }
 
   void _resetPagination() {

@@ -198,4 +198,17 @@ class GestoresCubit extends Cubit<GestoresState> {
   }
 
   int get currentPage => _ultimaPagination?['page'] ?? 1;
+
+  /// 🔥 Versão que já carrega os dados (opcional)
+  Future<void> resetAndLoad() async {
+    resetFilters();
+    await fetchGestores(perPage: 10);
+  }
+
+  void resetFilters() {
+    _currentSearch = null;
+    _currentStatusList = [];
+    _currentNiveis = [];
+    _todosGestores = [];
+  }
 }

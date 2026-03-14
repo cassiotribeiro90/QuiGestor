@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../shared/api/api_client.dart';
 import '../widgets/side_menu.dart';
 import '../../theme/bloc/theme_cubit.dart';
 import '../../theme/bloc/theme_state.dart';
 import '../../dashboard/views/DashboardScreen.dart';
 import '../../gestores/views/gestor_form_screen.dart';
 import '../../gestores/models/gestor.dart';
+import '../../lojas/views/loja_form_screen.dart';
+import '../../lojas/models/loja.dart';
+import '../../lojas/bloc/lojas_cubit.dart';
+import '../../gestores/bloc/gestores_cubit.dart';
+import '../../categorias/bloc/categorias_cubit.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,31 +21,64 @@ class HomeScreen extends StatefulWidget {
 }
 
 class HomeScreenState extends State<HomeScreen> {
-  // 🔥 Controlador simples de navegação interna
   Widget _currentContent = const DashboardScreen();
   String _currentTitle = 'Dashboard';
   
-  // Pilha de navegação para voltar
-  final List<Map<String, dynamic>> _navigationStack = [];
+  final List<Map<String, dynamic>> _navigationStack = [
+    {'title': 'Dashboard', 'content': const DashboardScreen()}
+  ];
 
   @override
-  void initState() {
-    super.initState();
-    _navigationStack.add({
-      'title': _currentTitle,
-      'content': _currentContent,
-    });
-  }
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bool showSidebar = constraints.maxWidth > 600;
 
-  void navigateTo(Widget content, String title) {
-    setState(() {
-      _currentContent = content;
-      _currentTitle = title;
-      _navigationStack.add({
-        'title': title,
-        'content': content,
-      });
-    });
+        return Scaffold(
+          drawer: !showSidebar ? const SideMenu() : null,
+          body: Row(
+            children: [
+              if (showSidebar) const SideMenu(isCompact: false),
+              Expanded(
+                child: Scaffold(
+                  appBar: AppBar(
+                    title: Text(_currentTitle),
+                    leading: showSidebar && _navigationStack.length > 1
+                        ? IconButton(
+                            icon: const Icon(Icons.arrow_back_rounded),
+                            onPressed: goBack,
+                          )
+                        : null,
+                    actions: [
+                      BlocBuilder<ThemeCubit, ThemeState>(
+                        builder: (context, themeState) {
+                          return IconButton(
+                            icon: Icon(
+                              themeState.themeMode == ThemeMode.dark
+                                  ? Icons.light_mode_outlined
+                                  : Icons.dark_mode_outlined,
+                            ),
+                            onPressed: () => context.read<ThemeCubit>().toggleTheme(),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                  body: Align(
+                    alignment: Alignment.topCenter,
+                    child: ConstrainedBox(
+                      // 🔥 TODAS AS TELAS CENTRALIZADAS COM maxWidth 820
+                      constraints: const BoxConstraints(maxWidth: 820),
+                      child: _currentContent,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   void goBack() {
@@ -47,102 +86,63 @@ class HomeScreenState extends State<HomeScreen> {
       setState(() {
         _navigationStack.removeLast();
         final last = _navigationStack.last;
-        _currentContent = last['content'];
+
+        // Recriamos o conteúdo ao voltar para garantir o refresh dos dados
+        _currentContent = _buildPageContent(last['title'], last['content']);
         _currentTitle = last['title'];
       });
     }
   }
 
-  // Métodos públicos para navegação (serão chamados pelos outros screens)
+  void navigateTo(Widget content, String title) {
+    setState(() {
+      _currentContent = _buildPageContent(title, content);
+      _currentTitle = title;
+      _navigationStack.add({'title': title, 'content': content});
+    });
+  }
+
+  Widget _buildPageContent(String title, Widget content) {
+    final apiClient = context.read<ApiClient>();
+    
+    if (title == 'Todas as Lojas') {
+      return BlocProvider(
+        key: ValueKey('lojas_${DateTime.now().millisecondsSinceEpoch}'),
+        create: (_) => LojasCubit(apiClient)..fetchLojas(perPage: 10),
+        child: content,
+      );
+    }
+    
+    if (title == 'Gestores') {
+      return BlocProvider(
+        key: ValueKey('gestores_${DateTime.now().millisecondsSinceEpoch}'),
+        create: (_) => GestoresCubit(apiClient)..fetchGestores(perPage: 10),
+        child: content,
+      );
+    }
+
+    if (title == 'Categorias') {
+      return BlocProvider(
+        key: ValueKey('categorias_${DateTime.now().millisecondsSinceEpoch}'),
+        create: (_) => CategoriasCubit(apiClient)..fetchCategorias(),
+        child: content,
+      );
+    }
+    
+    return content;
+  }
+
   void openGestorForm({Gestor? gestor}) {
     navigateTo(
-      GestorFormScreen(
-        gestor: gestor,
-        onSaved: () => goBack(), // Volta após salvar
-      ),
+      GestorFormScreen(gestor: gestor, onSaved: goBack),
       gestor == null ? 'Novo Gestor' : 'Editar Gestor',
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // 🔥 MENU SEMPRE VISÍVEL PARA WEB > 600
-        final bool showSidebar = constraints.maxWidth > 600;
-
-        if (!showSidebar) {
-          // 📱 VERSÃO MOBILE (com drawer)
-          return Scaffold(
-            appBar: AppBar(
-              title: Text(_currentTitle),
-              actions: [
-                BlocBuilder<ThemeCubit, ThemeState>(
-                  builder: (context, themeState) {
-                    return IconButton(
-                      icon: Icon(
-                        themeState.themeMode == ThemeMode.dark
-                            ? Icons.light_mode_outlined
-                            : Icons.dark_mode_outlined,
-                      ),
-                      onPressed: () => context.read<ThemeCubit>().toggleTheme(),
-                    );
-                  },
-                ),
-              ],
-            ),
-            drawer: const SideMenu(), // Drawer para mobile
-            body: _currentContent,
-          );
-        } else {
-          // 💻 VERSÃO WEB (menu lateral sempre visível)
-          return Scaffold(
-            body: Row(
-              children: [
-                // Menu lateral fixo
-                const SideMenu(
-                  isCompact: false,
-                ),
-                
-                // Área de conteúdo
-                Expanded(
-                  child: Scaffold(
-                    appBar: AppBar(
-                      title: Text(_currentTitle),
-                      leading: _navigationStack.length > 1
-                          ? IconButton(
-                              icon: const Icon(Icons.arrow_back_rounded),
-                              onPressed: goBack,
-                            )
-                          : null,
-                      actions: [
-                        BlocBuilder<ThemeCubit, ThemeState>(
-                          builder: (context, themeState) {
-                            return IconButton(
-                              icon: Icon(
-                                themeState.themeMode == ThemeMode.dark
-                                    ? Icons.light_mode_outlined
-                                    : Icons.dark_mode_outlined,
-                              ),
-                              onPressed: () => context.read<ThemeCubit>().toggleTheme(),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                    body: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 820),
-                        child: _currentContent,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-      },
+  void openLojaForm({Loja? loja}) {
+    navigateTo(
+      LojaFormScreen(loja: loja, onSaved: goBack),
+      loja == null ? 'Nova Loja' : 'Editar Loja',
     );
   }
 }

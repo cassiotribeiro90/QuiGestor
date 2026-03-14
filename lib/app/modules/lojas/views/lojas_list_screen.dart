@@ -8,6 +8,7 @@ import '../bloc/lojas_cubit.dart';
 import '../bloc/lojas_state.dart';
 import '../models/loja.dart';
 import '../widgets/loja_filters.dart';
+import '../widgets/loja_card_item.dart';
 import 'loja_form_screen.dart';
 
 class LojasListScreen extends StatefulWidget {
@@ -30,7 +31,6 @@ class _LojasListScreenState extends State<LojasListScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    _carregarLojas();
   }
 
   @override
@@ -38,11 +38,6 @@ class _LojasListScreenState extends State<LojasListScreen> {
     _searchController.dispose();
     _scrollController.dispose();
     super.dispose();
-  }
-
-  void _carregarLojas() {
-    _resetPagination();
-    context.read<LojasCubit>().fetchLojas(perPage: _perPage);
   }
 
   void _resetPagination() {
@@ -87,18 +82,22 @@ class _LojasListScreenState extends State<LojasListScreen> {
     await context.read<LojasCubit>().fetchLojas(perPage: _perPage);
   }
 
-  void _showFilters() {
+  void _showFilters(LojasCubit cubit) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => const LojaFilters(),
+      builder: (context) => BlocProvider.value(
+        value: cubit,
+        child: const LojaFilters(),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final lojasCubit = context.read<LojasCubit>();
 
     return Scaffold(
       appBar: AppBar(
@@ -106,7 +105,7 @@ class _LojasListScreenState extends State<LojasListScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_alt_outlined),
-            onPressed: _showFilters,
+            onPressed: () => _showFilters(lojasCubit),
           ),
         ],
         bottom: PreferredSize(
@@ -203,7 +202,7 @@ class _LojasListScreenState extends State<LojasListScreen> {
               onRefresh: _onRefresh,
               child: ListView.builder(
                 controller: _scrollController,
-                padding: const EdgeInsets.all(0),
+                padding: const EdgeInsets.all(16),
                 itemCount: lojas.length + (_isLoadingMore ? 1 : 0),
                 itemBuilder: (context, index) {
                   if (index == lojas.length) {
@@ -216,165 +215,9 @@ class _LojasListScreenState extends State<LojasListScreen> {
                   }
 
                   final loja = lojas[index];
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: QuiGestorCard(
-                      onTap: () => _abrirFormLoja(context, loja: loja),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 56,
-                            height: 56,
-                            decoration: BoxDecoration(
-                              color: loja.statusColor.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Center(
-                              child: loja.logo != null
-                                  ? ClipRRect(
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: Image.network(
-                                        loja.logo!,
-                                        width: 40,
-                                        height: 40,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (_, __, ___) => Icon(
-                                          Icons.store,
-                                          color: loja.statusColor,
-                                        ),
-                                      ),
-                                    )
-                                  : Text(
-                                      loja.nome[0].toUpperCase(),
-                                      style: TextStyle(
-                                        color: loja.statusColor,
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        loja.nome,
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                    if (loja.destaque)
-                                      Container(
-                                        margin: const EdgeInsets.only(right: 8),
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 4,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.amber.withOpacity(0.1),
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                        child: const Text(
-                                          '⭐',
-                                          style: TextStyle(fontSize: 12),
-                                        ),
-                                      ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color:
-                                            loja.statusColor.withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Text(
-                                        loja.statusLabel,
-                                        style: TextStyle(
-                                          color: loja.statusColor,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.category_outlined,
-                                      size: 14,
-                                      color: Colors.grey[600],
-                                    ),
-                                    const SizedBox(width: 4),
-                                    TextBody2(
-                                      loja.categoria,
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.location_on_outlined,
-                                      size: 14,
-                                      color: Colors.grey[600],
-                                    ),
-                                    const SizedBox(width: 4),
-                                    TextBody2(
-                                      '${loja.cidade}/${loja.uf}',
-                                      maxLines: 1,
-                                    )
-                                  ],
-                                ),
-                                const SizedBox(height: 2),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.access_time_outlined,
-                                      size: 14,
-                                      color: Colors.grey[600],
-                                    ),
-                                    const SizedBox(width: 4),
-                                    TextBody3(
-                                      '${loja.tempoEntregaMin}-${loja.tempoEntregaMax} min',
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Icon(
-                                      Icons.attach_money_outlined,
-                                      size: 14,
-                                      color: Colors.grey[600],
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      'R\$ ${loja.pedidoMinimo.toStringAsFixed(2)}',
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                          Icon(
-                            Icons.chevron_right_rounded,
-                            color: Colors.grey[400],
-                          ),
-                        ],
-                      ),
-                    ),
+                  return LojaCardItem(
+                    loja: loja,
+                    onTap: () => _abrirFormLoja(context, loja: loja),
                   );
                 },
               ),

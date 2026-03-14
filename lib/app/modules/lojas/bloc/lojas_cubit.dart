@@ -198,4 +198,18 @@ class LojasCubit extends Cubit<LojasState> {
       return false;
     }
   }
+
+  /// 🔥 Versão que já carrega os dados (opcional)
+  Future<void> resetAndLoad() async {
+    resetFilters();
+    await fetchLojas(perPage: 10);
+  }
+
+  void resetFilters() {
+    _currentSearch = null;
+    _currentDestaque = null;
+    _currentStatusList = [];
+    _currentCategorias = [];
+    _todasLojas = [];
+  }
 }
