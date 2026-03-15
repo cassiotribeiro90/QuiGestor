@@ -13,7 +13,7 @@ class ProdutosCubit extends Cubit<ProdutosState> {
     emit(ProdutosLoading());
     try {
       // ✅ Alterado para POST com o formato de URL específico solicitado
-      final response = await _apiClient.post('/gestor/loja/?id=$_lojaId/produtos');
+      final response = await _apiClient.post('/gestor/loja/produtos?id=$_lojaId');
 
       if (response.data['success'] == true) {
         final items = List<dynamic>.from(response.data['data']['items'] ?? []);
