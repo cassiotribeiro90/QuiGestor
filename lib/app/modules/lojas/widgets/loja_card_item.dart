@@ -1,10 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../apparte/widgets/quigestor_card.dart';
 import '../../../../apparte/widgets/app_text.dart';
-import '../../home/views/home_screen.dart';
+import '../../../../shared/api/api_client.dart';
 import '../models/loja.dart';
 import 'loja_status_chip.dart';
+import '../../produtos/views/produtos_list_screen.dart';
+import '../../produtos/bloc/produtos_cubit.dart';
 
 class LojaCardItem extends StatelessWidget {
   final Loja loja;
@@ -135,10 +138,15 @@ class LojaCardItem extends StatelessWidget {
                     IconButton(
                       icon: const Icon(Icons.restaurant_menu_outlined),
                       onPressed: () {
-                        final homeState = context.findAncestorStateOfType<HomeScreenState>();
-                        if (homeState != null) {
-                          homeState.openProdutosList(lojaId: loja.id, lojaNome: loja.nome);
-                        }
+                        final apiClient = context.read<ApiClient>();
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => BlocProvider(
+                              create: (_) => ProdutosCubit(apiClient, loja.id),
+                              child: ProdutosListScreen(lojaId: loja.id, lojaNome: loja.nome),
+                            ),
+                          ),
+                        );
                       },
                       color: theme.colorScheme.primary,
                       iconSize: 22,

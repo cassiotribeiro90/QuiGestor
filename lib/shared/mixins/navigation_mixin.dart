@@ -8,7 +8,7 @@ mixin NavigationMixin<T extends StatefulWidget> on State<T> {
     if (isWeb) {
       final homeState = context.findAncestorStateOfType<HomeScreenState>();
       if (homeState != null) {
-        homeState.navigateTo(content, title);
+        homeState.navigateTo(content);
       }
     }
   }
@@ -29,7 +29,7 @@ mixin NavigationMixin<T extends StatefulWidget> on State<T> {
     if (isWeb) {
       final homeState = context.findAncestorStateOfType<HomeScreenState>();
       if (homeState != null) {
-        homeState.navigateTo(webContent, title);
+        homeState.navigateTo(webContent);
       }
     } else {
       Navigator.push(context, MaterialPageRoute(builder: (_) => mobileScreen));

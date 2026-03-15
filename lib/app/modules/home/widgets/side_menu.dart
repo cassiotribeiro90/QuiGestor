@@ -2,11 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../auth/bloc/auth_cubit.dart';
 import '../../../routes/app_routes.dart';
-import '../../dashboard/views/DashboardScreen.dart';
-import '../../gestores/views/gestores_list_screen.dart';
-import '../../lojas/views/lojas_list_screen.dart';
-import '../../categorias/views/categorias_list_screen.dart';
-import '../views/home_screen.dart';
+import '../bloc/home_cubit.dart';
 import '../../theme/bloc/theme_cubit.dart';
 import '../../theme/bloc/theme_state.dart';
 
@@ -75,7 +71,7 @@ class SideMenu extends StatelessWidget {
                     context,
                     icon: Icons.dashboard_outlined,
                     label: 'Dashboard',
-                    content: const DashboardScreen(),
+                    index: 0,
                     isCompact: isCompact,
                   ),
                 ),
@@ -85,21 +81,21 @@ class SideMenu extends StatelessWidget {
                   context,
                   icon: Icons.admin_panel_settings_outlined,
                   label: 'Gestores',
-                  content: const GestoresListScreen(),
+                  index: 1,
                   isCompact: isCompact,
                 ),
                 _buildMenuItem(
                   context,
                   icon: Icons.storefront_outlined,
                   label: 'Lojistas',
-                  content: const Center(child: Text('Lojistas Screen')),
+                  index: 2,
                   isCompact: isCompact,
                 ),
                 _buildMenuItem(
                   context,
                   icon: Icons.people_outlined,
                   label: 'Clientes',
-                  content: const Center(child: Text('Clientes Screen')),
+                  index: 3,
                   isCompact: isCompact,
                 ),
                 
@@ -108,14 +104,14 @@ class SideMenu extends StatelessWidget {
                   context,
                   icon: Icons.store_mall_directory_outlined,
                   label: 'Todas as Lojas',
-                  content: const LojasListScreen(),
+                  index: 4,
                   isCompact: isCompact,
                 ),
                 _buildMenuItem(
                   context,
                   icon: Icons.category_outlined,
                   label: 'Categorias',
-                  content: const CategoriasListScreen(),
+                  index: 5,
                   isCompact: isCompact,
                 ),
                 
@@ -124,7 +120,7 @@ class SideMenu extends StatelessWidget {
                   context,
                   icon: Icons.receipt_outlined,
                   label: 'Todos os Pedidos',
-                  content: const Center(child: Text('Pedidos Screen')),
+                  index: 6,
                   isCompact: isCompact,
                 ),
                 
@@ -133,7 +129,7 @@ class SideMenu extends StatelessWidget {
                   context,
                   icon: Icons.settings_outlined,
                   label: 'Configurações',
-                  content: const Center(child: Text('Configurações Screen')),
+                  index: 7,
                   isCompact: isCompact,
                 ),
               ],
@@ -189,7 +185,7 @@ class SideMenu extends StatelessWidget {
     BuildContext context, {
     required IconData icon,
     required String label,
-    required Widget content,
+    required int index,
     required bool isCompact,
   }) {
     return ListTile(
@@ -204,11 +200,7 @@ class SideMenu extends StatelessWidget {
           }
         } catch (_) {}
         
-        // 🔥 Acessa o HomeScreen e navega
-        final homeState = context.findAncestorStateOfType<HomeScreenState>();
-        if (homeState != null) {
-          homeState.navigateTo(content, label);
-        }
+        context.read<HomeCubit>().changeModule(index, label);
       },
     );
   }

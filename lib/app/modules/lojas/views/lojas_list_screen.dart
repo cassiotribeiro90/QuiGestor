@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../apparte/widgets/loading_skeleton.dart';
 import '../../../app_config.dart';
-import '../../home/views/home_screen.dart';
 import '../bloc/lojas_cubit.dart';
 import '../bloc/lojas_state.dart';
 import '../models/loja.dart';
@@ -234,17 +233,13 @@ class _LojasListScreenState extends State<LojasListScreen> {
   }
 
   void _abrirFormLoja(BuildContext context, {Loja? loja}) {
-    final homeState = context.findAncestorStateOfType<HomeScreenState>();
-    if (homeState != null) {
-      homeState.openLojaForm(loja: loja);
-    } else {
-      // Fallback
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => LojaFormScreen(loja: loja),
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => BlocProvider.value(
+          value: context.read<LojasCubit>(),
+          child: LojaFormScreen(loja: loja),
         ),
-      );
-    }
+      ),
+    );
   }
 }

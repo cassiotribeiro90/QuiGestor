@@ -6,8 +6,8 @@ import 'package:quigestor/app/app_config.dart';
 import 'package:quigestor/app/modules/gestores/bloc/gestores_cubit.dart';
 import 'package:quigestor/app/modules/gestores/bloc/gestores_state.dart';
 import 'package:quigestor/app/modules/gestores/models/gestor.dart';
-import 'package:quigestor/app/modules/home/views/home_screen.dart';
 import 'package:quigestor/app/modules/gestores/widgets/gestor_filters.dart';
+import 'package:quigestor/app/modules/gestores/views/gestor_form_screen.dart';
 
 class GestoresListScreen extends StatefulWidget {
   const GestoresListScreen({super.key});
@@ -305,10 +305,14 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
   }
 
   void _abrirFormGestor(BuildContext context, {Gestor? gestor}) {
-    final homeState = context.findAncestorStateOfType<HomeScreenState>();
-    if (homeState != null) {
-      homeState.openGestorForm(gestor: gestor);
-    }
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => BlocProvider.value(
+          value: context.read<GestoresCubit>(),
+          child: GestorFormScreen(gestor: gestor),
+        ),
+      ),
+    );
   }
 
   Color _getStatusColor(int status) {
