@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import '../models/produto.dart';
+import '../models/subcategoria.dart';
 import '../../categorias/models/categoria.dart';
 import '../../lojas/models/loja.dart';
 
@@ -17,15 +18,17 @@ class ProdutoLoaded extends ProdutoState {
   final Produto? produto;
   final List<Categoria> categorias;
   final List<Loja> lojas;
+  final List<Subcategoria> subcategorias;
 
   const ProdutoLoaded({
     this.produto,
     required this.categorias,
     required this.lojas,
+    this.subcategorias = const [],
   });
 
   @override
-  List<Object?> get props => [produto, categorias, lojas];
+  List<Object?> get props => [produto, categorias, lojas, subcategorias];
 }
 
 class ProdutoError extends ProdutoState {

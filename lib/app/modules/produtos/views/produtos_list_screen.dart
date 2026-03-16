@@ -32,7 +32,7 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
   }
 
   void _navegarParaForm({int? produtoId}) async {
-    final result = await Navigator.of(context).push(
+    await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => BlocProvider(
           create: (context) => ProdutoCubit(
@@ -46,7 +46,8 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
       ),
     );
 
-    if (result == true && mounted) {
+    // Simplificado: Sempre que voltar da tela de formulário, recarrega a lista
+    if (mounted) {
       context.read<ProdutosCubit>().fetchProdutos();
     }
   }
@@ -58,12 +59,11 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: TextH2('Cardápio - ${widget.lojaNome}'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () => _navegarParaForm(),
-          ),
-        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _navegarParaForm(),
+        label: const TextBody1('Novo Produto', color: Colors.white),
+        icon: const Icon(Icons.add, color: Colors.white),
       ),
       body: BlocBuilder<ProdutosCubit, ProdutosState>(
         builder: (context, state) {
@@ -102,7 +102,7 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
           if (state is ProdutosLoaded) {
             final sections = state.sections;
 
-            if (sections.isEmpty) {
+            if (sections.isEmpty || sections.values.every((list) => list.isEmpty)) {
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -116,7 +116,7 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
                     ElevatedButton.icon(
                       onPressed: () => _navegarParaForm(),
                       icon: const Icon(Icons.add),
-                      label: const TextInverse('Adicionar Produto'),
+                      label: const TextBody1('Adicionar Produto'),
                     ),
                   ],
                 ),
@@ -130,6 +130,9 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
                 children: sections.entries.map((entry) {
                   final categoria = entry.key;
                   final produtos = entry.value;
+
+                  if (produtos.isEmpty) return const SizedBox.shrink();
+
                   final count = produtos.length;
 
                   return Column(

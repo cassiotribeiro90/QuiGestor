@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../shared/api/api_client.dart';
 import '../models/produto.dart';
+import '../models/subcategoria.dart';
 import '../../categorias/models/categoria.dart';
 import '../../lojas/models/loja.dart';
 import 'produto_state.dart';
@@ -14,12 +15,11 @@ class ProdutoCubit extends Cubit<ProdutoState> {
     emit(ProdutoLoading());
     try {
       final futures = [
-        _apiClient.get('/gestor/categorias?per_page=100'),
+        _apiClient.get('/gestor/categorias?per_page=100&ativo=1'),
         _apiClient.get('/gestor/lojas?per_page=100'),
       ];
 
       if (produtoId != null) {
-        // ✅ Alterado para o endpoint de view específico
         futures.add(_apiClient.get('/gestor/produto/view?id=$produtoId'));
       }
 
@@ -49,12 +49,27 @@ class ProdutoCubit extends Cubit<ProdutoState> {
       }
 
       Produto? produto;
+      List<Subcategoria> subcategorias = [];
+      
       if (produtoId != null && responses.length > 2) {
         final produtoRes = responses[2];
         if (produtoRes.data['success'] == true) {
-          // No endpoint de view, os dados vêm direto no data ou dentro de um objeto?
-          // Geralmente segue o padrão do projeto: response.data['data']
-          produto = Produto.fromJson(produtoRes.data['data']);
+          final produtoData = produtoRes.data['data']['produto'];
+          if (produtoData != null) {
+            produto = Produto.fromJson(produtoData);
+            
+            // Se o produto tem categoria, carregar subcategorias dela
+            final catId = produto.categoriaId;
+            if (catId != null) {
+              final subResponse = await _apiClient.get(
+                '/gestor/subcategoria/por-categoria?id=$catId',
+              );
+              if (subResponse.data['success'] == true) {
+                final List<dynamic> subData = subResponse.data['data'];
+                subcategorias = subData.map((j) => Subcategoria.fromJson(j)).toList();
+              }
+            }
+          }
         }
       }
 
@@ -62,6 +77,7 @@ class ProdutoCubit extends Cubit<ProdutoState> {
         produto: produto,
         categorias: categorias,
         lojas: lojas,
+        subcategorias: subcategorias,
       ));
     } catch (e) {
       emit(ProdutoError('Erro ao carregar dados: $e'));
@@ -72,8 +88,8 @@ class ProdutoCubit extends Cubit<ProdutoState> {
     emit(ProdutoOperationLoading());
     try {
       final response = id == null
-          ? await _apiClient.post('/gestor/produtos', data: data)
-          : await _apiClient.put('/gestor/produtos/$id', data: data);
+          ? await _apiClient.post('/gestor/produto/create', data: data)
+          : await _apiClient.post('/gestor/produto/update?id=$id', data: data);
 
       if (response.data['success'] == true) {
         emit(ProdutoOperationSuccess(
@@ -93,7 +109,7 @@ class ProdutoCubit extends Cubit<ProdutoState> {
   Future<bool> deleteProduto(int id) async {
     emit(ProdutoOperationLoading());
     try {
-      final response = await _apiClient.delete('/gestor/produtos/$id');
+      final response = await _apiClient.delete('/gestor/produto/delete?id=$id');
       if (response.data['success'] == true) {
         emit(ProdutoOperationSuccess('Produto removido com sucesso', isDeletion: true));
         return true;

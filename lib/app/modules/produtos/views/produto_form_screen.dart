@@ -5,6 +5,7 @@ import '../../../../apparte/widgets/qui_button.dart';
 import '../bloc/produto_cubit.dart';
 import '../bloc/produto_state.dart';
 import '../models/produto.dart';
+import '../models/subcategoria.dart';
 import '../../categorias/models/categoria.dart';
 import '../../lojas/models/loja.dart';
 import '../../../../apparte/widgets/quigestor_card.dart';
@@ -39,6 +40,11 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> {
   int? _categoriaId;
   int? _subcategoriaId;
   
+  // Listas de opções
+  List<Categoria> _categorias = [];
+  List<Subcategoria> _subcategorias = [];
+  bool _loadingSubcategorias = false;
+  
   // Status
   bool _disponivel = true;
   bool _ativo = true;
@@ -50,6 +56,7 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> {
   bool _apimentado = false;
   
   bool _isEditing = false;
+  bool _initialDataLoaded = false;
 
   @override
   void initState() {
@@ -89,7 +96,9 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> {
     _estoqueController.text = produto.estoque.toString();
     
     _lojaId = produto.lojaId;
-    _categoriaId = produto.categoria?.id;
+    
+    // Prioriza o categoria_id do produto ou do objeto categoria (join)
+    _categoriaId = produto.categoriaId ?? produto.categoriaId;
     _subcategoriaId = produto.subcategoriaId;
     
     _disponivel = produto.disponivel;
@@ -100,6 +109,42 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> {
     _vegano = produto.vegano;
     _vegetariano = produto.vegetariano;
     _apimentado = produto.apimentado;
+  }
+
+  Future<void> _carregarSubcategorias(int categoriaId, {bool resetSelection = true}) async {
+    setState(() {
+      _loadingSubcategorias = true;
+      if (resetSelection) {
+        _subcategoriaId = null;
+      }
+      _subcategorias = [];
+    });
+
+    try {
+      final response = await context.read<ApiClient>().get(
+        '/gestor/subcategoria/por-categoria?id=$categoriaId',
+      );
+
+      if (response.data['success'] == true) {
+        final List<dynamic> data = response.data['data'];
+        setState(() {
+          _subcategorias = data.map((json) => Subcategoria.fromJson(json)).toList();
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: TextInverse('Erro ao carregar subcategorias: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _loadingSubcategorias = false);
+      }
+    }
   }
 
   @override
@@ -152,26 +197,40 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return BlocConsumer<ProdutoCubit, ProdutoState>(
       listener: (context, state) {
-        if (state is ProdutoOperationSuccess) {
+        if (state is ProdutoLoaded) {
+          setState(() {
+            _categorias = {for (var cat in state.categorias) cat.id: cat}.values.toList();
+            
+            if (!_initialDataLoaded) {
+              if (state.produto != null) {
+                _preencherControllers(state.produto!);
+                _subcategorias = {for (var sub in state.subcategorias) sub.id: sub}.values.toList();
+              }
+              _initialDataLoaded = true;
+            }
+          });
+        } else if (state is ProdutoOperationSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: TextBody2(state.message), backgroundColor: Colors.green),
+            SnackBar(content: TextInverse(state.message), backgroundColor: Colors.green),
           );
-          Navigator.pop(context, true);
         } else if (state is ProdutoError) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: TextBody2(state.message), backgroundColor: Colors.red),
+            SnackBar(content: TextInverse(state.message), backgroundColor: Colors.red),
           );
-        } else if (state is ProdutoLoaded && state.produto != null) {
-          _preencherControllers(state.produto!);
         }
       },
       builder: (context, state) {
         final isLoading = state is ProdutoLoading || state is ProdutoOperationLoading;
         
+        if (state is ProdutoLoading && !_initialDataLoaded) {
+           return Scaffold(
+             appBar: AppBar(title: TextH2(_isEditing ? 'Editar Produto' : 'Novo Produto')),
+             body: const Center(child: CircularProgressIndicator())
+           );
+        }
+
         String title = _isEditing ? 'Editar Produto' : 'Novo Produto';
         if (state is ProdutoLoaded) {
           final lojaNome = _getLojaNome(state.lojas);
@@ -198,7 +257,7 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> {
                 ),
             ],
           ),
-          body: isLoading && state is ProdutoLoading
+          body: isLoading && !_initialDataLoaded
               ? const Center(child: CircularProgressIndicator())
               : SingleChildScrollView(
                   padding: const EdgeInsets.all(20),
@@ -209,11 +268,7 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> {
                         if (state is ProdutoLoaded || state is ProdutoOperationLoading || state is ProdutoOperationSuccess) ...[
                           _buildBasicInfoCard(context),
                           const SizedBox(height: 20),
-                          _buildCategorizationCard(
-                            context, 
-                            state is ProdutoLoaded ? state.lojas : [], 
-                            state is ProdutoLoaded ? state.categorias : []
-                          ),
+                          _buildCategorizationCard(context),
                           const SizedBox(height: 20),
                           _buildImageCard(context),
                           const SizedBox(height: 20),
@@ -288,8 +343,21 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> {
     );
   }
 
-  Widget _buildCategorizationCard(BuildContext context, List<Loja> lojas, List<Categoria> categorias) {
-    final lojaNome = _getLojaNome(lojas);
+  Widget _buildCategorizationCard(BuildContext context) {
+    // 1. Remove duplicatas e garante que o valor selecionado existe
+    final uniqueCategorias = {for (var cat in _categorias) cat.id: cat}.values.toList();
+    
+    int? effectiveCategoriaId = _categoriaId;
+    if (effectiveCategoriaId != null && !uniqueCategorias.any((cat) => cat.id == effectiveCategoriaId)) {
+      effectiveCategoriaId = null;
+    }
+
+    final uniqueSubcategorias = {for (var sub in _subcategorias) sub.id: sub}.values.toList();
+    
+    int? effectiveSubcategoriaId = _subcategoriaId;
+    if (effectiveSubcategoriaId != null && !uniqueSubcategorias.any((sub) => sub.id == effectiveSubcategoriaId)) {
+      effectiveSubcategoriaId = null;
+    }
 
     return QuiGestorCard(
       child: Column(
@@ -298,33 +366,63 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> {
           _buildSectionHeader(context, icon: Icons.category_outlined, title: 'Categorização'),
           const SizedBox(height: 20),
           
-          TextFormField(
-            initialValue: lojaNome.isNotEmpty ? lojaNome : 'Carregando...',
-            key: ValueKey('loja_$lojaNome'),
-            enabled: false,
-            decoration: InputDecoration(
-              labelText: 'Loja', 
-              prefixIcon: const Icon(Icons.store_outlined),
-              fillColor: Colors.grey.withOpacity(0.05),
-              filled: true,
-              disabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey.withOpacity(0.3)),
-              ),
-            ),
-          ),
-          
+          if (uniqueCategorias.isNotEmpty)
+            DropdownButtonFormField<int?>(
+              value: effectiveCategoriaId,
+              decoration: const InputDecoration(labelText: 'Categoria *', prefixIcon: Icon(Icons.category_outlined)),
+              items: [
+                const DropdownMenuItem(value: null, child: TextBody2('Selecione uma categoria')),
+                ...uniqueCategorias.map((cat) => DropdownMenuItem(
+                  value: cat.id,
+                  child: Row(children: [TextBody2(cat.icone ?? ''), const SizedBox(width: 8), TextBody2(cat.nome)]),
+                )),
+              ],
+              onChanged: (id) {
+                setState(() {
+                  _categoriaId = id;
+                  _subcategoriaId = null;
+                  _subcategorias = [];
+                });
+                if (id != null) {
+                  _carregarSubcategorias(id);
+                }
+              },
+              validator: (value) => value == null ? 'Selecione uma categoria' : null,
+            )
+          else 
+            const Center(child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: CircularProgressIndicator(),
+            )),
+
           const SizedBox(height: 16),
+
+          if (_loadingSubcategorias)
+            const Center(child: Padding(
+              padding: EdgeInsets.all(8.0),
+              child: CircularProgressIndicator(),
+            ))
+          else if (uniqueSubcategorias.isNotEmpty || _categoriaId != null)
+            DropdownButtonFormField<int?>(
+              value: effectiveSubcategoriaId,
+              decoration: const InputDecoration(labelText: 'Subcategoria', prefixIcon: Icon(Icons.account_tree_outlined)),
+              items: [
+                const DropdownMenuItem(value: null, child: TextBody2('Sem subcategoria')),
+                ...uniqueSubcategorias.map((sub) => DropdownMenuItem(
+                  value: sub.id,
+                  child: TextBody2(sub.nome),
+                )),
+              ],
+              onChanged: (value) => setState(() => _subcategoriaId = value),
+            ),
           
-          if (categorias.isNotEmpty)
-            DropdownButtonFormField<int>(
-              value: _categoriaId,
-              decoration: const InputDecoration(labelText: 'Categoria', prefixIcon: Icon(Icons.category_outlined)),
-              items: categorias.map((cat) => DropdownMenuItem(
-                value: cat.id,
-                child: Row(children: [TextBody2(cat.icone ?? ''), const SizedBox(width: 8), TextBody2(cat.nome)]),
-              )).toList(),
-              onChanged: (value) => setState(() => _categoriaId = value),
+          if (!_loadingSubcategorias && uniqueSubcategorias.isEmpty && _categoriaId != null)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8),
+              child: TextBody3(
+                'Nenhuma subcategoria disponível',
+                color: Colors.grey,
+              ),
             ),
         ],
       ),
@@ -486,7 +584,6 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> {
           : null,
       'imagem': _imagemController.text,
       'loja_id': _lojaId,
-      'categoria_id': _categoriaId,
       'subcategoria_id': _subcategoriaId,
       'disponivel': _disponivel ? 1 : 0,
       'ativo': _ativo ? 1 : 0,
@@ -502,7 +599,11 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> {
       'estoque': int.tryParse(_estoqueController.text) ?? 0,
     };
 
-    await context.read<ProdutoCubit>().saveProduto(data, id: widget.produtoId);
+    final success = await context.read<ProdutoCubit>().saveProduto(data, id: widget.produtoId);
+    
+    if (success && mounted) {
+      Navigator.pop(context, true);
+    }
   }
 
   Future<void> _deletar() async {
@@ -523,7 +624,10 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> {
     );
 
     if (confirm == true && widget.produtoId != null) {
-      await context.read<ProdutoCubit>().deleteProduto(widget.produtoId!);
+      final success = await context.read<ProdutoCubit>().deleteProduto(widget.produtoId!);
+      if (success && mounted) {
+        Navigator.pop(context, true);
+      }
     }
   }
 }
