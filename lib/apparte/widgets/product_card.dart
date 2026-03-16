@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'app_text.dart';
 
 class ProductCard extends StatelessWidget {
   final String title;
@@ -44,29 +45,25 @@ class ProductCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  TextBody1(
                     title,
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    fontWeight: FontWeight.bold,
                     maxLines: 1,
-                    overflow: TextOverflow.fade,
                   ),
                   if (subtitle != null) ...[
                     const SizedBox(height: 4),
-                    Text(
+                    TextBody3(
                       subtitle!,
-                      style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                      color: Colors.grey[600],
                       maxLines: 2,
-                      overflow: TextOverflow.fade,
                     ),
                   ],
                   if (price != null) ...[
                     const SizedBox(height: 8),
-                    Text(
+                    TextBody2(
                       price!,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.bold,
                     ),
                   ],
                 ],

@@ -79,10 +79,10 @@ class LojaCardItem extends StatelessWidget {
                           width: 48,
                           height: 48,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => AppText(loja.categoriaEmoji, fontSize: 24),
-                        ),
-                      )
-                    : AppText(loja.categoriaEmoji, fontSize: 24),
+                          errorBuilder: (context, error, stackTrace) => TextH3(loja.categoriaEmoji, textAlign: TextAlign.center),
+                        )
+                    )
+                    : TextH3(loja.categoriaEmoji, textAlign: TextAlign.center),
               ),
             ),
             
@@ -100,7 +100,7 @@ class LojaCardItem extends StatelessWidget {
                           margin: const EdgeInsets.only(right: 4),
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(color: Colors.amber.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-                          child: const AppText('⭐', fontSize: 11),
+                          child: const TextBody3('⭐'),
                         ),
                       ],
                       LojaStatusChip(status: loja.status),
@@ -159,7 +159,7 @@ class LojaCardItem extends StatelessWidget {
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(color: theme.colorScheme.primary, shape: BoxShape.circle),
                           constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                          child: Center(child: Text('${loja.totalProdutos}', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold))),
+                          child: Center(child: TextBody3('${loja.totalProdutos}', color: Colors.white, fontWeight: FontWeight.bold)),
                         ),
                       ),
                   ],

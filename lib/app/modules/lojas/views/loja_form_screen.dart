@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../apparte/widgets/app_text.dart';
+import '../../../../apparte/widgets/qui_button.dart';
 import '../../../../shared/api/api_client.dart';
 import '../../produtos/bloc/produtos_cubit.dart';
 import '../../produtos/views/produtos_list_screen.dart';
@@ -110,7 +112,7 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
       _preencherControllers(widget.loja!);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Alguns campos podem estar incompletos'),
+          content: TextBody2('Alguns campos podem estar incompletos'),
           backgroundColor: Colors.orange,
         ),
       );
@@ -217,14 +219,14 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confirmar exclusão'),
-        content: Text('Tem certeza que deseja excluir a loja "${widget.loja!.nome}"?'),
+        title: const TextH3('Confirmar exclusão'),
+        content: TextBody2('Tem certeza que deseja excluir a loja "${widget.loja!.nome}"?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const TextBody2('Cancelar')),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Excluir'),
+            child: const TextInverse('Excluir', fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -250,8 +252,6 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
   void _abrirCardapio(BuildContext context) {
     if (widget.loja == null) return;
     
-    // ✅ Alterado para usar o Navigator.of(context).push local
-    // Isso evita o erro de navegação global (crash/stack duplicada)
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => BlocProvider(
@@ -272,7 +272,6 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     
-    // Título dinâmico: nome_loja - Gerenciar Loja
     String title = _isEditing ? 'Editar Loja' : 'Nova Loja';
     if (_nomeController.text.isNotEmpty) {
       title = '${_nomeController.text} - Gerenciar Loja';
@@ -280,7 +279,7 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        title: TextH2(title, fontWeight: FontWeight.bold),
         centerTitle: false,
         actions: [
           IconButton(
@@ -400,7 +399,7 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
                         DropdownButtonFormField<String>(
                           value: _status,
                           decoration: _inputDecoration(theme, 'Status *', Icons.circle_outlined),
-                          items: _statusOptions.map((opt) => DropdownMenuItem(value: opt['value'], child: Text(opt['label']!))).toList(),
+                          items: _statusOptions.map((opt) => DropdownMenuItem(value: opt['value'], child: TextBody2(opt['label']!))).toList(),
                           onChanged: (val) => setState(() => _status = val!),
                         ),
                         const SizedBox(height: 16),
@@ -443,18 +442,13 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
+                                    const TextH3(
                                       'Produtos / Cardápio',
-                                      style: theme.textTheme.titleMedium?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                      fontWeight: FontWeight.bold,
                                     ),
-                                    Text(
+                                    TextBody3(
                                       'Gerencie os produtos e itens do cardápio desta loja',
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 12,
-                                      ),
+                                      color: Colors.grey[600],
                                     ),
                                   ],
                                 ),
@@ -464,32 +458,18 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
                           
                           const SizedBox(height: 20),
                           
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton.icon(
-                              onPressed: () => _abrirCardapio(context),
-                              icon: const Icon(Icons.restaurant_menu_outlined),
-                              label: const Text('Gerenciar Cardápio'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: theme.colorScheme.primary,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            ),
+                          QuiButton(
+                            label: 'Gerenciar Cardápio',
+                            onPressed: () => _abrirCardapio(context),
+                            icon: Icons.restaurant_menu_outlined,
                           ),
                           
                           const SizedBox(height: 8),
                           
                           Center(
-                            child: Text(
+                            child: TextBody3(
                               'Você será redirecionado para a gestão completa do cardápio',
-                              style: TextStyle(
-                                color: Colors.grey[500],
-                                fontSize: 11,
-                              ),
+                              color: Colors.grey[500],
                             ),
                           ),
                         ],
@@ -503,7 +483,11 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
                   _buildDeleteButton(),
                 ],
                 const SizedBox(height: 32),
-                _buildSubmitButton(theme),
+                QuiButton(
+                  label: _isEditing ? 'ATUALIZAR LOJA' : 'CRIAR LOJA',
+                  onPressed: _salvar,
+                  isLoading: _isSaving,
+                ),
               ],
             ),
           ),
@@ -530,7 +514,7 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
           child: Icon(icon, color: theme.colorScheme.primary, size: 20),
         ),
         const SizedBox(width: 12),
-        Text(title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+        TextH3(title, fontWeight: FontWeight.bold),
       ],
     );
   }
@@ -540,8 +524,8 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey[300]!)),
       child: SwitchListTile(
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
-        subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
+        title: TextBody1(title, fontWeight: FontWeight.w500),
+        subtitle: TextBody3(subtitle),
         value: value,
         onChanged: onChanged,
         contentPadding: EdgeInsets.zero,
@@ -554,24 +538,8 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
       child: TextButton.icon(
         onPressed: _isDeleting ? null : _deletar,
         icon: _isDeleting ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.delete_outline, size: 18, color: Colors.red),
-        label: Text(_isDeleting ? 'Excluindo...' : 'Excluir loja', style: const TextStyle(color: Colors.red)),
+        label: TextBody2(_isDeleting ? 'Excluindo...' : 'Excluir loja', color: Colors.red),
         style: TextButton.styleFrom(backgroundColor: Colors.red.withOpacity(0.05), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))),
-      ),
-    );
-  }
-
-  Widget _buildSubmitButton(ThemeData theme) {
-    return SizedBox(
-      width: double.infinity,
-      height: 52,
-      child: ElevatedButton(
-        onPressed: _isSaving || _isLoadingData ? null : _salvar,
-        style: ElevatedButton.styleFrom(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          backgroundColor: theme.colorScheme.primary,
-          foregroundColor: Colors.white,
-        ),
-        child: _isSaving ? const CircularProgressIndicator(color: Colors.white) : Text(_isEditing ? 'ATUALIZAR LOJA' : 'CRIAR LOJA'),
       ),
     );
   }

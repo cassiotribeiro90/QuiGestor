@@ -4,6 +4,7 @@ import '../bloc/gestores_cubit.dart';
 import '../../../../apparte/widgets/app_text.dart';
 import '../../../../apparte/widgets/filter_option.dart';
 import '../../../../apparte/widgets/filter_section_widget.dart';
+import '../../../../apparte/widgets/qui_button.dart';
 
 class GestorFilters extends StatefulWidget {
   const GestorFilters({super.key});
@@ -113,7 +114,7 @@ class _GestorFiltersState extends State<GestorFilters> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const TextH2('Filtrar Gestores'),
+          const TextH2('Filtrar Gestores', fontWeight: FontWeight.bold),
           const SizedBox(height: 20),
           
           FilterSectionWidget(
@@ -138,12 +139,14 @@ class _GestorFiltersState extends State<GestorFilters> {
                     context.read<GestoresCubit>().clearFilters();
                     Navigator.pop(context);
                   },
-                  child: const Text('limpar'),
+                  child: const TextBody2('limpar'),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: ElevatedButton(
+                child: QuiButton(
+                  label: 'APLICAR',
+                  height: 48,
                   onPressed: () {
                     context.read<GestoresCubit>().applyFilters(
                       niveis: _nivelSection.getSelectedValues(),
@@ -151,14 +154,6 @@ class _GestorFiltersState extends State<GestorFilters> {
                     );
                     Navigator.pop(context);
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.colorScheme.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: const Text('APLICAR'),
                 ),
               ),
             ],

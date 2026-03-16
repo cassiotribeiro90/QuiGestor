@@ -1,6 +1,8 @@
 // lojas/widgets/loja_empty_state.dart
 import 'package:flutter/material.dart';
 
+import '../../../../apparte/widgets/app_text.dart';
+
 class LojaEmptyState extends StatelessWidget {
   final bool isListEmpty;
   final VoidCallback onCreatePressed;
@@ -25,23 +27,21 @@ class LojaEmptyState extends StatelessWidget {
             color: Colors.grey[400],
           ),
           const SizedBox(height: 16),
-          Text(
+          TextBody1(
             'Nenhuma loja encontrada',
-            style: theme.textTheme.titleMedium,
           ),
           const SizedBox(height: 8),
-          Text(
+          TextBody2(
             isListEmpty
                 ? 'Comece criando uma loja'
                 : 'Tente outros filtros de busca',
-            style: TextStyle(color: Colors.grey[600]),
           ),
           if (isListEmpty) ...[
             const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: onCreatePressed,
               icon: const Icon(Icons.add),
-              label: const Text('Criar Loja'),
+              label: const TextH2('Criar Loja'),
             ),
           ],
         ],

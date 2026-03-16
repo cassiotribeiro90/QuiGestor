@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../apparte/widgets/app_text.dart';
 import '../../auth/bloc/auth_cubit.dart';
 import '../../../routes/app_routes.dart';
 import '../bloc/home_cubit.dart';
@@ -47,13 +48,14 @@ class SideMenu extends StatelessWidget {
                 ),
                 if (!isCompact) ...[
                   const SizedBox(height: 8),
-                  const Text(
+                  const TextBody1(
                     'QuiGestor',
-                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
                   ),
-                  const Text(
+                  const TextBody3(
                     'Painel Administrativo',
-                    style: TextStyle(color: Colors.white70, fontSize: 12),
+                    color: Colors.white70,
                   ),
                 ],
               ],
@@ -132,35 +134,42 @@ class SideMenu extends StatelessWidget {
                   index: 7,
                   isCompact: isCompact,
                 ),
+
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Divider(),
+                ),
+
+                // Theme Toggle dentro do scroll
+                BlocBuilder<ThemeCubit, ThemeState>(
+                  builder: (context, state) {
+                    final isDark = state.themeMode == ThemeMode.dark;
+                    return ListTile(
+                      leading: Icon(
+                        isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+                        color: theme.colorScheme.primary,
+                      ),
+                      title: isCompact ? null : TextBody2(isDark ? 'Tema Claro' : 'Tema Escuro'),
+                      onTap: () => context.read<ThemeCubit>().toggleTheme(),
+                    );
+                  },
+                ),
+
+                // Logout dentro do scroll
+                ListTile(
+                  leading: const Icon(Icons.logout_rounded, color: Colors.red),
+                  title: isCompact ? null : const TextBody2('Sair', color: Colors.red),
+                  onTap: () {
+                    context.read<AuthCubit>().logout();
+                    Navigator.pushReplacementNamed(context, Routes.LOGIN);
+                  },
+                ),
+                
+                // Espaço extra no final da lista
+                SizedBox(height: MediaQuery.of(context).padding.bottom + 20),
               ],
             ),
           ),
-          
-          // Theme Toggle
-          BlocBuilder<ThemeCubit, ThemeState>(
-            builder: (context, state) {
-              final isDark = state.themeMode == ThemeMode.dark;
-              return ListTile(
-                leading: Icon(
-                  isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
-                  color: theme.colorScheme.primary,
-                ),
-                title: isCompact ? null : Text(isDark ? 'Tema Claro' : 'Tema Escuro'),
-                onTap: () => context.read<ThemeCubit>().toggleTheme(),
-              );
-            },
-          ),
-
-          // Logout
-          ListTile(
-            leading: const Icon(Icons.logout_rounded, color: Colors.red),
-            title: isCompact ? null : const Text('Sair', style: TextStyle(color: Colors.red)),
-            onTap: () {
-              context.read<AuthCubit>().logout();
-              Navigator.pushReplacementNamed(context, Routes.LOGIN);
-            },
-          ),
-          SizedBox(height: MediaQuery.of(context).padding.bottom),
         ],
       ),
     );
@@ -170,13 +179,10 @@ class SideMenu extends StatelessWidget {
     if (isCompact) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-      child: Text(
+      child: TextBody3(
         title,
-        style: TextStyle(
-          fontSize: 12, 
-          fontWeight: FontWeight.bold, 
-          color: Theme.of(context).disabledColor,
-        ),
+        fontWeight: FontWeight.bold,
+        color: Theme.of(context).disabledColor,
       ),
     );
   }
@@ -190,7 +196,7 @@ class SideMenu extends StatelessWidget {
   }) {
     return ListTile(
       leading: Icon(icon),
-      title: isCompact ? null : Text(label),
+      title: isCompact ? null : TextBody2(label),
       dense: true,
       onTap: () {
         // Fecha drawer se estiver aberto (Mobile)

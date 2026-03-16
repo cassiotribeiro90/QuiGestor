@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../theme/app_colors.dart';
-import '../../theme/app_text_styles.dart';
+import '../../../../apparte/widgets/app_text.dart';
 
 class FilterOptionTile extends StatelessWidget {
   final String label;
@@ -76,12 +75,10 @@ class FilterOptionTile extends StatelessWidget {
                 
                 // Label
                 Expanded(
-                  child: Text(
+                  child: TextBody2(
                     label,
-                    style: AppTextStyles.body2.copyWith(
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                      color: isSelected ? optionColor : theme.colorScheme.onSurface,
-                    ),
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                    color: isSelected ? optionColor : theme.colorScheme.onSurface,
                   ),
                 ),
                 
@@ -96,12 +93,10 @@ class FilterOptionTile extends StatelessWidget {
                       color: Colors.grey[200],
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Text(
+                    child: TextCaption(
                       '$count',
-                      style: AppTextStyles.caption.copyWith(
-                        color: Colors.grey[700],
-                        fontWeight: FontWeight.w600,
-                      ),
+                      color: Colors.grey[700],
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
               ],

@@ -23,18 +23,18 @@ class ProdutosLoaded extends ProdutosState {
   static Map<String, List<Produto>> _agruparPorCategoria(List<Produto> produtos) {
     final agrupados = <String, List<Produto>>{};
     for (var p in produtos) {
-      final cat = p.categoria ?? 'Outros';
-      if (!agrupados.containsKey(cat)) agrupados[cat as String] = [];
+      final cat = p.categoria?.nome ?? 'Outros';
+      if (!agrupados.containsKey(cat)) agrupados[cat] = [];
       agrupados[cat]!.add(p);
     }
     return agrupados;
   }
 
   static Map<String, int> _calcularContagens(List<Produto> produtos) {
-    final contagens = <String, int>{};
+    final Map<String, int> contagens = <String, int>{};
     for (var p in produtos) {
-      final cat = p.categoria ?? 'Outros';
-      contagens[cat as String] = (contagens[cat] ?? 0) + 1;
+      final cat = p.categoria?.nome ?? 'Outros';
+      contagens[cat] = (contagens[cat] ?? 0) + 1;
     }
     return contagens;
   }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../apparte/widgets/app_text.dart';
+import '../../../../apparte/widgets/qui_button.dart';
 import '../bloc/gestores_cubit.dart';
 import '../models/gestor.dart';
 
@@ -42,11 +44,9 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
     super.initState();
     _isEditing = widget.gestor != null;
     
-    // ✅ Inicializa controllers VAZIOS (conforme roteiro)
     _inicializarControllersVazios();
     
     if (_isEditing) {
-      // ✅ Carrega dados completos do backend
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _carregarDadosCompletos();
       });
@@ -59,6 +59,10 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
     _cpfController = TextEditingController();
     _telefoneController = TextEditingController();
     _senhaController = TextEditingController();
+
+    _nomeController.addListener(() {
+      if (mounted) setState(() {});
+    });
   }
 
   Future<void> _carregarDadosCompletos() async {
@@ -72,11 +76,10 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
         _preencherControllers(gestorCompleto);
       });
     } else if (mounted) {
-      // Fallback: usa os dados da lista se falhar
       _preencherControllers(widget.gestor!);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Alguns campos podem estar incompletos'),
+          content: TextBody2('Alguns campos podem estar incompletos'),
           backgroundColor: Colors.orange,
         ),
       );
@@ -133,7 +136,7 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
       if (widget.onSaved != null) {
         widget.onSaved!();
       } else {
-        Navigator.pop(context, true); // ✅ Retorna true
+        Navigator.pop(context, true);
       }
     }
     
@@ -144,12 +147,12 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confirmar exclusão'),
-        content: Text('Tem certeza que deseja excluir ${widget.gestor!.nome}? Esta ação não pode ser desfeita.'),
+        title: const TextH3('Confirmar exclusão'),
+        content: TextBody2('Tem certeza que deseja excluir ${widget.gestor!.nome}? Esta ação não pode ser desfeita.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+            child: const TextBody2('Cancelar'),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -157,7 +160,7 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
               foregroundColor: Colors.white,
             ),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Excluir'),
+            child: const TextBody2('Excluir', fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -173,7 +176,7 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
       if (widget.onSaved != null) {
         widget.onSaved!();
       } else {
-        Navigator.pop(context, true); // ✅ Retorna true
+        Navigator.pop(context, true);
       }
     }
     
@@ -184,9 +187,15 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     
+    String title = _isEditing ? 'Editar Gestor' : 'Novo Gestor';
+    if (_nomeController.text.isNotEmpty) {
+      title = '${_nomeController.text} - Gerenciar Gestor';
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEditing ? 'Editar Gestor' : 'Novo Gestor'),
+        title: TextH2(title, fontWeight: FontWeight.bold),
+        centerTitle: false,
         actions: [
           IconButton(
             icon: _isSaving || _isLoadingData
@@ -271,7 +280,7 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
                         DropdownButtonFormField<String>(
                           value: _nivel,
                           decoration: _inputDecoration(theme, 'Nível de Acesso *', Icons.security_outlined),
-                          items: _niveis.map((nivel) => DropdownMenuItem(value: nivel['value'], child: Text(nivel['label']!))).toList(),
+                          items: _niveis.map((nivel) => DropdownMenuItem(value: nivel['value'], child: TextBody2(nivel['label']!))).toList(),
                           onChanged: (value) => setState(() => _nivel = value!),
                         ),
                         const SizedBox(height: 16),
@@ -285,7 +294,11 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
                   _buildDeleteButton(),
                 ],
                 const SizedBox(height: 32),
-                _buildSubmitButton(theme),
+                QuiButton(
+                  label: _isEditing ? 'ATUALIZAR GESTOR' : 'CRIAR GESTOR',
+                  onPressed: _save,
+                  isLoading: _isSaving,
+                ),
               ],
             ),
           ),
@@ -304,16 +317,15 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
   }
 
   Widget _buildSectionHeader(BuildContext context, IconData icon, String title) {
-    final theme = Theme.of(context);
     return Row(
       children: [
         Container(
           padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(color: theme.colorScheme.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-          child: Icon(icon, color: theme.colorScheme.primary, size: 20),
+          decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+          child: Icon(icon, color: Theme.of(context).colorScheme.primary, size: 20),
         ),
         const SizedBox(width: 12),
-        Text(title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+        TextH3(title, fontWeight: FontWeight.bold),
       ],
     );
   }
@@ -334,8 +346,8 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Gestor Ativo', style: TextStyle(fontWeight: FontWeight.w500)),
-                Text('Define se o gestor pode acessar o sistema', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                const TextBody1('Gestor Ativo', fontWeight: FontWeight.w500),
+                TextBody3('Define se o gestor pode acessar o sistema', color: Colors.grey[600]),
               ],
             ),
           ),
@@ -350,24 +362,8 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
       child: TextButton.icon(
         onPressed: _isDeleting ? null : _delete,
         icon: _isDeleting ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.delete_outline, size: 18, color: Colors.red),
-        label: Text(_isDeleting ? 'Excluindo...' : 'Excluir gestor', style: const TextStyle(color: Colors.red)),
+        label: TextBody2(_isDeleting ? 'Excluindo...' : 'Excluir gestor', color: Colors.red),
         style: TextButton.styleFrom(backgroundColor: Colors.red.withOpacity(0.05), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))),
-      ),
-    );
-  }
-
-  Widget _buildSubmitButton(ThemeData theme) {
-    return SizedBox(
-      width: double.infinity,
-      height: 52,
-      child: ElevatedButton(
-        onPressed: _isSaving || _isLoadingData ? null : _save,
-        style: ElevatedButton.styleFrom(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          backgroundColor: theme.colorScheme.primary,
-          foregroundColor: Colors.white,
-        ),
-        child: _isSaving ? const CircularProgressIndicator(color: Colors.white) : Text(_isEditing ? 'ATUALIZAR GESTOR' : 'CRIAR GESTOR'),
       ),
     );
   }

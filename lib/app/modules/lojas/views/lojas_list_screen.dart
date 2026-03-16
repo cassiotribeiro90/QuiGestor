@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../apparte/widgets/app_text.dart';
 import '../../../../apparte/widgets/loading_skeleton.dart';
 import '../../../app_config.dart';
 import '../bloc/lojas_cubit.dart';
@@ -99,7 +100,7 @@ class _LojasListScreenState extends State<LojasListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Todas as Lojas'),
+        title: const TextH2('Todas as Lojas', fontWeight: FontWeight.bold),
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_alt_outlined),
@@ -141,14 +142,14 @@ class _LojasListScreenState extends State<LojasListScreen> {
           if (state is LojasError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.message),
+                content: TextBody2(state.message, color: Colors.white),
                 backgroundColor: Colors.red,
               ),
             );
           } else if (state is LojaOperationSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.message),
+                content: TextBody2(state.message, color: Colors.white),
                 backgroundColor: Colors.green,
               ),
             );
@@ -182,14 +183,13 @@ class _LojasListScreenState extends State<LojasListScreen> {
                       color: Colors.grey[400],
                     ),
                     const SizedBox(height: 16),
-                    Text('Nenhuma loja encontrada',
-                        style: theme.textTheme.titleMedium),
+                    const TextH2('Nenhuma loja encontrada'),
                     const SizedBox(height: 8),
-                    Text(
+                    TextBody2(
                       state.lojas.isEmpty
                           ? 'Comece criando uma loja'
                           : 'Tente outros filtros de busca',
-                      style: TextStyle(color: Colors.grey[600]),
+                      color: Colors.grey[600],
                     ),
                   ],
                 ),
@@ -226,8 +226,8 @@ class _LojasListScreenState extends State<LojasListScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _abrirFormLoja(context),
-        label: const Text('Nova Loja'),
-        icon: const Icon(Icons.add),
+        label: const TextBody2('Nova Loja', fontWeight: FontWeight.bold, color: Colors.white),
+        icon: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }

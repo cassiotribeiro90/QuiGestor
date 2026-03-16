@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../apparte/widgets/app_text.dart';
 import '../services/token_service.dart';
 import '../../app/routes/app_routes.dart';
 import '../../app/modules/auth/bloc/auth_cubit.dart';
@@ -174,7 +175,7 @@ class RefreshInterceptor extends QueuedInterceptor {
             if (context != null) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Sessão expirada. Faça login novamente.'),
+                  content: TextBody2('Sessão expirada. Faça login novamente.', color: Colors.white),
                   backgroundColor: Colors.orange,
                   duration: Duration(seconds: 3),
                 ),

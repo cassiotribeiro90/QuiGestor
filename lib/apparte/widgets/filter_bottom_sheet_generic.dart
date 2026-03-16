@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'filter_option.dart';
 import 'filter_section_widget.dart';
 import 'app_text.dart';
+import 'qui_button.dart';
 
 class FilterBottomSheetGeneric extends StatefulWidget {
   final String title;
@@ -105,7 +106,7 @@ class _FilterBottomSheetGenericState extends State<FilterBottomSheetGeneric> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                TextH2(widget.title),
+                TextH2(widget.title, fontWeight: FontWeight.bold),
                 IconButton(
                   icon: const Icon(Icons.close),
                   onPressed: () => Navigator.pop(context),
@@ -139,24 +140,18 @@ class _FilterBottomSheetGenericState extends State<FilterBottomSheetGeneric> {
                 Expanded(
                   child: TextButton(
                     onPressed: _clearAll,
-                    child: const Text('Limpar'),
+                    child: const TextBody2('Limpar'),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: ElevatedButton(
+                  child: QuiButton(
+                    label: 'Aplicar',
+                    height: 48,
                     onPressed: () {
                       widget.onApply(_sections);
                       Navigator.pop(context);
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.colorScheme.primary,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: const Text('Aplicar'),
                   ),
                 ),
               ],

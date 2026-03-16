@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'filter_option_chip.dart';
 import 'filter_option.dart';
+import 'app_text.dart';
 
 class FilterSectionWidget extends StatelessWidget {
   final FilterSectionModel section;
@@ -19,12 +20,9 @@ class FilterSectionWidget extends StatelessWidget {
       children: [
         Row(
           children: [
-            Text(
+            TextBody1(
               section.title,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
+              fontWeight: FontWeight.bold,
             ),
             const SizedBox(width: 8),
             Container(
@@ -33,12 +31,9 @@ class FilterSectionWidget extends StatelessWidget {
                 color: section.isRadio ? Colors.blue : Colors.green,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Text(
+              child: TextBody3(
                 section.isRadio ? 'única' : 'múltipla',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                ),
+                color: Colors.white,
               ),
             ),
           ],

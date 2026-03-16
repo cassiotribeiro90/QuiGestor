@@ -1,6 +1,8 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../apparte/widgets/app_text.dart';
+import '../../../../apparte/widgets/qui_button.dart';
 import '../../../shared/services/token_service.dart';
 
 class DebugScreen extends StatelessWidget {
@@ -12,7 +14,7 @@ class DebugScreen extends StatelessWidget {
     final tokenService = TokenService();
     
     return Scaffold(
-      appBar: AppBar(title: const Text('Debug - Token')),
+      appBar: AppBar(title: const TextH2('Debug - Token', fontWeight: FontWeight.bold)),
       body: FutureBuilder<SharedPreferences>(
         future: SharedPreferences.getInstance(),
         builder: (context, snapshot) {
@@ -20,7 +22,6 @@ class DebugScreen extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
           
-          final prefs = snapshot.data!;
           final token = tokenService.getAccessToken();
           final refreshToken = tokenService.getRefreshToken();
           
@@ -33,7 +34,7 @@ class DebugScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Status do Token', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      const TextH3('Status do Token', fontWeight: FontWeight.bold),
                       const Divider(),
                       _buildInfoRow('Access Token', token != null ? 'SIM' : 'NÃO'),
                       if (token != null) ...[
@@ -51,42 +52,45 @@ class DebugScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              ElevatedButton(
+              QuiButton(
+                label: 'LIMPAR TOKENS',
+                backgroundColor: Colors.red,
                 onPressed: () async {
                   await tokenService.clearTokens();
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Tokens limpos!')),
+                      const SnackBar(content: TextBody2('Tokens limpos!', color: Colors.white)),
                     );
                     Navigator.of(context).pop();
                   }
                 },
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                child: const Text('LIMPAR TOKENS', style: TextStyle(color: Colors.white)),
               ),
               const SizedBox(height: 8),
-              ElevatedButton(
+              QuiButton(
+                label: 'VER ACCESS TOKEN COMPLETO',
                 onPressed: () {
                   if (context.mounted) {
                     if (token != null) {
                       showDialog(
                         context: context,
                         builder: (context) => AlertDialog(
-                          title: const Text('Access Token Completo'),
+                          title: const TextH3('Access Token Completo', fontWeight: FontWeight.bold),
                           content: SelectableText(token),
                           actions: [
-                            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Fechar'))
+                            TextButton(
+                              onPressed: () => Navigator.pop(context), 
+                              child: const TextBody2('Fechar')
+                            )
                           ],
                         ),
                       );
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Token não encontrado!')),
+                        const SnackBar(content: TextBody2('Token não encontrado!', color: Colors.white)),
                       );
                     }
                   }
                 },
-                child: const Text('VER ACCESS TOKEN COMPLETO'),
               ),
             ],
           );
@@ -101,8 +105,8 @@ class DebugScreen extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 120, child: Text('$label:', style: const TextStyle(fontWeight: FontWeight.bold))),
-          Expanded(child: Text(value)),
+          SizedBox(width: 120, child: TextBody2('$label:', fontWeight: FontWeight.bold)),
+          Expanded(child: TextBody2(value)),
         ],
       ),
     );

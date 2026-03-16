@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../apparte/widgets/app_text.dart';
+import '../../../../apparte/widgets/qui_button.dart';
 import '../bloc/produto_cubit.dart';
 import '../bloc/produto_state.dart';
 import '../models/produto.dart';
@@ -70,7 +72,6 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> {
     _ordemController = TextEditingController();
     _estoqueController = TextEditingController();
     
-    // Atualiza o título em tempo real ao digitar o nome
     _nomeController.addListener(() {
       if (mounted) setState(() {});
     });
@@ -141,11 +142,9 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> {
           child: Icon(icon, color: theme.colorScheme.primary, size: 20),
         ),
         const SizedBox(width: 12),
-        Text(
+        TextH3(
           title,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          fontWeight: FontWeight.bold,
         ),
       ],
     );
@@ -159,12 +158,12 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> {
       listener: (context, state) {
         if (state is ProdutoOperationSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message), backgroundColor: Colors.green),
+            SnackBar(content: TextBody2(state.message), backgroundColor: Colors.green),
           );
           Navigator.pop(context, true);
         } else if (state is ProdutoError) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+            SnackBar(content: TextBody2(state.message), backgroundColor: Colors.red),
           );
         } else if (state is ProdutoLoaded && state.produto != null) {
           _preencherControllers(state.produto!);
@@ -173,7 +172,6 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> {
       builder: (context, state) {
         final isLoading = state is ProdutoLoading || state is ProdutoOperationLoading;
         
-        // Configuração dinâmica do título: nome_produto - nome_loja
         String title = _isEditing ? 'Editar Produto' : 'Novo Produto';
         if (state is ProdutoLoaded) {
           final lojaNome = _getLojaNome(state.lojas);
@@ -190,7 +188,7 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> {
 
         return Scaffold(
           appBar: AppBar(
-            title: Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+            title: TextH2(title, fontWeight: FontWeight.bold),
             centerTitle: false,
             actions: [
               if (!isLoading)
@@ -231,7 +229,11 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> {
                           
                           const SizedBox(height: 16),
                           
-                          _buildSubmitButton(theme, isLoading),
+                          QuiButton(
+                            label: _isEditing ? 'ATUALIZAR PRODUTO' : 'CRIAR PRODUTO',
+                            onPressed: _salvar,
+                            isLoading: isLoading,
+                          ),
                         ]
                       ],
                     ),
@@ -296,7 +298,6 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> {
           _buildSectionHeader(context, icon: Icons.category_outlined, title: 'Categorização'),
           const SizedBox(height: 20),
           
-          // Campo de Loja apenas leitura (Não editável)
           TextFormField(
             initialValue: lojaNome.isNotEmpty ? lojaNome : 'Carregando...',
             key: ValueKey('loja_$lojaNome'),
@@ -321,7 +322,7 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> {
               decoration: const InputDecoration(labelText: 'Categoria', prefixIcon: Icon(Icons.category_outlined)),
               items: categorias.map((cat) => DropdownMenuItem(
                 value: cat.id,
-                child: Row(children: [Text(cat.icone ?? ''), const SizedBox(width: 8), Text(cat.nome)]),
+                child: Row(children: [TextBody2(cat.icone ?? ''), const SizedBox(width: 8), TextBody2(cat.nome)]),
               )).toList(),
               onChanged: (value) => setState(() => _categoriaId = value),
             ),
@@ -355,7 +356,7 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> {
                   errorBuilder: (_, __, ___) => Container(
                     height: 100,
                     color: Colors.grey[200],
-                    child: const Center(child: Text('Imagem inválida')),
+                    child: const Center(child: TextBody2('Imagem inválida')),
                   ),
                 ),
               ),
@@ -373,17 +374,17 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> {
           _buildSectionHeader(context, icon: Icons.info_outline, title: 'Status e Disponibilidade'),
           const SizedBox(height: 20),
           SwitchListTile(
-            title: const Text('Disponível para venda'),
+            title: const TextBody1('Disponível para venda'),
             value: _disponivel,
             onChanged: (value) => setState(() => _disponivel = value),
           ),
           SwitchListTile(
-            title: const Text('Produto Ativo'),
+            title: const TextBody1('Produto Ativo'),
             value: _ativo,
             onChanged: (value) => setState(() => _ativo = value),
           ),
           SwitchListTile(
-            title: const Text('Produto em Destaque'),
+            title: const TextBody1('Produto em Destaque'),
             value: _destaque,
             onChanged: (value) => setState(() => _destaque = value),
           ),
@@ -403,11 +404,11 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> {
             spacing: 8,
             runSpacing: 8,
             children: [
-              FilterChip(label: const Text('Contém Glúten'), selected: _contemGluten, onSelected: (v) => setState(() => _contemGluten = v)),
-              FilterChip(label: const Text('Contém Lactose'), selected: _contemLactose, onSelected: (v) => setState(() => _contemLactose = v)),
-              FilterChip(label: const Text('Vegano'), selected: _vegano, onSelected: (v) => setState(() => _vegano = v)),
-              FilterChip(label: const Text('Vegetariano'), selected: _vegetariano, onSelected: (v) => setState(() => _vegetariano = v)),
-              FilterChip(label: const Text('Apimentado'), selected: _apimentado, onSelected: (v) => setState(() => _apimentado = v)),
+              FilterChip(label: const TextBody3('Contém Glúten'), selected: _contemGluten, onSelected: (v) => setState(() => _contemGluten = v)),
+              FilterChip(label: const TextBody3('Contém Lactose'), selected: _contemLactose, onSelected: (v) => setState(() => _contemLactose = v)),
+              FilterChip(label: const TextBody3('Vegano'), selected: _vegano, onSelected: (v) => setState(() => _vegano = v)),
+              FilterChip(label: const TextBody3('Vegetariano'), selected: _vegetariano, onSelected: (v) => setState(() => _vegetariano = v)),
+              FilterChip(label: const TextBody3('Apimentado'), selected: _apimentado, onSelected: (v) => setState(() => _apimentado = v)),
             ],
           ),
           const SizedBox(height: 16),
@@ -463,32 +464,12 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> {
       child: TextButton.icon(
         onPressed: isLoading ? null : _deletar,
         icon: const Icon(Icons.delete_outline, color: Colors.red),
-        label: const Text('Excluir produto', style: TextStyle(color: Colors.red)),
+        label: const TextBody2('Excluir produto', color: Colors.red),
         style: TextButton.styleFrom(
           backgroundColor: Colors.red.withOpacity(0.05),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         ),
-      ),
-    );
-  }
-
-  Widget _buildSubmitButton(ThemeData theme, bool isLoading) {
-    return SizedBox(
-      width: double.infinity,
-      height: 52,
-      child: ElevatedButton(
-        onPressed: isLoading ? null : _salvar,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: theme.colorScheme.primary,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        child: isLoading
-            ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-            : Text(_isEditing ? 'ATUALIZAR PRODUTO' : 'CRIAR PRODUTO', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
       ),
     );
   }
@@ -528,14 +509,14 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Excluir Produto'),
-        content: const Text('Tem certeza que deseja excluir este produto? Esta ação não pode ser desfeita.'),
+        title: const TextH3('Excluir Produto'),
+        content: const TextBody2('Tem certeza que deseja excluir este produto? Esta ação não pode ser desfeita.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('CANCELAR')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const TextBody2('CANCELAR')),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('EXCLUIR'),
+            child: const TextBody2('EXCLUIR', fontWeight: FontWeight.bold, color: Colors.red),
           ),
         ],
       ),

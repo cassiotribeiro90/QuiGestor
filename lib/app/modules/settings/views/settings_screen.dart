@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../apparte/widgets/app_text.dart';
 import '../../theme/bloc/theme_cubit.dart';
 import '../../theme/bloc/theme_state.dart';
 
@@ -12,7 +13,7 @@ class SettingsScreen extends StatelessWidget {
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Configurações'),
+        title: const TextH2('Configurações', fontWeight: FontWeight.bold),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -27,11 +28,9 @@ class SettingsScreen extends StatelessWidget {
                     children: [
                       Icon(Icons.palette_outlined, color: theme.colorScheme.primary),
                       const SizedBox(width: 8),
-                      Text(
+                      const TextH3(
                         'Aparência',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        fontWeight: FontWeight.bold,
                       ),
                     ],
                   ),
@@ -41,7 +40,7 @@ class SettingsScreen extends StatelessWidget {
                       return Column(
                         children: [
                           RadioListTile<ThemeMode>(
-                            title: const Text('Claro'),
+                            title: const TextBody1('Claro'),
                             secondary: const Icon(Icons.light_mode_outlined),
                             value: ThemeMode.light,
                             groupValue: state.themeMode,
@@ -52,7 +51,7 @@ class SettingsScreen extends StatelessWidget {
                             },
                           ),
                           RadioListTile<ThemeMode>(
-                            title: const Text('Escuro'),
+                            title: const TextBody1('Escuro'),
                             secondary: const Icon(Icons.dark_mode_outlined),
                             value: ThemeMode.dark,
                             groupValue: state.themeMode,
@@ -63,7 +62,7 @@ class SettingsScreen extends StatelessWidget {
                             },
                           ),
                           RadioListTile<ThemeMode>(
-                            title: const Text('Sistema'),
+                            title: const TextBody1('Sistema'),
                             secondary: const Icon(Icons.settings_suggest_outlined),
                             value: ThemeMode.system,
                             groupValue: state.themeMode,
@@ -85,8 +84,8 @@ class SettingsScreen extends StatelessWidget {
           Card(
             child: ListTile(
               leading: const Icon(Icons.info_outline),
-              title: const Text('Sobre o QuiGestor'),
-              subtitle: const Text('Versão 1.0.0'),
+              title: const TextBody1('Sobre o QuiGestor', fontWeight: FontWeight.bold),
+              subtitle: const TextBody3('Versão 1.0.0'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () {
                 showAboutDialog(
@@ -95,7 +94,7 @@ class SettingsScreen extends StatelessWidget {
                   applicationVersion: '1.0.0',
                   applicationIcon: Icon(Icons.store, size: 48, color: theme.colorScheme.primary),
                   children: [
-                    const Text('Sistema de gestão inteligente para o ecossistema Qui.'),
+                    const TextBody2('Sistema de gestão inteligente para o ecossistema Qui.'),
                   ],
                 );
               },

@@ -49,6 +49,8 @@ class GestorCard extends StatelessWidget {
                     child: Center(
                       child: TextH2(
                         gestor.nome.substring(0, 1).toUpperCase(),
+                        color: nivelColor,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
@@ -62,9 +64,9 @@ class GestorCard extends StatelessWidget {
                         Row(
                           children: [
                             Expanded(
-                              child: TextH3(
+                              child: TextBody1(
                                 gestor.nome,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                             if (showNivelBadge) _buildNivelBadge(context, gestor.nivel),
@@ -73,6 +75,7 @@ class GestorCard extends StatelessWidget {
                         const SizedBox(height: 4),
                         TextBody2(
                           gestor.email,
+                          color: Colors.grey[600],
                         ),
                       ],
                     ),
@@ -85,7 +88,7 @@ class GestorCard extends StatelessWidget {
                       Container(
                         margin: const EdgeInsets.only(right: 8),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withOpacity(0.1), // ← 10% de opacidade
+                          color: theme.colorScheme.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: IconButton(
@@ -143,13 +146,10 @@ class GestorCard extends StatelessWidget {
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(4),
       ),
-      child: Text(
+      child: TextBody3(
         label,
-        style: TextStyle(
-          color: color,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
+        color: color,
+        fontWeight: FontWeight.w600,
       ),
     );
   }

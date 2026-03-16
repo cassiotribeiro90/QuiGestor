@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
+import '../../../../apparte/widgets/app_text.dart';
+import '../../../../apparte/widgets/qui_button.dart';
 import '../models/filter_model.dart';
 import '../../theme/app_colors.dart';
-import '../../theme/app_text_styles.dart';
 
 class FilterSheet extends StatefulWidget {
   final FilterConfig config;
@@ -99,11 +100,9 @@ class _FilterSheetState extends State<FilterSheet> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
+                TextH2(
                   _config.title,
-                  style: AppTextStyles.h2.copyWith(
-                    color: AppColors.textPrimary,
-                  ),
+                  color: AppColors.textPrimary,
                 ),
                 Row(
                   children: [
@@ -118,13 +117,10 @@ class _FilterSheetState extends State<FilterSheet> {
                           color: AppColors.primary,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Text(
+                        child: TextBody3(
                           '$activeCount',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     IconButton(
@@ -173,12 +169,10 @@ class _FilterSheetState extends State<FilterSheet> {
                               ),
                             ),
                             const SizedBox(width: 12),
-                            Text(
+                            TextBody1(
                               section.title,
-                              style: AppTextStyles.body1.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimary,
-                              ),
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
                             ),
                           ],
                         ),
@@ -201,16 +195,14 @@ class _FilterSheetState extends State<FilterSheet> {
                             title: Row(
                               children: [
                                 Expanded(
-                                  child: Text(
+                                  child: TextBody2(
                                     option.label,
-                                    style: AppTextStyles.body2.copyWith(
-                                      fontWeight: option.selected
-                                          ? FontWeight.w600
-                                          : FontWeight.normal,
-                                      color: option.selected
-                                          ? AppColors.primary
-                                          : AppColors.textPrimary,
-                                    ),
+                                    fontWeight: option.selected
+                                        ? FontWeight.w600
+                                        : FontWeight.normal,
+                                    color: option.selected
+                                        ? AppColors.primary
+                                        : AppColors.textPrimary,
                                   ),
                                 ),
                                 if (option.count != null)
@@ -223,11 +215,9 @@ class _FilterSheetState extends State<FilterSheet> {
                                       color: AppColors.divider,
                                       borderRadius: BorderRadius.circular(12),
                                     ),
-                                    child: Text(
+                                    child: TextCaption(
                                       '${option.count}',
-                                      style: AppTextStyles.caption.copyWith(
-                                        color: AppColors.textSecondary,
-                                      ),
+                                      color: AppColors.textSecondary,
                                     ),
                                   ),
                               ],
@@ -272,34 +262,22 @@ class _FilterSheetState extends State<FilterSheet> {
                         side: const BorderSide(color: AppColors.divider),
                       ),
                     ),
-                    child: Text(
+                    child: const TextBody2(
                       'Limpar',
-                      style: AppTextStyles.button.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
+                      color: AppColors.textSecondary,
                     ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: ElevatedButton(
+                  child: QuiButton(
+                    label: 'Aplicar',
+                    height: 48,
                     onPressed: () {
                       final filters = _config.getSelectedFilters();
                       widget.onApply(filters);
                       Navigator.pop(context);
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: Text(
-                      'Aplicar',
-                      style: AppTextStyles.button.copyWith(color: Colors.white),
-                    ),
                   ),
                 ),
               ],

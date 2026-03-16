@@ -22,7 +22,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    print('📊 [DashboardScreen] initState - Carregando dados...');
     context.read<DashboardCubit>().fetchDashboard();
     _faturamentoScrollController.addListener(_updateFadeVisibility);
     WidgetsBinding.instance.addPostFrameCallback((_) => _updateFadeVisibility());
@@ -50,7 +49,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    print('📊 [DashboardScreen] build - width: ${MediaQuery.of(context).size.width}');
 
     return BlocBuilder<DashboardCubit, DashboardState>(
       builder: (context, state) {
@@ -70,6 +68,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   TextH2(
                     'Erro ao carregar dashboard',
                     color: theme.colorScheme.error,
+                    fontWeight: FontWeight.bold,
                   ),
                   const SizedBox(height: 8),
                   TextBody1(
@@ -79,8 +78,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
                     onPressed: () => context.read<DashboardCubit>().fetchDashboard(),
-                    icon: const Icon(Icons.refresh_rounded),
-                    label: const AppTextButton('Tentar novamente'),
+                    icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+                    label: const TextBody2('Tentar novamente', color: Colors.white, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -109,11 +108,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       TextH2(
                         'Lojas e Pedidos',
                         color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.bold,
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
-                  // === CARDS DE RESUMO USANDO WRAP ===
                   Center(
                     child: Wrap(
                       spacing: 12,
@@ -190,7 +189,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                   const SizedBox(height: 24),
 
-                  // === CARD DE FATURAMENTO ===
                   QuiGestorCard(
                     horizontalScroll: false,
                     child: Column(
@@ -203,6 +201,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             TextH2(
                               'Faturamento',
                               color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.bold,
                             ),
                           ],
                         ),
@@ -276,7 +275,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                   const SizedBox(height: 24),
 
-                  // === CARD DE MÉTRICAS ===
                   QuiGestorCard(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -288,6 +286,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             TextH2(
                               'Métricas',
                               color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.bold,
                             ),
                           ],
                         ),
@@ -339,16 +338,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // Função auxiliar para calcular largura responsiva dos cards
   Widget _buildWrapItem(BuildContext context, Widget child) {
     final isWeb = ResponsiveLayout.isWeb(context);
     final screenWidth = MediaQuery.of(context).size.width;
 
-    // 🔥 Web: considera a sidebar de 260px
-    // 📱 Mobile: padding padrão de 16px de cada lado (32px total)
     final availableWidth = isWeb
-        ? (screenWidth - 260 - 32)  // sidebar 260px + padding 32px
-        : (screenWidth - 32);        // apenas padding
+        ? (screenWidth - 260 - 32)
+        : (screenWidth - 32);
 
     int itemsPerRow = 2;
     if (isWeb) {

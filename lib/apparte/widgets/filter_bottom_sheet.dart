@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
+import 'app_text.dart';
+import 'qui_button.dart';
 import '../../app/theme/app_colors.dart';
-import '../../app/theme/app_text_styles.dart';
 
 class FilterOption {
   final String value;
@@ -170,7 +171,6 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Handle
           Container(
             margin: const EdgeInsets.only(top: 12),
             width: 40,
@@ -181,17 +181,15 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
             ),
           ),
           
-          // Header
           Padding(
             padding: const EdgeInsets.all(20),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
+                TextH2(
                   widget.title,
-                  style: AppTextStyles.h2.copyWith(
-                    color: AppColors.textPrimary,
-                  ),
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.bold,
                 ),
                 Row(
                   children: [
@@ -206,13 +204,10 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                           color: AppColors.primary,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Text(
+                        child: TextBody3(
                           '$totalSelected',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     IconButton(
@@ -228,10 +223,8 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
             ),
           ),
 
-          // Divider
           const Divider(color: AppColors.divider, height: 1),
 
-          // Conteúdo (scrollable)
           Flexible(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
@@ -244,7 +237,6 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Título da seção com ícone
                       Row(
                         children: [
                           Container(
@@ -260,18 +252,15 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                             ),
                           ),
                           const SizedBox(width: 12),
-                          Text(
+                          TextBody1(
                             section.title,
-                            style: AppTextStyles.body1.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.textPrimary,
-                            ),
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
                           ),
                         ],
                       ),
                       const SizedBox(height: 16),
 
-                      // Opções
                       ...section.options.asMap().entries.map((optEntry) {
                         final optionIndex = optEntry.key;
                         final option = optEntry.value;
@@ -288,16 +277,14 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                             title: Row(
                               children: [
                                 Expanded(
-                                  child: Text(
+                                  child: TextBody2(
                                     option.label,
-                                    style: AppTextStyles.body2.copyWith(
-                                      fontWeight: option.selected
-                                          ? FontWeight.w600
-                                          : FontWeight.normal,
-                                      color: option.selected
-                                          ? AppColors.primary
-                                          : AppColors.textPrimary,
-                                    ),
+                                    fontWeight: option.selected
+                                        ? FontWeight.w600
+                                        : FontWeight.normal,
+                                    color: option.selected
+                                        ? AppColors.primary
+                                        : AppColors.textPrimary,
                                   ),
                                 ),
                                 if (option.count > 0)
@@ -310,11 +297,9 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                                       color: AppColors.divider,
                                       borderRadius: BorderRadius.circular(12),
                                     ),
-                                    child: Text(
+                                    child: TextCaption(
                                       '${option.count}',
-                                      style: AppTextStyles.caption.copyWith(
-                                        color: AppColors.textSecondary,
-                                      ),
+                                      color: AppColors.textSecondary,
                                     ),
                                   ),
                               ],
@@ -344,10 +329,8 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
             ),
           ),
 
-          // Divider
           const Divider(color: AppColors.divider, height: 1),
 
-          // Botões de ação
           Padding(
             padding: const EdgeInsets.all(20),
             child: Row(
@@ -362,36 +345,22 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                         side: const BorderSide(color: AppColors.divider),
                       ),
                     ),
-                    child: Text(
+                    child: const TextBody2(
                       'Limpar',
-                      style: AppTextStyles.button.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
+                      color: AppColors.textSecondary,
                     ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: ElevatedButton(
+                  child: QuiButton(
+                    label: 'Aplicar',
+                    height: 48,
                     onPressed: () {
                       final filters = _getSelectedFilters();
                       widget.onApply(filters);
                       Navigator.pop(context);
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: Text(
-                      'Aplicar',
-                      style: AppTextStyles.button.copyWith(
-                        color: Colors.white,
-                      ),
-                    ),
                   ),
                 ),
               ],

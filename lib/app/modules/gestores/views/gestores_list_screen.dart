@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:quigestor/apparte/widgets/loading_skeleton.dart';
-import 'package:quigestor/apparte/widgets/quigestor_card.dart';
-import 'package:quigestor/app/app_config.dart';
-import 'package:quigestor/app/modules/gestores/bloc/gestores_cubit.dart';
-import 'package:quigestor/app/modules/gestores/bloc/gestores_state.dart';
-import 'package:quigestor/app/modules/gestores/models/gestor.dart';
-import 'package:quigestor/app/modules/gestores/widgets/gestor_filters.dart';
-import 'package:quigestor/app/modules/gestores/views/gestor_form_screen.dart';
+import '../../../../apparte/widgets/app_text.dart';
+import '../../../../apparte/widgets/loading_skeleton.dart';
+import '../../../../apparte/widgets/quigestor_card.dart';
+import '../../../app_config.dart';
+import '../bloc/gestores_cubit.dart';
+import '../bloc/gestores_state.dart';
+import '../models/gestor.dart';
+import '../widgets/gestor_filters.dart';
+import 'gestor_form_screen.dart';
 
 class GestoresListScreen extends StatefulWidget {
   const GestoresListScreen({super.key});
@@ -95,7 +96,7 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Gestores'),
+        title: const TextH2('Gestores'),
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_alt_outlined),
@@ -137,14 +138,14 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
           if (state is GestoresError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.message),
+                content: TextBody2(state.message),
                 backgroundColor: Colors.red,
               ),
             );
           } else if (state is GestorOperationSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.message),
+                content: TextBody2(state.message),
                 backgroundColor: Colors.green,
               ),
             );
@@ -174,18 +175,18 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
                   children: [
                     Icon(Icons.people_outline, size: 100, color: Colors.grey[400]),
                     const SizedBox(height: 16),
-                    Text('Nenhum gestor encontrado', style: theme.textTheme.titleMedium),
+                    const TextH2('Nenhum gestor encontrado'),
                     const SizedBox(height: 8),
-                    Text(
+                    TextBody2(
                       state.gestores.isEmpty ? 'Comece criando um gestor' : 'Tente outros filtros de busca',
-                      style: TextStyle(color: Colors.grey[600]),
+                      color: Colors.grey[600],
                     ),
                     if (state.gestores.isEmpty) ...[
                       const SizedBox(height: 24),
                       ElevatedButton.icon(
                         onPressed: () => _abrirFormGestor(context),
                         icon: const Icon(Icons.add),
-                        label: const Text('Criar Gestor'),
+                        label: const TextBody2('Criar Gestor', fontWeight: FontWeight.bold, color: Colors.white),
                       ),
                     ],
                   ],
@@ -225,13 +226,10 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Center(
-                              child: Text(
+                              child: TextH1(
                                 gestor.nome[0].toUpperCase(),
-                                style: TextStyle(
-                                  color: _getStatusColor(gestor.status),
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                color: _getStatusColor(gestor.status),
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ),
@@ -243,9 +241,9 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
                                 Row(
                                   children: [
                                     Expanded(
-                                      child: Text(
+                                      child: TextBody1(
                                         gestor.nome,
-                                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                     Container(
@@ -254,13 +252,10 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
                                         color: _getStatusColor(gestor.status).withOpacity(0.1),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
-                                      child: Text(
+                                      child: TextBody3(
                                         _getStatusLabel(gestor.status),
-                                        style: TextStyle(
-                                          color: _getStatusColor(gestor.status),
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                        ),
+                                        color: _getStatusColor(gestor.status),
+                                        fontWeight: FontWeight.w600,
                                       ),
                                     ),
                                   ],
@@ -270,7 +265,7 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
                                   children: [
                                     Icon(Icons.email_outlined, size: 14, color: Colors.grey[600]),
                                     const SizedBox(width: 4),
-                                    Text(gestor.email, style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                                    TextBody3(gestor.email, color: Colors.grey[600]),
                                   ],
                                 ),
                                 const SizedBox(height: 2),
@@ -278,7 +273,7 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
                                   children: [
                                     Icon(Icons.security_outlined, size: 14, color: Colors.grey[600]),
                                     const SizedBox(width: 4),
-                                    Text(gestor.nivel, style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                                    TextBody3(gestor.nivel, color: Colors.grey[600]),
                                   ],
                                 ),
                               ],
@@ -298,7 +293,7 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _abrirFormGestor(context),
-        label: const Text('Novo Gestor'),
+        label: const TextBody2('Novo Gestor', fontWeight: FontWeight.bold),
         icon: const Icon(Icons.add),
       ),
     );

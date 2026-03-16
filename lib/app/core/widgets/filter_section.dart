@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../../apparte/widgets/app_text.dart';
 import 'filter_option_tile.dart';
-import '../../theme/app_text_styles.dart';
 
 class FilterSection extends StatelessWidget {
   final String title;
@@ -41,11 +41,9 @@ class FilterSection extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              Text(
+              TextBody1(
                 title,
-                style: AppTextStyles.body1.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                fontWeight: FontWeight.bold,
               ),
             ],
           ),

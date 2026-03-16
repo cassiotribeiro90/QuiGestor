@@ -60,9 +60,9 @@ class GradientButton extends StatelessWidget {
                     Icon(icon, color: Colors.white),
                     const SizedBox(width: 8),
                   ],
-                  AppTextButton(
+                  TextInverse(
                     label,
-                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
                   ),
                 ],
               ),

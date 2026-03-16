@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../apparte/widgets/app_text.dart';
 import 'filter_sheet.dart';
 import '../models/filter_model.dart';
 import '../../theme/app_colors.dart';
@@ -59,14 +60,12 @@ class FilterButton extends StatelessWidget {
                           : AppColors.textSecondary,
                     ),
                     const SizedBox(width: 8),
-                    Text(
+                    TextBody2(
                       activeCount > 0 ? 'Filtros ($activeCount)' : 'Filtros',
-                      style: TextStyle(
-                        color: activeCount > 0
-                            ? AppColors.primary
-                            : AppColors.textSecondary,
-                        fontWeight: activeCount > 0 ? FontWeight.w600 : FontWeight.normal,
-                      ),
+                      color: activeCount > 0
+                          ? AppColors.primary
+                          : AppColors.textSecondary,
+                      fontWeight: activeCount > 0 ? FontWeight.w600 : FontWeight.normal,
                     ),
                   ],
                 ),
@@ -90,13 +89,10 @@ class FilterButton extends StatelessWidget {
                 minHeight: 20,
               ),
               child: Center(
-                child: Text(
+                child: TextBody3(
                   '$activeCount',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),

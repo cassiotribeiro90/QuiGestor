@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../apparte/widgets/app_text.dart';
 import '../../../../apparte/widgets/filter_option.dart';
 import '../../../../apparte/widgets/filter_section_widget.dart';
+import '../../../../apparte/widgets/qui_button.dart';
 import '../bloc/categorias_cubit.dart';
 
 class CategoriaFilters extends StatefulWidget {
@@ -20,13 +21,12 @@ class _CategoriaFiltersState extends State<CategoriaFilters> {
   void initState() {
     super.initState();
     final cubit = context.read<CategoriasCubit>();
-    final filterOptions = cubit.filterOptions ?? {};
 
     // STATUS (Ativo/Inativo)
     _statusSection = FilterSectionModel(
       id: 'ativo',
       title: 'STATUS',
-      isRadio: true, // Única escolha para simplificar
+      isRadio: true,
       options: [
         FilterOptionModel(
           value: '1',
@@ -93,7 +93,7 @@ class _CategoriaFiltersState extends State<CategoriaFilters> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const TextH2('Filtrar Categorias'),
+              const TextH2('Filtrar Categorias', fontWeight: FontWeight.bold),
               IconButton(
                 icon: const Icon(Icons.close),
                 onPressed: () => Navigator.pop(context),
@@ -123,12 +123,14 @@ class _CategoriaFiltersState extends State<CategoriaFilters> {
                     context.read<CategoriasCubit>().clearFilters();
                     Navigator.pop(context);
                   },
-                  child: const Text('limpar'),
+                  child: const TextBody2('limpar'),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: ElevatedButton(
+                child: QuiButton(
+                  label: 'APLICAR',
+                  height: 48,
                   onPressed: () {
                     final statusVal = _statusSection.getSelectedValues().firstOrNull;
                     final destaqueVal = _destaqueSection.getSelectedValues().firstOrNull;
@@ -139,14 +141,6 @@ class _CategoriaFiltersState extends State<CategoriaFilters> {
                     );
                     Navigator.pop(context);
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.colorScheme.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: const Text('APLICAR'),
                 ),
               ),
             ],

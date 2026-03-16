@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../apparte/widgets/app_text.dart';
 import '../bloc/auth_cubit.dart';
 import '../bloc/auth_state.dart';
 import '../../../routes/app_routes.dart';
@@ -37,7 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
           } else if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.message),
+                content: TextBody2(state.message, color: Colors.white),
                 backgroundColor: theme.colorScheme.error,
               ),
             );

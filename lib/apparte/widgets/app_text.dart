@@ -60,7 +60,7 @@ class AppText extends StatelessWidget {
       fontSize: fontSize,
       fontWeight: fontWeight,
       fontFamily: AppTextStyles.fontFamily,
-      overflow: TextOverflow.fade,
+      overflow: overflow ?? TextOverflow.fade,
     );
 
     if (_isSelectable) {
@@ -68,14 +68,14 @@ class AppText extends StatelessWidget {
         text,
         style: baseStyle,
         textAlign: textAlign,
-        maxLines: maxLines ?? 1,
+        maxLines: maxLines,
       );
     } else {
       return Text(
         text,
         style: baseStyle,
         textAlign: textAlign,
-        maxLines: maxLines ?? 1,
+        maxLines: maxLines,
         overflow: overflow ?? TextOverflow.fade,
       );
     }
@@ -110,7 +110,6 @@ class TextH1 extends StatelessWidget {
       maxLines: maxLines,
       fontWeight: fontWeight,
       selectable: selectable,
-      overflow: TextOverflow.fade,
     );
   }
 }
@@ -143,7 +142,6 @@ class TextH2 extends StatelessWidget {
       maxLines: maxLines,
       fontWeight: fontWeight,
       selectable: selectable,
-      overflow: TextOverflow.fade,
     );
   }
 }
@@ -176,7 +174,6 @@ class TextH3 extends StatelessWidget {
       maxLines: maxLines,
       fontWeight: fontWeight,
       selectable: selectable,
-      overflow: TextOverflow.fade,
     );
   }
 }
@@ -209,7 +206,6 @@ class TextBody1 extends StatelessWidget {
       maxLines: maxLines,
       fontWeight: fontWeight,
       selectable: selectable,
-      overflow: TextOverflow.fade,
     );
   }
 }
@@ -242,7 +238,6 @@ class TextBody2 extends StatelessWidget {
       maxLines: maxLines,
       fontWeight: fontWeight,
       selectable: selectable,
-      overflow: TextOverflow.fade,
     );
   }
 }
@@ -275,7 +270,37 @@ class TextBody3 extends StatelessWidget {
       maxLines: maxLines,
       fontWeight: fontWeight,
       selectable: selectable,
-      overflow: TextOverflow.fade,
+    );
+  }
+}
+
+/// Texto para botões (Sempre branco para botões com fundo colorido)
+class TextInverse extends StatelessWidget {
+  final String text;
+  final Color? color;
+  final TextAlign? textAlign;
+  final FontWeight? fontWeight;
+  final double? fontSize;
+
+  const TextInverse(
+    this.text, {
+    super.key,
+    this.color,
+    this.textAlign,
+    this.fontWeight,
+    this.fontSize,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AppText(
+      text,
+      style: AppTextStyles.button,
+      color: color ?? Colors.white,
+      textAlign: textAlign,
+      fontWeight: fontWeight,
+      fontSize: fontSize,
+      selectable: false,
     );
   }
 }
@@ -305,7 +330,6 @@ class AppTextButton extends StatelessWidget {
       textAlign: textAlign,
       fontWeight: fontWeight,
       selectable: selectable,
-      overflow: TextOverflow.fade,
     );
   }
 }
@@ -338,7 +362,6 @@ class TextCaption extends StatelessWidget {
       maxLines: maxLines,
       fontWeight: fontWeight,
       selectable: selectable,
-      overflow: TextOverflow.fade,
     );
   }
 }

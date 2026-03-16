@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import '../../../../apparte/widgets/app_text.dart';
+import '../../../../apparte/widgets/qui_button.dart';
 import '../../../../shared/api/api_client.dart';
 
 class CriarLojaScreen extends StatefulWidget {
@@ -42,7 +44,6 @@ class _CriarLojaScreenState extends State<CriarLojaScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // 🔥 Usando o Singleton manual ApiClient() em vez de getIt
       await ApiClient().post('/gestor/lojas', data: {
         'nome': _nomeController.text,
         'descricao': _descricaoController.text,
@@ -53,7 +54,7 @@ class _CriarLojaScreenState extends State<CriarLojaScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Loja criada com sucesso!')),
+          const SnackBar(content: TextBody2('Loja criada com sucesso!', color: Colors.white)),
         );
         Navigator.pop(context, true);
       }
@@ -69,7 +70,7 @@ class _CriarLojaScreenState extends State<CriarLojaScreen> {
           }
         }
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(mensagem), backgroundColor: Colors.red),
+          SnackBar(content: TextBody2(mensagem, color: Colors.white), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -83,7 +84,7 @@ class _CriarLojaScreenState extends State<CriarLojaScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Criar Nova Loja'),
+        title: const TextH2('Criar Nova Loja', fontWeight: FontWeight.bold),
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -116,12 +117,13 @@ class _CriarLojaScreenState extends State<CriarLojaScreen> {
                   labelText: 'Categoria',
                   prefixIcon: Icon(Icons.category),
                 ),
-                items: _categorias.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                items: _categorias.map((c) => DropdownMenuItem(value: c, child: TextBody2(c))).toList(),
               ),
               const SizedBox(height: 30),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _criarLoja,
-                child: _isLoading ? const CircularProgressIndicator() : const Text('Salvar Loja'),
+              QuiButton(
+                label: 'Salvar Loja',
+                onPressed: _criarLoja,
+                isLoading: _isLoading,
               ),
             ],
           ),

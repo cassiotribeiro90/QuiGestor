@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../apparte/widgets/app_text.dart';
 import '../modules/auth/views/login_screen.dart';
 import '../modules/auth/views/splash_screen.dart';
 import '../modules/home/views/home_screen.dart';
@@ -61,7 +62,7 @@ class AppRouter {
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(
-            body: Center(child: Text('Rota não encontrada: ${settings.name}')),
+            body: Center(child: TextBody1('Rota não encontrada: ${settings.name}')),
           ),
         );
     }

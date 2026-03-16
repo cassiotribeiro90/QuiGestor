@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'app_text.dart';
 
 class FilterOptionChip extends StatelessWidget {
   final String label;
@@ -6,7 +7,7 @@ class FilterOptionChip extends StatelessWidget {
   final IconData? icon;
   final int? count;
   final bool isSelected;
-  final bool isRadio; // ← para estilo diferente se quiser
+  final bool isRadio;
   final VoidCallback onTap;
 
   const FilterOptionChip({
@@ -46,21 +47,19 @@ class FilterOptionChip extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (emoji != null) ...[
-              Text(emoji!, style: const TextStyle(fontSize: 16)),
+              TextBody2(emoji!),
               const SizedBox(width: 4),
             ],
             if (icon != null) ...[
               Icon(icon, size: 16, color: isSelected && isRadio ? Colors.white : (isSelected ? theme.colorScheme.primary : Colors.grey[600])),
               const SizedBox(width: 4),
             ],
-            Text(
+            TextBody2(
               label,
-              style: TextStyle(
-                color: isSelected && isRadio 
-                    ? Colors.white 
-                    : (isSelected ? theme.colorScheme.primary : Colors.black87),
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-              ),
+              color: isSelected && isRadio 
+                  ? Colors.white 
+                  : (isSelected ? theme.colorScheme.primary : Colors.black87),
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             ),
             if (count != null && count! > 0) ...[
               const SizedBox(width: 4),
@@ -72,12 +71,10 @@ class FilterOptionChip extends StatelessWidget {
                       : Colors.grey[300],
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Text(
+                child: TextBody3(
                   '$count',
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: isSelected && isRadio ? Colors.white : Colors.grey[700],
-                  ),
+                  color: isSelected && isRadio ? Colors.white : Colors.grey[700],
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ],

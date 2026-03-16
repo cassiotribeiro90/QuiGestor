@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../bloc/lojas_cubit.dart';
 import '../../../../apparte/widgets/app_text.dart';
 import '../../../../apparte/widgets/filter_option.dart';
 import '../../../../apparte/widgets/filter_section_widget.dart';
+import '../../../../apparte/widgets/qui_button.dart';
+import '../bloc/lojas_cubit.dart';
 
 class LojaFilters extends StatefulWidget {
   const LojaFilters({super.key});
@@ -103,7 +104,7 @@ class _LojaFiltersState extends State<LojaFilters> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const TextH2('Filtrar Lojas'),
+              const TextH2('Filtrar Lojas', fontWeight: FontWeight.bold),
               IconButton(
                 icon: const Icon(Icons.close),
                 onPressed: () => Navigator.pop(context),
@@ -148,12 +149,14 @@ class _LojaFiltersState extends State<LojaFilters> {
                     context.read<LojasCubit>().clearFilters();
                     Navigator.pop(context);
                   },
-                  child: const Text('limpar'),
+                  child: const TextBody2('limpar'),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: ElevatedButton(
+                child: QuiButton(
+                  label: 'APLICAR',
+                  height: 48,
                   onPressed: () {
                     final outros = _outrosSection.getSelectedValues();
                     context.read<LojasCubit>().applyFilters(
@@ -164,14 +167,6 @@ class _LojaFiltersState extends State<LojaFilters> {
                     );
                     Navigator.pop(context);
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.colorScheme.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: const Text('APLICAR'),
                 ),
               ),
             ],

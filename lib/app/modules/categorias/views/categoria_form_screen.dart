@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import '../../../../apparte/widgets/app_text.dart';
+import '../../../../apparte/widgets/qui_button.dart';
 import '../bloc/categorias_cubit.dart';
 import '../bloc/categorias_state.dart';
 import '../models/categoria.dart';
@@ -36,6 +37,10 @@ class _CategoriaFormScreenState extends State<CategoriaFormScreen> {
     _selectedColor = widget.categoria?.colorValue ?? const Color(0xFFFF6B6B);
     _ativo = widget.categoria?.ativo ?? true;
     _destaque = widget.categoria?.destaque ?? false;
+
+    _nomeController.addListener(() {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
@@ -55,7 +60,7 @@ class _CategoriaFormScreenState extends State<CategoriaFormScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Selecione uma cor'),
+        title: const TextH3('Selecione uma cor'),
         content: SingleChildScrollView(
           child: BlockPicker(
             pickerColor: _selectedColor,
@@ -99,17 +104,17 @@ class _CategoriaFormScreenState extends State<CategoriaFormScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confirmar exclusão'),
-        content: const Text('Deseja realmente excluir esta categoria?'),
+        title: const TextH3('Confirmar exclusão'),
+        content: const TextBody2('Deseja realmente excluir esta categoria?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+            child: const TextBody2('Cancelar'),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Excluir'),
+            child: const TextBody2('Excluir', color: Colors.red, fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -126,10 +131,14 @@ class _CategoriaFormScreenState extends State<CategoriaFormScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    String title = isEditing ? 'Editar Categoria' : 'Nova Categoria';
+    if (_nomeController.text.isNotEmpty) {
+      title = '${_nomeController.text} - Gerenciar Categoria';
+    }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEditing ? 'Editar Categoria' : 'Nova Categoria'),
+        title: TextH2(title, fontWeight: FontWeight.bold),
         actions: [
           if (isEditing)
             IconButton(
@@ -142,7 +151,7 @@ class _CategoriaFormScreenState extends State<CategoriaFormScreen> {
         listener: (context, state) {
           if (state is CategoriasError) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+              SnackBar(content: TextBody2(state.message), backgroundColor: Colors.red),
             );
           }
         },
@@ -207,13 +216,10 @@ class _CategoriaFormScreenState extends State<CategoriaFormScreen> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(Icons.color_lens, color: _selectedColor),
-                                Text(
+                                TextBody3(
                                   _colorToHex(_selectedColor),
-                                  style: TextStyle(
-                                    color: _selectedColor,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                  color: _selectedColor,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ],
                             ),
@@ -234,32 +240,22 @@ class _CategoriaFormScreenState extends State<CategoriaFormScreen> {
                   const SizedBox(height: 24),
                   const TextBody1('Status e Destaque', fontWeight: FontWeight.bold),
                   SwitchListTile(
-                    title: const Text('Categoria Ativa'),
-                    subtitle: const Text('Define se a categoria aparece para os clientes'),
+                    title: const TextBody1('Categoria Ativa'),
+                    subtitle: const TextBody3('Define se a categoria aparece para os clientes'),
                     value: _ativo,
                     onChanged: (v) => setState(() => _ativo = v),
                   ),
                   SwitchListTile(
-                    title: const Text('Destaque'),
-                    subtitle: const Text('Exibir com prioridade nas listas'),
+                    title: const TextBody1('Destaque'),
+                    subtitle: const TextBody3('Exibir com prioridade nas listas'),
                     value: _destaque,
                     onChanged: (v) => setState(() => _destaque = v),
                   ),
                   const SizedBox(height: 40),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: isLoading ? null : _submit,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: theme.colorScheme.primary,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: isLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : Text(isEditing ? 'SALVAR ALTERAÇÕES' : 'CRIAR CATEGORIA'),
-                    ),
+                  QuiButton(
+                    label: isEditing ? 'SALVAR ALTERAÇÕES' : 'CRIAR CATEGORIA',
+                    onPressed: _submit,
+                    isLoading: isLoading,
                   ),
                 ],
               ),

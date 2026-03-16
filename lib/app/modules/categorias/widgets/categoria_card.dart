@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../apparte/widgets/app_text.dart';
 import '../../../../apparte/widgets/quigestor_card.dart';
 import '../models/categoria.dart';
 
@@ -29,9 +30,9 @@ class CategoriaCard extends StatelessWidget {
               ),
               child: Center(
                 child: categoria.icone != null && categoria.icone!.isNotEmpty
-                    ? Text(
+                    ? TextH2(
                         categoria.icone!,
-                        style: const TextStyle(fontSize: 24),
+                        textAlign: TextAlign.center,
                       )
                     : Icon(
                         Icons.category_outlined,
@@ -48,12 +49,9 @@ class CategoriaCard extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: Text(
+                        child: TextBody1(
                           categoria.nome,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                       if (categoria.destaque)
@@ -67,10 +65,7 @@ class CategoriaCard extends StatelessWidget {
                             color: Colors.amber.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Text(
-                            '⭐',
-                            style: TextStyle(fontSize: 12),
-                          ),
+                          child: const TextBody3('⭐'),
                         ),
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -83,27 +78,20 @@ class CategoriaCard extends StatelessWidget {
                               : Colors.grey.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Text(
+                        child: TextBody3(
                           categoria.statusLabel,
-                          style: TextStyle(
-                            color: categoria.ativo ? Colors.green : Colors.grey,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          color: categoria.ativo ? Colors.green : Colors.grey,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
                   ),
                   if (categoria.descricao != null && categoria.descricao!.isNotEmpty) ...[
                     const SizedBox(height: 4),
-                    Text(
+                    TextBody3(
                       categoria.descricao!,
                       maxLines: 1,
-                      overflow: TextOverflow.fade,
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 13,
-                      ),
+                      color: Colors.grey[600],
                     ),
                   ],
                   const SizedBox(height: 4),
@@ -115,12 +103,9 @@ class CategoriaCard extends StatelessWidget {
                         color: Colors.grey[400],
                       ),
                       const SizedBox(width: 4),
-                      Text(
+                      TextBody3(
                         'Ordem: ${categoria.ordem}',
-                        style: TextStyle(
-                          color: Colors.grey[400],
-                          fontSize: 12,
-                        ),
+                        color: Colors.grey[400],
                       ),
                     ],
                   ),

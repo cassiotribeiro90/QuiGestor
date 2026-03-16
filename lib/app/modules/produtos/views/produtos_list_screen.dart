@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../apparte/widgets/app_text.dart';
 import '../bloc/produto_cubit.dart';
 import '../bloc/produtos_cubit.dart';
 import '../bloc/produtos_state.dart';
@@ -31,7 +32,6 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
   }
 
   void _navegarParaForm({int? produtoId}) async {
-    // ✅ Usa navegação local com MaterialPageRoute para evitar crash de contexto global
     final result = await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => BlocProvider(
@@ -57,7 +57,7 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Cardápio - ${widget.lojaNome}'),
+        title: TextH2('Cardápio - ${widget.lojaNome}'),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -85,14 +85,14 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
                 children: [
                   Icon(Icons.error_outline, size: 80, color: Colors.grey[400]),
                   const SizedBox(height: 16),
-                  Text('Erro ao carregar produtos', style: theme.textTheme.titleMedium),
+                  const TextH3('Erro ao carregar produtos'),
                   const SizedBox(height: 8),
-                  Text(state.message, textAlign: TextAlign.center),
+                  TextBody2(state.message, textAlign: TextAlign.center),
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
                     onPressed: () => context.read<ProdutosCubit>().fetchProdutos(),
                     icon: const Icon(Icons.refresh),
-                    label: const Text('Tentar novamente'),
+                    label: const TextBody1('Tentar novamente'),
                   ),
                 ],
               ),
@@ -107,14 +107,14 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
                   children: [
                     Icon(Icons.restaurant_menu_outlined, size: 100, color: Colors.grey[400]),
                     const SizedBox(height: 16),
-                    Text('Nenhum produto cadastrado', style: theme.textTheme.titleMedium),
+                    const TextH2('Nenhum produto cadastrado'),
                     const SizedBox(height: 8),
-                    const Text('Adicione produtos ao cardápio desta loja'),
+                    const TextBody2('Adicione produtos ao cardápio desta loja'),
                     const SizedBox(height: 24),
                     ElevatedButton.icon(
                       onPressed: () => _navegarParaForm(),
                       icon: const Icon(Icons.add),
-                      label: const Text('Adicionar Produto'),
+                      label: const TextBody1('Adicionar Produto'),
                     ),
                   ],
                 ),
@@ -137,11 +137,9 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         child: Row(
                           children: [
-                            Text(
+                            TextH3(
                               categoria,
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                              fontWeight: FontWeight.bold,
                             ),
                             const SizedBox(width: 8),
                             Container(
@@ -150,13 +148,10 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
                                 color: theme.colorScheme.primary.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: Text(
+                              child: TextBody3(
                                 '$count',
-                                style: TextStyle(
-                                  color: theme.colorScheme.primary,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                ),
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ],
@@ -214,9 +209,10 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
                   Row(
                     children: [
                       Expanded(
-                        child: Text(
+                        child: TextBody1(
                           produto.nome,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
+                          fontWeight: FontWeight.bold,
+                          maxLines: 1,
                         ),
                       ),
                       if (!produto.disponivel)
@@ -226,49 +222,41 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
                             color: Colors.grey[200],
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          child: const Text(
+                          child: const TextBody3(
                             'INDISPONÍVEL',
-                            style: TextStyle(fontSize: 10, color: Colors.grey),
+                            color: Colors.grey,
                           ),
                         ),
                     ],
                   ),
                   if (produto.descricao != null) ...[
                     const SizedBox(height: 4),
-                    Text(
+                    TextBody3(
                       produto.descricao!,
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                      color: Colors.grey,
                       maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                   const SizedBox(height: 4),
                   Row(
                     children: [
                       if (produto.emPromocao) ...[
-                        Text(
+                        TextBody3(
                           'R\$ ${produto.preco.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            decoration: TextDecoration.lineThrough,
-                            fontSize: 12,
-                            color: Colors.grey,
-                          ),
+                          color: Colors.grey,
+                          fontWeight: FontWeight.normal,
                         ),
                         const SizedBox(width: 8),
-                        Text(
+                        TextBody2(
                           'R\$ ${produto.precoPromocional!.toStringAsFixed(2)}',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.primary,
-                          ),
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.primary,
                         ),
                       ] else
-                        Text(
+                        TextBody2(
                           'R\$ ${produto.preco.toStringAsFixed(2)}',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.primary,
-                          ),
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.primary,
                         ),
                     ],
                   ),
