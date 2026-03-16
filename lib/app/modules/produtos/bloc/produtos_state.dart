@@ -12,35 +12,22 @@ class ProdutosInitial extends ProdutosState {}
 class ProdutosLoading extends ProdutosState {}
 
 class ProdutosLoaded extends ProdutosState {
-  final List<Produto> produtos;
-  final Map<String, List<Produto>> produtosAgrupados;
-  final Map<String, int> contagens;
+  final Map<String, List<Produto>> sections; // ← Agora é um Map
+  final List<Map<String, dynamic>> categories; // ← Metadados
+  final Map<String, dynamic>? pagination;
 
-  ProdutosLoaded(this.produtos)
-      : produtosAgrupados = _agruparPorCategoria(produtos),
-        contagens = _calcularContagens(produtos);
+  const ProdutosLoaded({
+    required this.sections,
+    required this.categories,
+    this.pagination,
+  });
 
-  static Map<String, List<Produto>> _agruparPorCategoria(List<Produto> produtos) {
-    final agrupados = <String, List<Produto>>{};
-    for (var p in produtos) {
-      final cat = p.categoria?.nome ?? 'Outros';
-      if (!agrupados.containsKey(cat)) agrupados[cat] = [];
-      agrupados[cat]!.add(p);
-    }
-    return agrupados;
-  }
-
-  static Map<String, int> _calcularContagens(List<Produto> produtos) {
-    final Map<String, int> contagens = <String, int>{};
-    for (var p in produtos) {
-      final cat = p.categoria?.nome ?? 'Outros';
-      contagens[cat] = (contagens[cat] ?? 0) + 1;
-    }
-    return contagens;
-  }
+  // Getter para lista plana (se necessário)
+  List<Produto> get allItems =>
+      sections.values.expand((list) => list).toList();
 
   @override
-  List<Object?> get props => [produtos];
+  List<Object?> get props => [sections, categories, pagination];
 }
 
 class ProdutosError extends ProdutosState {

@@ -100,7 +100,9 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
           }
 
           if (state is ProdutosLoaded) {
-            if (state.produtos.isEmpty) {
+            final sections = state.sections;
+
+            if (sections.isEmpty) {
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -114,7 +116,7 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
                     ElevatedButton.icon(
                       onPressed: () => _navegarParaForm(),
                       icon: const Icon(Icons.add),
-                      label: const TextBody1('Adicionar Produto'),
+                      label: const TextInverse('Adicionar Produto'),
                     ),
                   ],
                 ),
@@ -125,10 +127,10 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
               onRefresh: () => context.read<ProdutosCubit>().fetchProdutos(),
               child: ListView(
                 padding: const EdgeInsets.all(16),
-                children: state.produtosAgrupados.entries.map((entry) {
+                children: sections.entries.map((entry) {
                   final categoria = entry.key;
                   final produtos = entry.value;
-                  final count = state.contagens[categoria] ?? 0;
+                  final count = produtos.length;
 
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -244,7 +246,6 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
                         TextBody3(
                           'R\$ ${produto.preco.toStringAsFixed(2)}',
                           color: Colors.grey,
-                          fontWeight: FontWeight.normal,
                         ),
                         const SizedBox(width: 8),
                         TextBody2(

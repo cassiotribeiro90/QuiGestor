@@ -283,6 +283,11 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
         centerTitle: false,
         actions: [
           IconButton(
+            icon: const Icon(Icons.restaurant_menu_outlined),
+            tooltip: 'Gerenciar Cardápio',
+            onPressed: () => _abrirCardapio(context),
+          ),
+          IconButton(
             icon: _isSaving || _isLoadingData
                 ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                 : const Icon(Icons.save_outlined),
