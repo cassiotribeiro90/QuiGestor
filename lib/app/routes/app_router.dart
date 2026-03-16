@@ -8,7 +8,9 @@ import '../modules/lojas/views/lojas_list_screen.dart';
 import '../modules/lojas/views/loja_form_screen.dart';
 import '../modules/lojas/models/loja.dart';
 import '../modules/produtos/views/produtos_list_screen.dart';
+import '../modules/produtos/views/produto_form_screen.dart';
 import '../modules/produtos/bloc/produtos_cubit.dart';
+import '../modules/produtos/bloc/produto_cubit.dart';
 import '../../shared/api/api_client.dart';
 import 'app_routes.dart';
 
@@ -40,6 +42,17 @@ class AppRouter {
             child: ProdutosListScreen(
               lojaId: args['lojaId'],
               lojaNome: args['lojaNome'],
+            ),
+          ),
+        );
+      case Routes.PRODUTO_FORM:
+        final args = settings.arguments as Map<String, dynamic>? ?? {};
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => ProdutoCubit(context.read<ApiClient>()),
+            child: ProdutoFormScreen(
+              produtoId: args['produtoId'],
+              initialLojaId: args['lojaId'],
             ),
           ),
         );

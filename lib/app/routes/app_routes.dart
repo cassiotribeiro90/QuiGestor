@@ -5,4 +5,5 @@ class Routes {
   static const String LOJAS = '/lojas';
   static const String LOJA_FORM = '/loja-form';
   static const String PRODUTOS = '/produtos';
+  static const String PRODUTO_FORM = '/produto-form';
 }

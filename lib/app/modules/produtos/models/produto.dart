@@ -1,3 +1,5 @@
+import '../../categorias/models/categoria.dart';
+
 class Produto {
   final int id;
   final int lojaId;
@@ -6,10 +8,21 @@ class Produto {
   final double preco;
   final double? precoPromocional;
   final String? imagem;
-  final String? categoria;
+  final Categoria? categoria;
+  final int? subcategoriaId;
   final String? subcategoria;
   final bool disponivel;
+  final bool ativo;
+  final bool destaque;
   final int? tempoPreparo;
+  final int ordem;
+  final String? ingredientesTexto;
+  final bool contemGluten;
+  final bool contemLactose;
+  final bool vegano;
+  final bool vegetariano;
+  final bool apimentado;
+  final int estoque;
   final Map<String, dynamic>? variacoes;
   final Map<String, dynamic>? opcoes;
 
@@ -22,9 +35,20 @@ class Produto {
     this.precoPromocional,
     this.imagem,
     this.categoria,
+    this.subcategoriaId,
     this.subcategoria,
     required this.disponivel,
+    this.ativo = true,
+    this.destaque = false,
     this.tempoPreparo,
+    this.ordem = 0,
+    this.ingredientesTexto,
+    this.contemGluten = false,
+    this.contemLactose = false,
+    this.vegano = false,
+    this.vegetariano = false,
+    this.apimentado = false,
+    this.estoque = 0,
     this.variacoes,
     this.opcoes,
   });
@@ -38,13 +62,56 @@ class Produto {
       preco: (json['preco'] as num?)?.toDouble() ?? 0,
       precoPromocional: (json['preco_promocional'] as num?)?.toDouble(),
       imagem: json['imagem'],
-      categoria: json['categoria'],
-      subcategoria: json['subcategoria'],
+      categoria: json['categoria'] != null && json['categoria'] is Map<String, dynamic>
+          ? Categoria.fromJson(json['categoria'])
+          : null,
+      subcategoriaId: json['subcategoria_id'] is int 
+          ? json['subcategoria_id'] 
+          : int.tryParse(json['subcategoria_id']?.toString() ?? ''),
+      subcategoria: json['subcategoria'] is String ? json['subcategoria'] : null,
       disponivel: json['disponivel'] == 1 || json['disponivel'] == true,
-      tempoPreparo: json['tempo_preparo_min'],
+      ativo: json['ativo'] == 1 || json['ativo'] == true,
+      destaque: json['destaque'] == 1 || json['destaque'] == true,
+      tempoPreparo: json['tempo_preparo_min'] is int 
+          ? json['tempo_preparo_min'] 
+          : int.tryParse(json['tempo_preparo_min']?.toString() ?? ''),
+      ordem: json['ordem'] is int ? json['ordem'] : int.tryParse(json['ordem']?.toString() ?? '0') ?? 0,
+      ingredientesTexto: json['ingredientes_texto'],
+      contemGluten: json['contem_gluten'] == 1 || json['contem_gluten'] == true,
+      contemLactose: json['contem_lactose'] == 1 || json['contem_lactose'] == true,
+      vegano: json['vegano'] == 1 || json['vegano'] == true,
+      vegetariano: json['vegetariano'] == 1 || json['vegetariano'] == true,
+      apimentado: json['apimentado'] == 1 || json['apimentado'] == true,
+      estoque: json['estoque'] is int ? json['estoque'] : int.tryParse(json['estoque']?.toString() ?? '0') ?? 0,
       variacoes: json['variacoes'],
       opcoes: json['opcoes'],
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'loja_id': lojaId,
+      'nome': nome,
+      'descricao': descricao,
+      'preco': preco,
+      'preco_promocional': precoPromocional,
+      'imagem': imagem,
+      'categoria_id': categoria?.id,
+      'subcategoria_id': subcategoriaId,
+      'disponivel': disponivel ? 1 : 0,
+      'ativo': ativo ? 1 : 0,
+      'destaque': destaque ? 1 : 0,
+      'tempo_preparo_min': tempoPreparo,
+      'ordem': ordem,
+      'ingredientes_texto': ingredientesTexto,
+      'contem_gluten': contemGluten ? 1 : 0,
+      'contem_lactose': contemLactose ? 1 : 0,
+      'vegano': vegano ? 1 : 0,
+      'vegetariano': vegetariano ? 1 : 0,
+      'apimentado': apimentado ? 1 : 0,
+      'estoque': estoque,
+    };
   }
 
   bool get emPromocao => precoPromocional != null && precoPromocional! < preco;

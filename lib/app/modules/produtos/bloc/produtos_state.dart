@@ -24,7 +24,7 @@ class ProdutosLoaded extends ProdutosState {
     final agrupados = <String, List<Produto>>{};
     for (var p in produtos) {
       final cat = p.categoria ?? 'Outros';
-      if (!agrupados.containsKey(cat)) agrupados[cat] = [];
+      if (!agrupados.containsKey(cat)) agrupados[cat as String] = [];
       agrupados[cat]!.add(p);
     }
     return agrupados;
@@ -34,7 +34,7 @@ class ProdutosLoaded extends ProdutosState {
     final contagens = <String, int>{};
     for (var p in produtos) {
       final cat = p.categoria ?? 'Outros';
-      contagens[cat] = (contagens[cat] ?? 0) + 1;
+      contagens[cat as String] = (contagens[cat] ?? 0) + 1;
     }
     return contagens;
   }

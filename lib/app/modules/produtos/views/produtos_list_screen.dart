@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../bloc/produto_cubit.dart';
 import '../bloc/produtos_cubit.dart';
 import '../bloc/produtos_state.dart';
 import '../models/produto.dart';
 import '../../../../apparte/widgets/quigestor_card.dart';
 import '../../../../apparte/widgets/loading_skeleton.dart';
+import '../../../../shared/api/api_client.dart';
+import 'produto_form_screen.dart';
 
 class ProdutosListScreen extends StatefulWidget {
   final int lojaId;
@@ -27,6 +30,27 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
     context.read<ProdutosCubit>().fetchProdutos();
   }
 
+  void _navegarParaForm({int? produtoId}) async {
+    // ✅ Usa navegação local com MaterialPageRoute para evitar crash de contexto global
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => BlocProvider(
+          create: (context) => ProdutoCubit(
+            context.read<ApiClient>(),
+          )..loadInitialData(produtoId: produtoId),
+          child: ProdutoFormScreen(
+            produtoId: produtoId,
+            initialLojaId: widget.lojaId,
+          ),
+        ),
+      ),
+    );
+
+    if (result == true && mounted) {
+      context.read<ProdutosCubit>().fetchProdutos();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -37,9 +61,7 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () {
-              // TODO: Navegar para criar produto
-            },
+            onPressed: () => _navegarParaForm(),
           ),
         ],
       ),
@@ -90,9 +112,7 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
                     const Text('Adicione produtos ao cardápio desta loja'),
                     const SizedBox(height: 24),
                     ElevatedButton.icon(
-                      onPressed: () {
-                        // TODO: Criar produto
-                      },
+                      onPressed: () => _navegarParaForm(),
                       icon: const Icon(Icons.add),
                       label: const Text('Adicionar Produto'),
                     ),
@@ -163,9 +183,7 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: QuiGestorCard(
-        onTap: () {
-          // TODO: Editar produto
-        },
+        onTap: () => _navegarParaForm(produtoId: produto.id),
         child: Row(
           children: [
             // Imagem do produto
@@ -175,14 +193,14 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
               decoration: BoxDecoration(
                 color: theme.colorScheme.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
-                image: produto.imagem != null
+                image: produto.imagem != null && produto.imagem!.isNotEmpty
                     ? DecorationImage(
                         image: NetworkImage(produto.imagem!),
                         fit: BoxFit.cover,
                       )
                     : null,
               ),
-              child: produto.imagem == null
+              child: produto.imagem == null || produto.imagem!.isEmpty
                   ? Icon(Icons.fastfood, color: theme.colorScheme.primary.withOpacity(0.3))
                   : null,
             ),

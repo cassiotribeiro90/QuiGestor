@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../home/views/home_screen.dart';
+import '../../../../shared/api/api_client.dart';
+import '../../produtos/bloc/produtos_cubit.dart';
+import '../../produtos/views/produtos_list_screen.dart';
 import '../bloc/lojas_cubit.dart';
 import '../models/loja.dart';
 
@@ -59,11 +61,9 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
     super.initState();
     _isEditing = widget.loja != null;
 
-    // ✅ Inicializa controllers VAZIOS (importante!)
     _inicializarControllersVazios();
 
     if (_isEditing) {
-      // ✅ Carrega dados completos do backend
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _carregarDadosCompletos();
       });
@@ -89,6 +89,11 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
     _tempoEntregaMaxController = TextEditingController();
     _taxaEntregaController = TextEditingController();
     _pedidoMinimoController = TextEditingController();
+
+    // Listener para atualizar o título dinamicamente
+    _nomeController.addListener(() {
+      if (mounted) setState(() {});
+    });
   }
 
   Future<void> _carregarDadosCompletos() async {
@@ -102,7 +107,6 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
         _preencherControllers(lojaCompleta);
       });
     } else if (mounted) {
-      // Fallback: usa os dados da lista
       _preencherControllers(widget.loja!);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -244,23 +248,40 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
   }
 
   void _abrirCardapio(BuildContext context) {
-    // ✅ Navegação correta usando o HomeScreenState para manter o menu lateral
-    final homeState = context.findAncestorStateOfType<HomeScreenState>();
-    if (homeState != null) {
-      homeState.openProdutosList(
-        lojaId: widget.loja!.id,
-        lojaNome: widget.loja!.nome,
-      );
-    }
+    if (widget.loja == null) return;
+    
+    // ✅ Alterado para usar o Navigator.of(context).push local
+    // Isso evita o erro de navegação global (crash/stack duplicada)
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => BlocProvider(
+          create: (context) => ProdutosCubit(
+            context.read<ApiClient>(),
+            widget.loja!.id,
+          ),
+          child: ProdutosListScreen(
+            lojaId: widget.loja!.id,
+            lojaNome: widget.loja!.nome,
+          ),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    
+    // Título dinâmico: nome_loja - Gerenciar Loja
+    String title = _isEditing ? 'Editar Loja' : 'Nova Loja';
+    if (_nomeController.text.isNotEmpty) {
+      title = '${_nomeController.text} - Gerenciar Loja';
+    }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEditing ? 'Editar Loja' : 'Nova Loja'),
+        title: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        centerTitle: false,
         actions: [
           IconButton(
             icon: _isSaving || _isLoadingData
@@ -391,7 +412,6 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
                   ),
                 ),
                 
-                // ===== SEÇÃO PRODUTOS/CARDÁPIO =====
                 if (_isEditing) ...[
                   const SizedBox(height: 24),
                   Card(
@@ -404,7 +424,6 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Título da seção
                           Row(
                             children: [
                               Container(
@@ -445,7 +464,6 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
                           
                           const SizedBox(height: 20),
                           
-                          // Botão para acessar cardápio
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton.icon(
@@ -465,7 +483,6 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
                           
                           const SizedBox(height: 8),
                           
-                          // Informação adicional
                           Center(
                             child: Text(
                               'Você será redirecionado para a gestão completa do cardápio',
