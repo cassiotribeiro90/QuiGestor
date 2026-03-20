@@ -24,7 +24,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.initState();
     context.read<DashboardCubit>().fetchDashboard();
     _faturamentoScrollController.addListener(_updateFadeVisibility);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _updateFadeVisibility());
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => _updateFadeVisibility());
   }
 
   @override
@@ -63,7 +64,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline, size: 80, color: theme.colorScheme.error),
+                  Icon(Icons.error_outline,
+                      size: 80, color: theme.colorScheme.error),
                   const SizedBox(height: 16),
                   TextH2(
                     'Erro ao carregar dashboard',
@@ -77,9 +79,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
-                    onPressed: () => context.read<DashboardCubit>().fetchDashboard(),
-                    icon: const Icon(Icons.refresh_rounded, color: Colors.white),
-                    label: const TextBody2('Tentar novamente', color: Colors.white, fontWeight: FontWeight.bold),
+                    onPressed: () =>
+                        context.read<DashboardCubit>().fetchDashboard(),
+                    icon:
+                        const Icon(Icons.refresh_rounded, color: Colors.white),
+                    label: const TextBody2('Tentar novamente',
+                        color: Colors.white, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -186,9 +191,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ],
                     ),
                   ),
-
                   const SizedBox(height: 24),
-
                   QuiGestorCard(
                     horizontalScroll: false,
                     child: Column(
@@ -196,7 +199,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.attach_money, color: theme.colorScheme.primary),
+                            Icon(Icons.attach_money,
+                                color: theme.colorScheme.primary),
                             const SizedBox(width: 8),
                             TextH2(
                               'Faturamento',
@@ -217,13 +221,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.start,
                                     children: [
-                                      _buildFaturamentoItem(context, 'Hoje', data['faturamento']['hoje']),
+                                      _buildFaturamentoItem(context, 'Hoje',
+                                          data['faturamento']['hoje']),
                                       const SizedBox(width: 16),
-                                      _buildFaturamentoItem(context, 'Semana', data['faturamento']['semana']),
+                                      _buildFaturamentoItem(context, 'Semana',
+                                          data['faturamento']['semana']),
                                       const SizedBox(width: 16),
-                                      _buildFaturamentoItem(context, 'Mês', data['faturamento']['mes']),
+                                      _buildFaturamentoItem(context, 'Mês',
+                                          data['faturamento']['mes']),
                                       const SizedBox(width: 16),
-                                      _buildFaturamentoItem(context, 'Ano', data['faturamento']['ano']),
+                                      _buildFaturamentoItem(context, 'Ano',
+                                          data['faturamento']['ano']),
                                     ],
                                   ),
                                 ),
@@ -239,8 +247,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                           begin: Alignment.centerLeft,
                                           end: Alignment.centerRight,
                                           colors: [
-                                            theme.cardTheme.color ?? theme.colorScheme.surface,
-                                            (theme.cardTheme.color ?? theme.colorScheme.surface).withOpacity(0.0),
+                                            theme.cardTheme.color ??
+                                                theme.colorScheme.surface,
+                                            (theme.cardTheme.color ??
+                                                    theme.colorScheme.surface)
+                                                .withOpacity(0.0),
                                           ],
                                         ),
                                       ),
@@ -258,8 +269,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                           begin: Alignment.centerRight,
                                           end: Alignment.centerLeft,
                                           colors: [
-                                            theme.cardTheme.color ?? theme.colorScheme.surface,
-                                            (theme.cardTheme.color ?? theme.colorScheme.surface).withOpacity(0.0),
+                                            theme.cardTheme.color ??
+                                                theme.colorScheme.surface,
+                                            (theme.cardTheme.color ??
+                                                    theme.colorScheme.surface)
+                                                .withOpacity(0.0),
                                           ],
                                         ),
                                       ),
@@ -272,16 +286,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ],
                     ),
                   ),
-
                   const SizedBox(height: 24),
-
                   QuiGestorCard(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.analytics, color: theme.colorScheme.primary),
+                            Icon(Icons.analytics,
+                                color: theme.colorScheme.primary),
                             const SizedBox(width: 8),
                             TextH2(
                               'Métricas',
@@ -318,7 +331,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ],
                     ),
                   ),
-
                   const SizedBox(height: 16),
                   Center(
                     child: TextCaption(
@@ -342,34 +354,52 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final isWeb = ResponsiveLayout.isWeb(context);
     final screenWidth = MediaQuery.of(context).size.width;
 
-    final availableWidth = isWeb
-        ? (screenWidth - 260 - 32)
-        : (screenWidth - 32);
+    final availableWidth = screenWidth;
 
-    int itemsPerRow = 2;
+    int itemsPerRow;
+
     if (isWeb) {
-      if (availableWidth > 850) {
-        itemsPerRow = 4;
+      if (availableWidth > 1200) {
+        itemsPerRow = 4;  // MUITO LARGO: 4 colunas
+      } else if (availableWidth > 900) {
+        itemsPerRow = 4;  // LARGO: ainda 4 colunas
       } else if (availableWidth > 600) {
-        itemsPerRow = 3;
+        itemsPerRow = 3;  // MÉDIO: 3 colunas
       } else {
-        itemsPerRow = 2;
+        itemsPerRow = 2;  // PEQUENO: 2 colunas
       }
     } else {
-      itemsPerRow = availableWidth > 500 ? 3 : 2;
+      // Mobile
+      if (availableWidth > 700) {
+        itemsPerRow = 4;  // Tablet: 3 colunas
+      } else if (availableWidth > 500) {
+        itemsPerRow = 3;  // Mobile grande: 2 colunas
+      } else {
+        itemsPerRow = 2;  // Mobile pequeno: 1 coluna
+      }
     }
 
+    // Log para debug (remova em produção)
+    debugPrint('📊 Dashboard - Screen: ${screenWidth.toStringAsFixed(0)}px, '
+        'Available: ${availableWidth.toStringAsFixed(0)}px, '
+        'Colunas: $itemsPerRow');
+
+    // Calcula largura do card
     final spacing = 12.0;
     final totalSpacing = (itemsPerRow - 1) * spacing;
     final itemWidth = (availableWidth - totalSpacing) / itemsPerRow;
 
+    // Garante largura mínima e máxima
+    final cardWidth = itemWidth.clamp(150.0, 350.0) - totalSpacing;
+
     return SizedBox(
-      width: itemWidth,
+      width: cardWidth,
       child: child,
     );
   }
 
-  Widget _buildFaturamentoItem(BuildContext context, String periodo, String valor) {
+  Widget _buildFaturamentoItem(
+      BuildContext context, String periodo, String valor) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -380,13 +410,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildMetricaItem(BuildContext context, String label, String valor, IconData icone, {Color? cor}) {
+  Widget _buildMetricaItem(
+      BuildContext context, String label, String valor, IconData icone,
+      {Color? cor}) {
     final theme = Theme.of(context);
     return Column(
       children: [
         Container(
           padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(color: (cor ?? theme.colorScheme.primary).withOpacity(0.1), shape: BoxShape.circle),
+          decoration: BoxDecoration(
+              color: (cor ?? theme.colorScheme.primary).withOpacity(0.1),
+              shape: BoxShape.circle),
           child: Icon(icone, color: cor ?? theme.colorScheme.primary, size: 20),
         ),
         const SizedBox(height: 8),

@@ -293,7 +293,7 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _abrirFormGestor(context),
-        label: const TextBody2('Novo Gestor', fontWeight: FontWeight.bold),
+        label: const TextInverse('Novo Gestor', fontWeight: FontWeight.bold),
         icon: const Icon(Icons.add),
       ),
     );
