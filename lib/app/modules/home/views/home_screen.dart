@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../shared/api/api_client.dart';
 import '../../../core/widgets/module_navigator.dart';
+import '../../../di/dependencies.dart';
 import '../widgets/side_menu.dart';
 import '../../theme/bloc/theme_cubit.dart';
 import '../../theme/bloc/theme_state.dart';
@@ -19,6 +20,10 @@ import '../../categorias/bloc/categorias_cubit.dart';
 import '../../categorias/views/categorias_list_screen.dart';
 import '../../produtos/views/produtos_list_screen.dart';
 import '../../produtos/bloc/produtos_cubit.dart';
+import '../../lojistas/views/lojistas_list_page.dart';
+import '../../lojistas/views/lojista_form_page.dart';
+import '../../lojistas/bloc/lojistas_cubit.dart';
+import '../../lojistas/bloc/lojista_form_cubit.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -59,7 +64,10 @@ class HomeScreenState extends State<HomeScreen> {
       ModuleNavigator(
         key: _navKeys[2],
         moduleName: 'Lojistas',
-        initialScreen: const Center(child: Text('Lojistas Screen')),
+        initialScreen: BlocProvider(
+          create: (_) => getIt<LojistasCubit>(),
+          child: const LojistasListPage(),
+        ),
       ),
       // 3: Clientes
       ModuleNavigator(
@@ -133,6 +141,18 @@ class HomeScreenState extends State<HomeScreen> {
         builder: (context) => BlocProvider.value(
           value: context.read<GestoresCubit>(),
           child: GestorFormScreen(gestor: gestor),
+        ),
+      ),
+    );
+  }
+
+  /// Abre o formulário de lojista dentro do módulo de Lojistas (índice 2)
+  void openLojistaForm({int? id}) {
+    _navKeys[2].currentState?.push(
+      MaterialPageRoute(
+        builder: (context) => BlocProvider(
+          create: (_) => getIt<LojistaFormCubit>(),
+          child: LojistaFormPage(id: id),
         ),
       ),
     );

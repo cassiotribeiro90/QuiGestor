@@ -8,6 +8,7 @@ import '../models/categoria.dart';
 import '../widgets/categoria_card.dart';
 import '../widgets/categoria_filters.dart';
 import 'categoria_form_screen.dart';
+import '../../../core/constants/icon_constants.dart';
 
 class CategoriasListScreen extends StatefulWidget {
   const CategoriasListScreen({super.key});
@@ -47,7 +48,7 @@ class _CategoriasListScreenState extends State<CategoriasListScreen> {
         title: const TextH2('Categorias', fontWeight: FontWeight.bold),
         actions: [
           IconButton(
-            icon: const Icon(Icons.filter_alt_outlined),
+            icon: const Icon(AppIcons.filter),
             onPressed: _showFilters,
           ),
         ],
@@ -59,10 +60,10 @@ class _CategoriasListScreenState extends State<CategoriasListScreen> {
               controller: _searchController,
               decoration: InputDecoration(
                 hintText: 'Buscar categorias...',
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: const Icon(AppIcons.search),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.clear),
+                        icon: const Icon(AppIcons.clear),
                         onPressed: () {
                           _searchController.clear();
                           context.read<CategoriasCubit>().applySearch('');
@@ -115,7 +116,7 @@ class _CategoriasListScreenState extends State<CategoriasListScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.category_outlined, size: 80, color: Colors.grey[400]),
+                    Icon(AppIcons.category, size: 80, color: Colors.grey[400]),
                     const SizedBox(height: 16),
                     const TextH3('Nenhuma categoria encontrada'),
                   ],
@@ -151,7 +152,7 @@ class _CategoriasListScreenState extends State<CategoriasListScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _abrirFormCategoria(context),
         label: const TextInverse('Nova Categoria', fontWeight: FontWeight.bold),
-        icon: const Icon(Icons.add),
+        icon: const Icon(AppIcons.add),
       ),
     );
   }

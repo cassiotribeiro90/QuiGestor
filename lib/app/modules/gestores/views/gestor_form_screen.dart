@@ -4,6 +4,7 @@ import '../../../../apparte/widgets/app_text.dart';
 import '../../../../apparte/widgets/qui_button.dart';
 import '../bloc/gestores_cubit.dart';
 import '../models/gestor.dart';
+import '../../../core/constants/icon_constants.dart';
 
 class GestorFormScreen extends StatefulWidget {
   final Gestor? gestor;
@@ -200,7 +201,7 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
           IconButton(
             icon: _isSaving || _isLoadingData
                 ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                : const Icon(Icons.save_outlined),
+                : const Icon(AppIcons.add),
             onPressed: _isSaving || _isLoadingData ? null : _save,
           ),
         ],
@@ -222,17 +223,17 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildSectionHeader(context, Icons.person_outline, 'Informações Pessoais'),
+                        _buildSectionHeader(context, AppIcons.person, 'Informações Pessoais'),
                         const SizedBox(height: 24),
                         TextFormField(
                           controller: _nomeController,
-                          decoration: _inputDecoration(theme, 'Nome completo *', Icons.person_outline),
+                          decoration: _inputDecoration(theme, 'Nome completo *', AppIcons.person),
                           validator: (value) => value == null || value.isEmpty ? 'Campo obrigatório' : null,
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: _emailController,
-                          decoration: _inputDecoration(theme, 'E-mail *', Icons.email_outlined),
+                          decoration: _inputDecoration(theme, 'E-mail *', AppIcons.email),
                           keyboardType: TextInputType.emailAddress,
                           validator: (value) => value == null || value.isEmpty ? 'Campo obrigatório' : null,
                         ),
@@ -242,7 +243,7 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
                             Expanded(
                               child: TextFormField(
                                 controller: _cpfController,
-                                decoration: _inputDecoration(theme, 'CPF', Icons.badge_outlined),
+                                decoration: _inputDecoration(theme, 'CPF', AppIcons.person),
                                 keyboardType: TextInputType.number,
                               ),
                             ),
@@ -250,7 +251,7 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
                             Expanded(
                               child: TextFormField(
                                 controller: _telefoneController,
-                                decoration: _inputDecoration(theme, 'Telefone', Icons.phone_outlined),
+                                decoration: _inputDecoration(theme, 'Telefone', AppIcons.phone),
                                 keyboardType: TextInputType.phone,
                               ),
                             ),
@@ -259,14 +260,14 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
                         const SizedBox(height: 20),
                         Divider(color: Colors.grey[300]),
                         const SizedBox(height: 16),
-                        _buildSectionHeader(context, Icons.security_outlined, 'Segurança e Acesso'),
+                        _buildSectionHeader(context, AppIcons.admin, 'Segurança e Acesso'),
                         const SizedBox(height: 24),
                         TextFormField(
                           controller: _senhaController,
                           decoration: _inputDecoration(
                             theme, 
                             _isEditing ? 'Nova senha (opcional)' : 'Senha *', 
-                            Icons.lock_outline,
+                            AppIcons.settings,
                             helperText: _isEditing ? 'Mantenha vazio para não alterar' : 'Mínimo 6 caracteres',
                           ),
                           obscureText: true,
@@ -279,7 +280,7 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
                         const SizedBox(height: 20),
                         DropdownButtonFormField<String>(
                           value: _nivel,
-                          decoration: _inputDecoration(theme, 'Nível de Acesso *', Icons.security_outlined),
+                          decoration: _inputDecoration(theme, 'Nível de Acesso *', AppIcons.admin),
                           items: _niveis.map((nivel) => DropdownMenuItem(value: nivel['value'], child: TextBody2(nivel['label']!))).toList(),
                           onChanged: (value) => setState(() => _nivel = value!),
                         ),
@@ -340,7 +341,7 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
       ),
       child: Row(
         children: [
-          Icon(_status == 1 ? Icons.check_circle_outline : Icons.cancel_outlined, color: _status == 1 ? Colors.green : Colors.red),
+          Icon(_status == 1 ? AppIcons.check : AppIcons.close, color: _status == 1 ? Colors.green : Colors.red),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -361,7 +362,7 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
     return Center(
       child: TextButton.icon(
         onPressed: _isDeleting ? null : _delete,
-        icon: _isDeleting ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.delete_outline, size: 18, color: Colors.red),
+        icon: _isDeleting ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(AppIcons.delete, size: 18, color: Colors.red),
         label: TextBody2(_isDeleting ? 'Excluindo...' : 'Excluir gestor', color: Colors.red),
         style: TextButton.styleFrom(backgroundColor: Colors.red.withOpacity(0.05), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))),
       ),

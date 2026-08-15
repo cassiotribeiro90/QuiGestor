@@ -7,6 +7,7 @@ import '../../produtos/bloc/produtos_cubit.dart';
 import '../../produtos/views/produtos_list_screen.dart';
 import '../bloc/lojas_cubit.dart';
 import '../models/loja.dart';
+import '../../../core/constants/icon_constants.dart';
 
 class LojaFormScreen extends StatefulWidget {
   final Loja? loja;
@@ -283,14 +284,14 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
         centerTitle: false,
         actions: [
           IconButton(
-            icon: const Icon(Icons.restaurant_menu_outlined),
+            icon: const Icon(AppIcons.fastfood),
             tooltip: 'Gerenciar Cardápio',
             onPressed: () => _abrirCardapio(context),
           ),
           IconButton(
             icon: _isSaving || _isLoadingData
                 ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                : const Icon(Icons.save_outlined),
+                : const Icon(AppIcons.add),
             onPressed: _isSaving || _isLoadingData ? null : _salvar,
           ),
         ],
@@ -310,11 +311,11 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildSectionHeader(context, Icons.store_outlined, 'Informações Básicas'),
+                        _buildSectionHeader(context, AppIcons.store, 'Informações Básicas'),
                         const SizedBox(height: 24),
                         TextFormField(
                           controller: _nomeController,
-                          decoration: _inputDecoration(theme, 'Nome da Loja *', Icons.store),
+                          decoration: _inputDecoration(theme, 'Nome da Loja *', AppIcons.store),
                           validator: (value) => value == null || value.isEmpty ? 'Campo obrigatório' : null,
                         ),
                         const SizedBox(height: 16),
@@ -323,7 +324,7 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
                             Expanded(
                               child: TextFormField(
                                 controller: _categoriaController,
-                                decoration: _inputDecoration(theme, 'Categoria *', Icons.category_outlined),
+                                decoration: _inputDecoration(theme, 'Categoria *', AppIcons.category),
                                 validator: (value) => value == null || value.isEmpty ? 'Campo obrigatório' : null,
                               ),
                             ),
@@ -331,7 +332,7 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
                             Expanded(
                               child: TextFormField(
                                 controller: _telefoneController,
-                                decoration: _inputDecoration(theme, 'Telefone *', Icons.phone_outlined),
+                                decoration: _inputDecoration(theme, 'Telefone *', AppIcons.phone),
                                 validator: (value) => value == null || value.isEmpty ? 'Campo obrigatório' : null,
                               ),
                             ),
@@ -340,17 +341,17 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: _descricaoController,
-                          decoration: _inputDecoration(theme, 'Descrição', Icons.description_outlined),
+                          decoration: _inputDecoration(theme, 'Descrição', AppIcons.inventory),
                           maxLines: 3,
                         ),
                         const SizedBox(height: 20),
                         Divider(color: Colors.grey[300]),
                         const SizedBox(height: 16),
-                        _buildSectionHeader(context, Icons.location_on_outlined, 'Endereço'),
+                        _buildSectionHeader(context, AppIcons.location, 'Endereço'),
                         const SizedBox(height: 24),
                         TextFormField(
                           controller: _cepController,
-                          decoration: _inputDecoration(theme, 'CEP *', Icons.location_on_outlined),
+                          decoration: _inputDecoration(theme, 'CEP *', AppIcons.location),
                         ),
                         const SizedBox(height: 16),
                         Row(
@@ -379,7 +380,7 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
                         const SizedBox(height: 20),
                         Divider(color: Colors.grey[300]),
                         const SizedBox(height: 16),
-                        _buildSectionHeader(context, Icons.delivery_dining_outlined, 'Entrega e Valores'),
+                        _buildSectionHeader(context, AppIcons.delivery, 'Entrega e Valores'),
                         const SizedBox(height: 24),
                         Row(
                           children: [
@@ -391,19 +392,19 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
                         const SizedBox(height: 16),
                         Row(
                           children: [
-                            Expanded(child: TextFormField(controller: _taxaEntregaController, decoration: _inputDecoration(theme, r'Taxa (R$) *', Icons.attach_money), keyboardType: TextInputType.number)),
+                            Expanded(child: TextFormField(controller: _taxaEntregaController, decoration: _inputDecoration(theme, r'Taxa (R$) *', AppIcons.money), keyboardType: TextInputType.number)),
                             const SizedBox(width: 12),
-                            Expanded(child: TextFormField(controller: _pedidoMinimoController, decoration: _inputDecoration(theme, r'Pedido Mín (R$) *', Icons.attach_money), keyboardType: TextInputType.number)),
+                            Expanded(child: TextFormField(controller: _pedidoMinimoController, decoration: _inputDecoration(theme, r'Pedido Mín (R$) *', AppIcons.money), keyboardType: TextInputType.number)),
                           ],
                         ),
                         const SizedBox(height: 20),
                         Divider(color: Colors.grey[300]),
                         const SizedBox(height: 16),
-                        _buildSectionHeader(context, Icons.info_outline, 'Status e Destaque'),
+                        _buildSectionHeader(context, AppIcons.info, 'Status e Destaque'),
                         const SizedBox(height: 24),
                         DropdownButtonFormField<String>(
                           value: _status,
-                          decoration: _inputDecoration(theme, 'Status *', Icons.circle_outlined),
+                          decoration: _inputDecoration(theme, 'Status *', AppIcons.info),
                           items: _statusOptions.map((opt) => DropdownMenuItem(value: opt['value'], child: TextBody2(opt['label']!))).toList(),
                           onChanged: (val) => setState(() => _status = val!),
                         ),
@@ -437,7 +438,7 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Icon(
-                                  Icons.restaurant_menu,
+                                  AppIcons.fastfood,
                                   color: theme.colorScheme.primary,
                                   size: 20,
                                 ),
@@ -466,7 +467,7 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
                           QuiButton(
                             label: 'Gerenciar Cardápio',
                             onPressed: () => _abrirCardapio(context),
-                            icon: Icons.restaurant_menu_outlined,
+                            icon: AppIcons.fastfood,
                           ),
                           
                           const SizedBox(height: 8),
@@ -542,7 +543,7 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
     return Center(
       child: TextButton.icon(
         onPressed: _isDeleting ? null : _deletar,
-        icon: _isDeleting ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.delete_outline, size: 18, color: Colors.red),
+        icon: _isDeleting ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(AppIcons.delete, size: 18, color: Colors.red),
         label: TextBody2(_isDeleting ? 'Excluindo...' : 'Excluir loja', color: Colors.red),
         style: TextButton.styleFrom(backgroundColor: Colors.red.withOpacity(0.05), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))),
       ),

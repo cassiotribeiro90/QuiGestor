@@ -22,7 +22,7 @@ class LojaEmptyState extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.storefront_outlined,
+            Icons.store,
             size: 100,
             color: Colors.grey[400],
           ),

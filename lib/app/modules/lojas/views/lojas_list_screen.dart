@@ -9,6 +9,7 @@ import '../models/loja.dart';
 import '../widgets/loja_filters.dart';
 import '../widgets/loja_card_item.dart';
 import 'loja_form_screen.dart';
+import '../../../core/constants/icon_constants.dart';
 
 class LojasListScreen extends StatefulWidget {
   const LojasListScreen({super.key});
@@ -103,7 +104,7 @@ class _LojasListScreenState extends State<LojasListScreen> {
         title: const TextH2('Todas as Lojas', fontWeight: FontWeight.bold),
         actions: [
           IconButton(
-            icon: const Icon(Icons.filter_alt_outlined),
+            icon: const Icon(AppIcons.filter),
             onPressed: () => _showFilters(lojasCubit),
           ),
         ],
@@ -115,10 +116,10 @@ class _LojasListScreenState extends State<LojasListScreen> {
               controller: _searchController,
               decoration: InputDecoration(
                 hintText: 'Buscar lojas por nome, cidade...',
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: const Icon(AppIcons.search),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.clear),
+                        icon: const Icon(AppIcons.clear),
                         onPressed: () {
                           _searchController.clear();
                           context.read<LojasCubit>().applySearch('');
@@ -178,7 +179,7 @@ class _LojasListScreenState extends State<LojasListScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      Icons.storefront_outlined,
+                      AppIcons.store,
                       size: 100,
                       color: Colors.grey[400],
                     ),
@@ -227,7 +228,7 @@ class _LojasListScreenState extends State<LojasListScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _abrirFormLoja(context),
         label: const TextBody2('Nova Loja', fontWeight: FontWeight.bold, color: Colors.white),
-        icon: const Icon(Icons.add, color: Colors.white),
+        icon: const Icon(AppIcons.add, color: Colors.white),
       ),
     );
   }

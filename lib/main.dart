@@ -13,6 +13,7 @@ import 'package:quigestor/app/modules/categorias/bloc/categorias_cubit.dart';
 import 'package:quigestor/app/modules/usuarios/usuario_state.dart';
 import 'package:quigestor/app/routes/app_router.dart';
 import 'package:quigestor/app/routes/app_routes.dart';
+import 'package:quigestor/app/di/dependencies.dart';
 import 'package:quigestor/app/theme/app_theme.dart';
 import 'package:quigestor/shared/auth/auth_observer.dart';
 import 'package:quigestor/shared/api/api_client.dart';
@@ -20,6 +21,7 @@ import 'package:quigestor/shared/services/token_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await setupDependencies();
   await TokenService.initialize();
   final apiClient = ApiClient();
   runApp(QuiGestorApp(apiClient: apiClient));

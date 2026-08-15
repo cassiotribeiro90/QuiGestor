@@ -6,6 +6,7 @@ import '../../../../apparte/widgets/app_text.dart';
 import '../bloc/dashboard_cubit.dart';
 import '../../../../apparte/widgets/responsive_layout.dart';
 import '../bloc/dashboard_state.dart';
+import '../../../core/constants/icon_constants.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -64,7 +65,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline,
+                  Icon(AppIcons.error,
                       size: 80, color: theme.colorScheme.error),
                   const SizedBox(height: 16),
                   TextH2(
@@ -82,7 +83,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     onPressed: () =>
                         context.read<DashboardCubit>().fetchDashboard(),
                     icon:
-                        const Icon(Icons.refresh_rounded, color: Colors.white),
+                        const Icon(AppIcons.refresh, color: Colors.white),
                     label: const TextBody2('Tentar novamente',
                         color: Colors.white, fontWeight: FontWeight.bold),
                   ),
@@ -108,7 +109,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.analytics, color: theme.colorScheme.primary),
+                      Icon(AppIcons.barChart, color: theme.colorScheme.primary),
                       const SizedBox(width: 8),
                       TextH2(
                         'Lojas e Pedidos',
@@ -130,7 +131,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           MainCardDash(
                             titulo: 'Lojas',
                             valor: '${lojas['total']}',
-                            icone: Icons.store,
+                            icone: AppIcons.store,
                             cor: Colors.blue,
                           ),
                         ),
@@ -139,7 +140,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           MainCardDash(
                             titulo: 'Lojas Ativas',
                             valor: '${lojas['ativas']}',
-                            icone: Icons.check_circle_outline,
+                            icone: AppIcons.check,
                             cor: Colors.indigo,
                           ),
                         ),
@@ -148,7 +149,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           MainCardDash(
                             titulo: 'Pedidos Hoje',
                             valor: '${pedidos['hoje']}',
-                            icone: Icons.today,
+                            icone: AppIcons.calendar,
                             cor: Colors.green,
                           ),
                         ),
@@ -157,7 +158,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           MainCardDash(
                             titulo: 'Esta Semana',
                             valor: '${pedidos['semana']}',
-                            icone: Icons.calendar_view_week,
+                            icone: AppIcons.calendar,
                             cor: Colors.orange,
                           ),
                         ),
@@ -166,7 +167,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           MainCardDash(
                             titulo: 'Este Mês',
                             valor: '${pedidos['mes']}',
-                            icone: Icons.calendar_month,
+                            icone: AppIcons.calendar,
                             cor: Colors.purple,
                           ),
                         ),
@@ -175,7 +176,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           MainCardDash(
                             titulo: 'Este Ano',
                             valor: '${pedidos['ano']}',
-                            icone: Icons.calendar_today,
+                            icone: AppIcons.calendar,
                             cor: Colors.teal,
                           ),
                         ),
@@ -184,7 +185,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           MainCardDash(
                             titulo: 'Total Acumulado',
                             valor: '${pedidos['total']}',
-                            icone: Icons.history,
+                            icone: AppIcons.inventory,
                             cor: Colors.brown,
                           ),
                         ),
@@ -199,7 +200,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.attach_money,
+                            Icon(AppIcons.money,
                                 color: theme.colorScheme.primary),
                             const SizedBox(width: 8),
                             TextH2(
@@ -293,7 +294,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.analytics,
+                            Icon(AppIcons.barChart,
                                 color: theme.colorScheme.primary),
                             const SizedBox(width: 8),
                             TextH2(
@@ -311,7 +312,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               context,
                               'Ticket Médio',
                               metricas['ticket_medio'],
-                              Icons.receipt,
+                              AppIcons.shoppingBag,
                             ),
                             _buildMetricaItem(
                               context,
@@ -323,7 +324,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               context,
                               'Crescimento',
                               metricas['crescimento_mensal'],
-                              Icons.trending_up,
+                              AppIcons.trendingUp,
                               cor: Colors.green,
                             ),
                           ],

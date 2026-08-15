@@ -9,6 +9,7 @@ import '../bloc/gestores_state.dart';
 import '../models/gestor.dart';
 import '../widgets/gestor_filters.dart';
 import 'gestor_form_screen.dart';
+import '../../../core/constants/icon_constants.dart';
 
 class GestoresListScreen extends StatefulWidget {
   const GestoresListScreen({super.key});
@@ -99,7 +100,7 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
         title: const TextH2('Gestores'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.filter_alt_outlined),
+            icon: const Icon(AppIcons.filter),
             onPressed: _showFilters,
           ),
         ],
@@ -111,10 +112,10 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
               controller: _searchController,
               decoration: InputDecoration(
                 hintText: 'Buscar gestores por nome, email...',
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: const Icon(AppIcons.search),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.clear),
+                        icon: const Icon(AppIcons.clear),
                         onPressed: () {
                           _searchController.clear();
                           context.read<GestoresCubit>().applySearch('');
@@ -173,7 +174,7 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.people_outline, size: 100, color: Colors.grey[400]),
+                    Icon(AppIcons.people, size: 100, color: Colors.grey[400]),
                     const SizedBox(height: 16),
                     const TextH2('Nenhum gestor encontrado'),
                     const SizedBox(height: 8),
@@ -185,7 +186,7 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
                       const SizedBox(height: 24),
                       ElevatedButton.icon(
                         onPressed: () => _abrirFormGestor(context),
-                        icon: const Icon(Icons.add),
+                        icon: const Icon(AppIcons.add),
                         label: const TextBody2('Criar Gestor', fontWeight: FontWeight.bold, color: Colors.white),
                       ),
                     ],
@@ -263,7 +264,7 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
                                 const SizedBox(height: 4),
                                 Row(
                                   children: [
-                                    Icon(Icons.email_outlined, size: 14, color: Colors.grey[600]),
+                                    Icon(AppIcons.email, size: 14, color: Colors.grey[600]),
                                     const SizedBox(width: 4),
                                     TextBody3(gestor.email, color: Colors.grey[600]),
                                   ],
@@ -271,7 +272,7 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
                                 const SizedBox(height: 2),
                                 Row(
                                   children: [
-                                    Icon(Icons.security_outlined, size: 14, color: Colors.grey[600]),
+                                    Icon(AppIcons.admin, size: 14, color: Colors.grey[600]),
                                     const SizedBox(width: 4),
                                     TextBody3(gestor.nivel, color: Colors.grey[600]),
                                   ],
@@ -279,7 +280,7 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
                               ],
                             ),
                           ),
-                          Icon(Icons.chevron_right_rounded, color: Colors.grey[400]),
+                          Icon(AppIcons.chevronRight, color: Colors.grey[400]),
                         ],
                       ),
                     ),
@@ -294,7 +295,7 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _abrirFormGestor(context),
         label: const TextInverse('Novo Gestor', fontWeight: FontWeight.bold),
-        icon: const Icon(Icons.add),
+        icon: const Icon(AppIcons.add),
       ),
     );
   }

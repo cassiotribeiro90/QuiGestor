@@ -12,6 +12,11 @@ import '../modules/produtos/views/produtos_list_screen.dart';
 import '../modules/produtos/views/produto_form_screen.dart';
 import '../modules/produtos/bloc/produtos_cubit.dart';
 import '../modules/produtos/bloc/produto_cubit.dart';
+import '../modules/lojistas/views/lojistas_list_page.dart';
+import '../modules/lojistas/views/lojista_form_page.dart';
+import '../modules/lojistas/bloc/lojistas_cubit.dart';
+import '../modules/lojistas/bloc/lojista_form_cubit.dart';
+import '../di/dependencies.dart';
 import '../../shared/api/api_client.dart';
 import 'app_routes.dart';
 
@@ -55,6 +60,21 @@ class AppRouter {
               produtoId: args['produtoId'],
               initialLojaId: args['lojaId'],
             ),
+          ),
+        );
+      case Routes.LOJISTAS:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<LojistasCubit>(),
+            child: const LojistasListPage(),
+          ),
+        );
+      case Routes.LOJISTA_FORM:
+        final id = settings.arguments as int?;
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<LojistaFormCubit>(),
+            child: LojistaFormPage(id: id),
           ),
         );
       case '/debug':

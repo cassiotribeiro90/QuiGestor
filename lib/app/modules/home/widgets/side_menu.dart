@@ -6,6 +6,7 @@ import '../../../routes/app_routes.dart';
 import '../bloc/home_cubit.dart';
 import '../../theme/bloc/theme_cubit.dart';
 import '../../theme/bloc/theme_state.dart';
+import '../../../core/constants/icon_constants.dart';
 
 class SideMenu extends StatelessWidget {
   final bool isCompact;
@@ -41,7 +42,7 @@ class SideMenu extends StatelessWidget {
                   height: isCompact ? 40 : 60,
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) => const Icon(
-                    Icons.admin_panel_settings, 
+                    AppIcons.admin, 
                     size: 40, 
                     color: Colors.white
                   ),
@@ -71,7 +72,7 @@ class SideMenu extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 12),
                   child: _buildMenuItem(
                     context,
-                    icon: Icons.dashboard_outlined,
+                    icon: AppIcons.dashboard,
                     label: 'Dashboard',
                     index: 0,
                     isCompact: isCompact,
@@ -81,21 +82,21 @@ class SideMenu extends StatelessWidget {
                 _buildSectionHeader(context, 'USUÁRIOS', isCompact),
                 _buildMenuItem(
                   context,
-                  icon: Icons.admin_panel_settings_outlined,
+                  icon: AppIcons.admin,
                   label: 'Gestores',
                   index: 1,
                   isCompact: isCompact,
                 ),
                 _buildMenuItem(
                   context,
-                  icon: Icons.storefront_outlined,
+                  icon: AppIcons.people,
                   label: 'Lojistas',
                   index: 2,
                   isCompact: isCompact,
                 ),
                 _buildMenuItem(
                   context,
-                  icon: Icons.people_outlined,
+                  icon: AppIcons.person,
                   label: 'Clientes',
                   index: 3,
                   isCompact: isCompact,
@@ -104,14 +105,14 @@ class SideMenu extends StatelessWidget {
                 _buildSectionHeader(context, 'LOJAS', isCompact),
                 _buildMenuItem(
                   context,
-                  icon: Icons.store_mall_directory_outlined,
+                  icon: AppIcons.store,
                   label: 'Todas as Lojas',
                   index: 4,
                   isCompact: isCompact,
                 ),
                 _buildMenuItem(
                   context,
-                  icon: Icons.category_outlined,
+                  icon: AppIcons.category,
                   label: 'Categorias',
                   index: 5,
                   isCompact: isCompact,
@@ -120,7 +121,7 @@ class SideMenu extends StatelessWidget {
                 _buildSectionHeader(context, 'PEDIDOS', isCompact),
                 _buildMenuItem(
                   context,
-                  icon: Icons.receipt_outlined,
+                  icon: AppIcons.inventory,
                   label: 'Todos os Pedidos',
                   index: 6,
                   isCompact: isCompact,
@@ -129,7 +130,7 @@ class SideMenu extends StatelessWidget {
                 _buildSectionHeader(context, 'SISTEMA', isCompact),
                 _buildMenuItem(
                   context,
-                  icon: Icons.settings_outlined,
+                  icon: AppIcons.settings,
                   label: 'Configurações',
                   index: 7,
                   isCompact: isCompact,
@@ -146,7 +147,7 @@ class SideMenu extends StatelessWidget {
                     final isDark = state.themeMode == ThemeMode.dark;
                     return ListTile(
                       leading: Icon(
-                        isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+                        isDark ? AppIcons.visibility : AppIcons.visibilityOff,
                         color: theme.colorScheme.primary,
                       ),
                       title: isCompact ? null : TextBody2(isDark ? 'Tema Claro' : 'Tema Escuro'),
@@ -157,7 +158,7 @@ class SideMenu extends StatelessWidget {
 
                 // Logout dentro do scroll
                 ListTile(
-                  leading: const Icon(Icons.logout_rounded, color: Colors.red),
+                  leading: const Icon(AppIcons.logout, color: Colors.red),
                   title: isCompact ? null : const TextBody2('Sair', color: Colors.red),
                   onTap: () {
                     context.read<AuthCubit>().logout();

@@ -9,6 +9,7 @@ import '../../../../apparte/widgets/quigestor_card.dart';
 import '../../../../apparte/widgets/loading_skeleton.dart';
 import '../../../../shared/api/api_client.dart';
 import 'produto_form_screen.dart';
+import '../../../core/constants/icon_constants.dart';
 
 class ProdutosListScreen extends StatefulWidget {
   final int lojaId;
@@ -63,7 +64,7 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _navegarParaForm(),
         label: const TextBody1('Novo Produto', color: Colors.white),
-        icon: const Icon(Icons.add, color: Colors.white),
+        icon: const Icon(AppIcons.add, color: Colors.white),
       ),
       body: BlocBuilder<ProdutosCubit, ProdutosState>(
         builder: (context, state) {
@@ -83,7 +84,7 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline, size: 80, color: Colors.grey[400]),
+                  Icon(AppIcons.error, size: 80, color: Colors.grey[400]),
                   const SizedBox(height: 16),
                   const TextH3('Erro ao carregar produtos'),
                   const SizedBox(height: 8),
@@ -91,7 +92,7 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
                     onPressed: () => context.read<ProdutosCubit>().fetchProdutos(),
-                    icon: const Icon(Icons.refresh),
+                    icon: const Icon(AppIcons.refresh),
                     label: const TextBody1('Tentar novamente'),
                   ),
                 ],
@@ -107,7 +108,7 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.restaurant_menu_outlined, size: 100, color: Colors.grey[400]),
+                    Icon(AppIcons.fastfood, size: 100, color: Colors.grey[400]),
                     const SizedBox(height: 16),
                     const TextH2('Nenhum produto cadastrado'),
                     const SizedBox(height: 8),
@@ -115,7 +116,7 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
                     const SizedBox(height: 24),
                     ElevatedButton.icon(
                       onPressed: () => _navegarParaForm(),
-                      icon: const Icon(Icons.add),
+                      icon: const Icon(AppIcons.add),
                       label: const TextBody1('Adicionar Produto'),
                     ),
                   ],
@@ -201,7 +202,7 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
                     : null,
               ),
               child: produto.imagem == null || produto.imagem!.isEmpty
-                  ? Icon(Icons.fastfood, color: theme.colorScheme.primary.withOpacity(0.3))
+                  ? Icon(AppIcons.fastfood, color: theme.colorScheme.primary.withOpacity(0.3))
                   : null,
             ),
             const SizedBox(width: 12),
@@ -269,7 +270,7 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
             ),
 
             // Seta
-            Icon(Icons.chevron_right_rounded, color: Colors.grey[400]),
+            Icon(AppIcons.chevronRight, color: Colors.grey[400]),
           ],
         ),
       ),
