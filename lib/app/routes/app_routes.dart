@@ -8,4 +8,6 @@ class Routes {
   static const String PRODUTO_FORM = '/produto-form';
   static const String LOJISTAS = '/lojistas';
   static const String LOJISTA_FORM = '/lojista-form';
+  static const String SUBCATEGORIAS = '/subcategorias';
+  static const String SUBCATEGORIA_FORM = '/subcategoria-form';
 }

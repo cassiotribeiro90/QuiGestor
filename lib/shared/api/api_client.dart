@@ -52,8 +52,8 @@ class ApiClient {
     }
   }
   
-  Future<Response> post(String path, {dynamic data, bool requiresAuth = true}) => 
-      _dio.post(path, data: data, options: Options(extra: {'requiresAuth': requiresAuth}));
+  Future<Response> post(String path, {dynamic data, Map<String, dynamic>? queryParameters, bool requiresAuth = true}) => 
+      _dio.post(path, data: data, queryParameters: queryParameters, options: Options(extra: {'requiresAuth': requiresAuth}));
       
   Future<Response> get(
     String path, {
@@ -65,11 +65,11 @@ class ApiClient {
     options: Options(extra: {'requiresAuth': requiresAuth})
   );
       
-  Future<Response> put(String path, {dynamic data, bool requiresAuth = true}) => 
-      _dio.put(path, data: data, options: Options(extra: {'requiresAuth': requiresAuth}));
+  Future<Response> put(String path, {dynamic data, Map<String, dynamic>? queryParameters, bool requiresAuth = true}) => 
+      _dio.put(path, data: data, queryParameters: queryParameters, options: Options(extra: {'requiresAuth': requiresAuth}));
       
-  Future<Response> delete(String path, {bool requiresAuth = true}) =>
-      _dio.delete(path, options: Options(extra: {'requiresAuth': requiresAuth}));
+  Future<Response> delete(String path, {Map<String, dynamic>? queryParameters, bool requiresAuth = true}) =>
+      _dio.delete(path, queryParameters: queryParameters, options: Options(extra: {'requiresAuth': requiresAuth}));
 
   Dio get dio => _dio;
   TokenService get tokenService => _tokenService;

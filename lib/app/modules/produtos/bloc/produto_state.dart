@@ -1,8 +1,8 @@
 import 'package:equatable/equatable.dart';
-import '../models/produto.dart';
-import '../models/subcategoria.dart';
-import '../../categorias/models/categoria.dart';
-import '../../lojas/models/loja.dart';
+import 'package:quigestor/app/modules/produtos/models/produto.dart';
+import 'package:quigestor/app/modules/subcategorias/models/subcategoria.dart';
+import 'package:quigestor/app/modules/categorias/models/categoria.dart';
+import 'package:quigestor/app/modules/lojas/models/loja.dart';
 
 abstract class ProdutoState extends Equatable {
   const ProdutoState();

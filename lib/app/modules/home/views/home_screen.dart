@@ -24,6 +24,8 @@ import '../../lojistas/views/lojistas_list_page.dart';
 import '../../lojistas/views/lojista_form_page.dart';
 import '../../lojistas/bloc/lojistas_cubit.dart';
 import '../../lojistas/bloc/lojista_form_cubit.dart';
+import '../../subcategorias/views/subcategorias_list_screen.dart';
+import '../../subcategorias/bloc/subcategoria_cubit.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -40,7 +42,7 @@ class HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     
-    _navKeys = List.generate(8, (_) => GlobalKey<ModuleNavigatorState>());
+    _navKeys = List.generate(9, (_) => GlobalKey<ModuleNavigatorState>());
     
     final apiClient = context.read<ApiClient>();
 
@@ -104,6 +106,15 @@ class HomeScreenState extends State<HomeScreen> {
         key: _navKeys[7],
         moduleName: 'Configurações',
         initialScreen: const Center(child: Text('Configurações Screen')),
+      ),
+      // 8: Subcategorias
+      ModuleNavigator(
+        key: _navKeys[8],
+        moduleName: 'Subcategorias',
+        initialScreen: BlocProvider(
+          create: (_) => getIt<SubcategoriaCubit>(),
+          child: const SubcategoriasListScreen(),
+        ),
       ),
     ];
 

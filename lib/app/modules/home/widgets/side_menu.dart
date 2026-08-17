@@ -53,10 +53,12 @@ class SideMenu extends StatelessWidget {
                     'QuiGestor',
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
+                    selectable: false,
                   ),
                   const TextBody3(
                     'Painel Administrativo',
                     color: Colors.white70,
+                    selectable: false,
                   ),
                 ],
               ],
@@ -117,6 +119,13 @@ class SideMenu extends StatelessWidget {
                   index: 5,
                   isCompact: isCompact,
                 ),
+                _buildMenuItem(
+                  context,
+                  icon: Icons.subdirectory_arrow_right,
+                  label: 'Subcategorias',
+                  index: 8,
+                  isCompact: isCompact,
+                ),
                 
                 _buildSectionHeader(context, 'PEDIDOS', isCompact),
                 _buildMenuItem(
@@ -150,7 +159,7 @@ class SideMenu extends StatelessWidget {
                         isDark ? AppIcons.visibility : AppIcons.visibilityOff,
                         color: theme.colorScheme.primary,
                       ),
-                      title: isCompact ? null : TextBody2(isDark ? 'Tema Claro' : 'Tema Escuro'),
+                      title: isCompact ? null : TextBody2(isDark ? 'Tema Claro' : 'Tema Escuro', selectable: false),
                       onTap: () => context.read<ThemeCubit>().toggleTheme(),
                     );
                   },
@@ -159,7 +168,7 @@ class SideMenu extends StatelessWidget {
                 // Logout dentro do scroll
                 ListTile(
                   leading: const Icon(AppIcons.logout, color: Colors.red),
-                  title: isCompact ? null : const TextBody2('Sair', color: Colors.red),
+                  title: isCompact ? null : const TextBody2('Sair', color: Colors.red, selectable: false),
                   onTap: () {
                     context.read<AuthCubit>().logout();
                     Navigator.pushReplacementNamed(context, Routes.LOGIN);
@@ -184,6 +193,7 @@ class SideMenu extends StatelessWidget {
         title,
         fontWeight: FontWeight.bold,
         color: Theme.of(context).disabledColor,
+        selectable: false,
       ),
     );
   }
@@ -197,7 +207,7 @@ class SideMenu extends StatelessWidget {
   }) {
     return ListTile(
       leading: Icon(icon),
-      title: isCompact ? null : TextBody2(label),
+      title: isCompact ? null : TextBody2(label, selectable: false),
       dense: true,
       onTap: () {
         // Fecha drawer se estiver aberto (Mobile)

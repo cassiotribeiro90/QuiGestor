@@ -5,7 +5,7 @@ import '../../../../apparte/widgets/qui_button.dart';
 import '../bloc/produto_cubit.dart';
 import '../bloc/produto_state.dart';
 import '../models/produto.dart';
-import '../models/subcategoria.dart';
+import 'package:quigestor/app/modules/subcategorias/models/subcategoria.dart';
 import '../../categorias/models/categoria.dart';
 import '../../lojas/models/loja.dart';
 import '../../../../apparte/widgets/quigestor_card.dart';

@@ -15,109 +15,84 @@ class CategoriaCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: QuiGestorCard(
-        onTap: onTap,
-        child: Row(
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: categoria.colorValue.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Center(
-                child: categoria.icone != null && categoria.icone!.isNotEmpty
-                    ? TextH2(
-                        categoria.icone!,
-                        textAlign: TextAlign.center,
-                      )
-                    : Icon(
-                        Icons.category_outlined,
-                        color: categoria.colorValue,
-                        size: 28,
-                      ),
-              ),
+    return QuiGestorCard(
+      onTap: onTap,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), // Reduzido para 4
+      child: Row(
+        children: [
+          Container(
+            width: 32, // Reduzido de 36
+            height: 32, // Reduzido de 36
+            decoration: BoxDecoration(
+              color: categoria.colorValue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(6), 
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextBody1(
-                          categoria.nome,
+            child: Center(
+              child: categoria.icone != null && categoria.icone!.isNotEmpty
+                  ? Text(
+                      categoria.icone!,
+                      style: const TextStyle(fontSize: 16), // Reduzido
+                      textAlign: TextAlign.center,
+                    )
+                  : Icon(
+                      Icons.category_outlined,
+                      color: categoria.colorValue,
+                      size: 16, // Reduzido de 18
+                    ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  categoria.nome,
+                  style: const TextStyle(
+                    fontSize: 11, // Fonte menor
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 1),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 1,
+                      ),
+                      decoration: BoxDecoration(
+                        color: categoria.ativo
+                            ? Colors.green.withOpacity(0.1)
+                            : Colors.grey.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        categoria.statusLabel,
+                        style: TextStyle(
+                          color: categoria.ativo ? Colors.green : Colors.grey,
+                          fontSize: 7, // Ainda menor
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      if (categoria.destaque)
-                        Container(
-                          margin: const EdgeInsets.only(right: 8),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.amber.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const TextBody3('⭐'),
-                        ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: categoria.ativo
-                              ? Colors.green.withOpacity(0.1)
-                              : Colors.grey.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: TextBody3(
-                          categoria.statusLabel,
-                          color: categoria.ativo ? Colors.green : Colors.grey,
-                          fontWeight: FontWeight.w600,
-                        ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '#${categoria.ordem}',
+                      style: TextStyle(
+                        color: Colors.grey[400],
+                        fontSize: 7,
                       ),
-                    ],
-                  ),
-                  if (categoria.descricao != null && categoria.descricao!.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    TextBody3(
-                      categoria.descricao!,
-                      maxLines: 1,
-                      color: Colors.grey[600],
                     ),
                   ],
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.sort,
-                        size: 14,
-                        color: Colors.grey[400],
-                      ),
-                      const SizedBox(width: 4),
-                      TextBody3(
-                        'Ordem: ${categoria.ordem}',
-                        color: Colors.grey[400],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-            Icon(
-              Icons.chevron_right_rounded,
-              color: Colors.grey[400],
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

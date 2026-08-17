@@ -88,6 +88,8 @@ class TextH1 extends StatelessWidget {
   final TextAlign? textAlign;
   final int? maxLines;
   final FontWeight? fontWeight;
+  final double? fontSize;
+  final TextOverflow? overflow;
   final bool selectable;
 
   const TextH1(
@@ -97,6 +99,8 @@ class TextH1 extends StatelessWidget {
     this.textAlign,
     this.maxLines,
     this.fontWeight,
+    this.fontSize,
+    this.overflow,
     this.selectable = true,
   });
 
@@ -109,6 +113,8 @@ class TextH1 extends StatelessWidget {
       textAlign: textAlign,
       maxLines: maxLines,
       fontWeight: fontWeight,
+      fontSize: fontSize,
+      overflow: overflow,
       selectable: selectable,
     );
   }
@@ -120,6 +126,8 @@ class TextH2 extends StatelessWidget {
   final TextAlign? textAlign;
   final int? maxLines;
   final FontWeight? fontWeight;
+  final double? fontSize;
+  final TextOverflow? overflow;
   final bool selectable;
 
   const TextH2(
@@ -129,6 +137,8 @@ class TextH2 extends StatelessWidget {
     this.textAlign,
     this.maxLines,
     this.fontWeight,
+    this.fontSize,
+    this.overflow,
     this.selectable = true,
   });
 
@@ -141,6 +151,8 @@ class TextH2 extends StatelessWidget {
       textAlign: textAlign,
       maxLines: maxLines,
       fontWeight: fontWeight,
+      fontSize: fontSize,
+      overflow: overflow,
       selectable: selectable,
     );
   }
@@ -152,6 +164,8 @@ class TextH3 extends StatelessWidget {
   final TextAlign? textAlign;
   final int? maxLines;
   final FontWeight? fontWeight;
+  final double? fontSize;
+  final TextOverflow? overflow;
   final bool selectable;
 
   const TextH3(
@@ -161,6 +175,8 @@ class TextH3 extends StatelessWidget {
     this.textAlign,
     this.maxLines,
     this.fontWeight,
+    this.fontSize,
+    this.overflow,
     this.selectable = true,
   });
 
@@ -173,6 +189,8 @@ class TextH3 extends StatelessWidget {
       textAlign: textAlign,
       maxLines: maxLines,
       fontWeight: fontWeight,
+      fontSize: fontSize,
+      overflow: overflow,
       selectable: selectable,
     );
   }
@@ -184,6 +202,8 @@ class TextBody1 extends StatelessWidget {
   final TextAlign? textAlign;
   final int? maxLines;
   final FontWeight? fontWeight;
+  final double? fontSize;
+  final TextOverflow? overflow;
   final bool selectable;
 
   const TextBody1(
@@ -193,6 +213,8 @@ class TextBody1 extends StatelessWidget {
     this.textAlign,
     this.maxLines,
     this.fontWeight,
+    this.fontSize,
+    this.overflow,
     this.selectable = true,
   });
 
@@ -205,6 +227,8 @@ class TextBody1 extends StatelessWidget {
       textAlign: textAlign,
       maxLines: maxLines,
       fontWeight: fontWeight,
+      fontSize: fontSize,
+      overflow: overflow,
       selectable: selectable,
     );
   }
@@ -216,6 +240,8 @@ class TextBody2 extends StatelessWidget {
   final TextAlign? textAlign;
   final int? maxLines;
   final FontWeight? fontWeight;
+  final double? fontSize;
+  final TextOverflow? overflow;
   final bool selectable;
 
   const TextBody2(
@@ -225,6 +251,8 @@ class TextBody2 extends StatelessWidget {
     this.textAlign,
     this.maxLines,
     this.fontWeight,
+    this.fontSize,
+    this.overflow,
     this.selectable = true,
   });
 
@@ -237,6 +265,8 @@ class TextBody2 extends StatelessWidget {
       textAlign: textAlign,
       maxLines: maxLines,
       fontWeight: fontWeight,
+      fontSize: fontSize,
+      overflow: overflow,
       selectable: selectable,
     );
   }
@@ -248,6 +278,8 @@ class TextBody3 extends StatelessWidget {
   final TextAlign? textAlign;
   final int? maxLines;
   final FontWeight? fontWeight;
+  final double? fontSize;
+  final TextOverflow? overflow;
   final bool selectable;
 
   const TextBody3(
@@ -257,6 +289,8 @@ class TextBody3 extends StatelessWidget {
     this.textAlign,
     this.maxLines,
     this.fontWeight,
+    this.fontSize,
+    this.overflow,
     this.selectable = true,
   });
 
@@ -269,6 +303,8 @@ class TextBody3 extends StatelessWidget {
       textAlign: textAlign,
       maxLines: maxLines,
       fontWeight: fontWeight,
+      fontSize: fontSize,
+      overflow: overflow,
       selectable: selectable,
     );
   }

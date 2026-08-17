@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../shared/api/api_client.dart';
 import '../models/produto.dart';
-import '../models/subcategoria.dart';
+import 'package:quigestor/app/modules/subcategorias/models/subcategoria.dart';
 import '../../categorias/models/categoria.dart';
 import '../../lojas/models/loja.dart';
 import 'produto_state.dart';

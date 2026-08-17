@@ -4,6 +4,8 @@ import '../modules/lojistas/services/lojista_service.dart';
 import '../modules/lojistas/repositories/lojista_repository.dart';
 import '../modules/lojistas/bloc/lojistas_cubit.dart';
 import '../modules/lojistas/bloc/lojista_form_cubit.dart';
+import '../modules/subcategorias/services/subcategoria_service.dart';
+import '../modules/subcategorias/bloc/subcategoria_cubit.dart';
 
 final getIt = GetIt.instance;
 
@@ -17,7 +19,11 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => LojistaService(getIt<ApiClient>()));
   getIt.registerLazySingleton(() => LojistaRepository(getIt<LojistaService>()));
   
+  // Subcategorias
+  getIt.registerLazySingleton(() => SubcategoriaService(getIt<ApiClient>()));
+  
   // Factory cubits to ensure fresh state when navigating
   getIt.registerFactory(() => LojistasCubit(getIt<LojistaRepository>()));
   getIt.registerFactory(() => LojistaFormCubit(getIt<LojistaRepository>()));
+  getIt.registerFactory(() => SubcategoriaCubit(getIt<SubcategoriaService>()));
 }

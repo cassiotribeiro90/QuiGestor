@@ -96,12 +96,12 @@ class _CategoriasListScreenState extends State<CategoriasListScreen> {
         builder: (context, state) {
           if (state is CategoriasLoading) {
             return GridView.builder(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(12),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 1.1,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
+                childAspectRatio: 3.2, // Aumentado para reduzir altura
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
               ),
               itemCount: 6,
               itemBuilder: (_, __) => const CardSkeleton(),
@@ -116,8 +116,8 @@ class _CategoriasListScreenState extends State<CategoriasListScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(AppIcons.category, size: 80, color: Colors.grey[400]),
-                    const SizedBox(height: 16),
+                    Icon(AppIcons.category, size: 60, color: Colors.grey[400]),
+                    const SizedBox(height: 12),
                     const TextH3('Nenhuma categoria encontrada'),
                   ],
                 ),
@@ -127,12 +127,12 @@ class _CategoriasListScreenState extends State<CategoriasListScreen> {
             return RefreshIndicator(
               onRefresh: () => context.read<CategoriasCubit>().fetchCategorias(),
               child: GridView.builder(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(12),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  childAspectRatio: 1.1,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
+                  childAspectRatio: 2.8, // Ainda mais compacto
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
                 ),
                 itemCount: categorias.length,
                 itemBuilder: (context, index) {

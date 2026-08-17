@@ -16,6 +16,9 @@ import '../modules/lojistas/views/lojistas_list_page.dart';
 import '../modules/lojistas/views/lojista_form_page.dart';
 import '../modules/lojistas/bloc/lojistas_cubit.dart';
 import '../modules/lojistas/bloc/lojista_form_cubit.dart';
+import '../modules/subcategorias/views/subcategorias_list_screen.dart';
+import '../modules/subcategorias/views/subcategoria_form_screen.dart';
+import '../modules/subcategorias/bloc/subcategoria_cubit.dart';
 import '../di/dependencies.dart';
 import '../../shared/api/api_client.dart';
 import 'app_routes.dart';
@@ -75,6 +78,25 @@ class AppRouter {
           builder: (_) => BlocProvider(
             create: (_) => getIt<LojistaFormCubit>(),
             child: LojistaFormPage(id: id),
+          ),
+        );
+      case Routes.SUBCATEGORIAS:
+        final catId = settings.arguments as int?;
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<SubcategoriaCubit>(),
+            child: SubcategoriasListScreen(categoriaId: catId),
+          ),
+        );
+      case Routes.SUBCATEGORIA_FORM:
+        final args = settings.arguments as Map<String, dynamic>? ?? {};
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<SubcategoriaCubit>(),
+            child: SubcategoriaFormScreen(
+              subcategoria: args['subcategoria'],
+              initialCategoriaId: args['categoriaId'],
+            ),
           ),
         );
       case '/debug':
