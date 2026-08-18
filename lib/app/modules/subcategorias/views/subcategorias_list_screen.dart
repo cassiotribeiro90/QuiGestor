@@ -8,9 +8,10 @@ import 'package:quigestor/app/modules/subcategorias/views/subcategoria_form_scre
 import 'package:quigestor/app/modules/subcategorias/models/subcategoria.dart';
 import 'package:quigestor/app/modules/subcategorias/bloc/subcategoria_cubit.dart';
 import 'package:quigestor/app/modules/subcategorias/bloc/subcategoria_state.dart';
+import 'package:quigestor/app/modules/subcategorias/widgets/filtros_subcategorias.dart';
 import 'package:quigestor/app/modules/categorias/bloc/categorias_cubit.dart';
-import 'package:quigestor/app/modules/categorias/bloc/categorias_state.dart';
-import 'package:quigestor/app/modules/categorias/models/categoria.dart';
+
+import '../../../di/dependencies.dart';
 
 class SubcategoriasListScreen extends StatefulWidget {
   final int? categoriaId;
@@ -30,9 +31,13 @@ class _SubcategoriasListScreenState extends State<SubcategoriasListScreen> {
   void initState() {
     super.initState();
     _categoriaIdFiltro = widget.categoriaId;
-    _carregar();
-    // Carregar categorias para o filtro
-    context.read<CategoriasCubit>().fetchCategorias();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _carregar();
+        // Carregar categorias para o filtro
+        context.read<CategoriasCubit>().fetchCategorias();
+      }
+    });
   }
 
   @override
@@ -63,7 +68,47 @@ class _SubcategoriasListScreenState extends State<SubcategoriasListScreen> {
       ),
       body: Column(
         children: [
-          _buildFilterBar(),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: FiltrosSubcategorias(
+                    categoriaId: _categoriaIdFiltro,
+                    searchQuery: _searchQuery,
+                    statusFiltro: _statusFiltro,
+                    searchController: _searchController,
+                    onCategoriaChanged: (val) {
+                      setState(() => _categoriaIdFiltro = val);
+                      _carregar();
+                    },
+                    onSearchChanged: (val) {
+                      setState(() => _searchQuery = val);
+                      _carregar();
+                    },
+                    onStatusChanged: (val) {
+                      setState(() => _statusFiltro = val);
+                      _carregar();
+                    },
+                    onClearFilters: () {
+                      setState(() {
+                        _searchController.clear();
+                        _searchQuery = '';
+                        _categoriaIdFiltro = widget.categoriaId;
+                        _statusFiltro = null;
+                      });
+                      _carregar();
+                    },
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(AppIcons.refresh),
+                  onPressed: _carregar,
+                  tooltip: 'Atualizar',
+                ),
+              ],
+            ),
+          ),
           Expanded(
             child: BlocConsumer<SubcategoriaCubit, SubcategoriaState>(
               listener: (context, state) {
@@ -81,11 +126,11 @@ class _SubcategoriasListScreenState extends State<SubcategoriasListScreen> {
                 if (state is SubcategoriaLoading) {
                   return GridView.builder(
                     padding: const EdgeInsets.all(12),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 3.2,
-                      crossAxisSpacing: 8,
-                      mainAxisSpacing: 8,
+                    gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: 300,
+                      childAspectRatio: 1.8,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
                     ),
                     itemCount: 6,
                     itemBuilder: (_, __) => const CardSkeleton(),
@@ -112,34 +157,42 @@ class _SubcategoriasListScreenState extends State<SubcategoriasListScreen> {
                     onRefresh: () async => _carregar(),
                     child: GridView.builder(
                       padding: const EdgeInsets.all(12),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        childAspectRatio: 3.2,
-                        crossAxisSpacing: 8,
-                        mainAxisSpacing: 8,
+                      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                        maxCrossAxisExtent: 300,
+                        childAspectRatio: 1.8,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
                       ),
                       itemCount: subcategorias.length,
                       itemBuilder: (context, index) {
                         final sub = subcategorias[index];
                         return QuiGestorCard(
                           onTap: () => _abrirFormSubcategoria(context, subcategoria: sub),
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                           child: Row(
                             children: [
                               Container(
-                                width: 28,
-                                height: 28,
+                                width: 44,
+                                height: 44,
                                 decoration: BoxDecoration(
                                   color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(6),
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
-                                child: Icon(
-                                  Icons.subdirectory_arrow_right,
-                                  color: Theme.of(context).colorScheme.primary,
-                                  size: 14,
+                                child: Center(
+                                  child: (sub.categoriaEmoji != null && sub.categoriaEmoji!.isNotEmpty)
+                                      ? Text(
+                                          sub.categoriaEmoji!,
+                                          style: const TextStyle(fontSize: 22),
+                                          textAlign: TextAlign.center,
+                                        )
+                                      : Icon(
+                                          Icons.subdirectory_arrow_right, // fallback
+                                          color: Theme.of(context).colorScheme.primary,
+                                          size: 24,
+                                        ),
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -148,10 +201,10 @@ class _SubcategoriasListScreenState extends State<SubcategoriasListScreen> {
                                     Text(
                                       sub.nome,
                                       style: const TextStyle(
-                                        fontSize: 11,
+                                        fontSize: 16,
                                         fontWeight: FontWeight.bold,
                                       ),
-                                      maxLines: 1,
+                                      maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                     if (sub.categoriaNome != null)
@@ -159,7 +212,7 @@ class _SubcategoriasListScreenState extends State<SubcategoriasListScreen> {
                                         sub.categoriaNome!,
                                         style: TextStyle(
                                           color: Colors.grey[600],
-                                          fontSize: 8,
+                                          fontSize: 12,
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
@@ -168,9 +221,9 @@ class _SubcategoriasListScreenState extends State<SubcategoriasListScreen> {
                                 ),
                               ),
                               IconButton(
-                                icon: const Icon(AppIcons.delete, size: 14, color: Colors.red),
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(),
+                                icon: const Icon(AppIcons.delete, size: 22, color: Colors.red),
+                                padding: const EdgeInsets.all(8),
+                                constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
                                 onPressed: () => _confirmarExclusao(context, sub),
                               ),
                             ],
@@ -195,98 +248,15 @@ class _SubcategoriasListScreenState extends State<SubcategoriasListScreen> {
     );
   }
 
-  Widget _buildFilterBar() {
-    return Container(
-      height: 50,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
-      ),
-      child: Row(
-        children: [
-          // Dropdown de Categorias Clean
-          BlocBuilder<CategoriasCubit, CategoriasState>(
-            builder: (context, state) {
-              List<Categoria> cats = [];
-              if (state is CategoriasLoaded) cats = state.categorias;
-
-              return DropdownButton<int?>(
-                value: _categoriaIdFiltro,
-                hint: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(AppIcons.category, size: 16, color: Colors.grey[600]),
-                    const SizedBox(width: 4),
-                    const Text('Categoria', style: TextStyle(fontSize: 13)),
-                  ],
-                ),
-                underline: const SizedBox.shrink(),
-                icon: const Icon(Icons.arrow_drop_down, size: 16),
-                items: [
-                  const DropdownMenuItem(value: null, child: Text('Todas', style: TextStyle(fontSize: 13))),
-                  ...cats.map((c) => DropdownMenuItem(
-                    value: c.id,
-                    child: Text(c.nome, style: const TextStyle(fontSize: 13)),
-                  )),
-                ],
-                onChanged: (val) {
-                  setState(() => _categoriaIdFiltro = val);
-                  _carregar();
-                },
-              );
-            },
-          ),
-          const VerticalDivider(width: 24, indent: 15, endIndent: 15),
-          
-          // Campo de busca clean
-          Expanded(
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Buscar...',
-                hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
-                prefixIcon: Icon(Icons.search, size: 16, color: Colors.grey[600]),
-                border: InputBorder.none,
-                isDense: true,
-                contentPadding: EdgeInsets.zero,
-              ),
-              style: const TextStyle(fontSize: 13),
-              onChanged: (val) {
-                _searchQuery = val;
-                _carregar();
-              },
-            ),
-          ),
-
-          // Toggle Ativo Clean
-          IconButton(
-            icon: Icon(
-              _statusFiltro == 1 ? Icons.visibility : Icons.visibility_off,
-              color: _statusFiltro == 1 ? Colors.green : Colors.grey,
-              size: 18,
-            ),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-            onPressed: () {
-              setState(() {
-                _statusFiltro = _statusFiltro == 1 ? null : 1;
-              });
-              _carregar();
-            },
-            tooltip: 'Filtrar ativos',
-          ),
-        ],
-      ),
-    );
-  }
-
   void _abrirFormSubcategoria(BuildContext context, {Subcategoria? subcategoria}) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => BlocProvider.value(
-          value: context.read<SubcategoriaCubit>(),
-          child: SubcategoriaFormScreen(subcategoria: subcategoria, initialCategoriaId: widget.categoriaId),
+        builder: (_) => BlocProvider(
+          create: (_) => getIt<SubcategoriaCubit>(),
+          child: SubcategoriaFormScreen(
+            subcategoria: subcategoria,
+            initialCategoriaId: widget.categoriaId,
+          ),
         ),
       ),
     );

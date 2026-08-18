@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../shared/api/api_client.dart';
 import '../../../core/widgets/module_navigator.dart';
 import '../../../di/dependencies.dart';
+import '../../dashboard/bloc/dashboard_cubit.dart';
 import '../widgets/side_menu.dart';
 import '../../theme/bloc/theme_cubit.dart';
 import '../../theme/bloc/theme_state.dart';
@@ -28,6 +29,8 @@ import '../../subcategorias/views/subcategorias_list_screen.dart';
 import '../../subcategorias/bloc/subcategoria_cubit.dart';
 
 class HomeScreen extends StatefulWidget {
+  static final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
+
   const HomeScreen({super.key});
 
   @override
@@ -35,88 +38,13 @@ class HomeScreen extends StatefulWidget {
 }
 
 class HomeScreenState extends State<HomeScreen> {
-  late final List<ModuleNavigator> _moduleNavigators;
   late final List<GlobalKey<ModuleNavigatorState>> _navKeys;
+  final Map<int, ModuleNavigator> _moduleCache = {};
 
   @override
   void initState() {
     super.initState();
-    
     _navKeys = List.generate(9, (_) => GlobalKey<ModuleNavigatorState>());
-    
-    final apiClient = context.read<ApiClient>();
-
-    _moduleNavigators = [
-      // 0: Dashboard
-      ModuleNavigator(
-        key: _navKeys[0],
-        moduleName: 'Dashboard',
-        initialScreen: const DashboardScreen(),
-      ),
-      // 1: Gestores
-      ModuleNavigator(
-        key: _navKeys[1],
-        moduleName: 'Gestores',
-        initialScreen: BlocProvider(
-          create: (_) => GestoresCubit(apiClient)..fetchGestores(perPage: 10),
-          child: const GestoresListScreen(),
-        ),
-      ),
-      // 2: Lojistas
-      ModuleNavigator(
-        key: _navKeys[2],
-        moduleName: 'Lojistas',
-        initialScreen: BlocProvider(
-          create: (_) => getIt<LojistasCubit>(),
-          child: const LojistasListPage(),
-        ),
-      ),
-      // 3: Clientes
-      ModuleNavigator(
-        key: _navKeys[3],
-        moduleName: 'Clientes',
-        initialScreen: const Center(child: Text('Clientes Screen')),
-      ),
-      // 4: Lojas
-      ModuleNavigator(
-        key: _navKeys[4],
-        moduleName: 'Lojas',
-        initialScreen: BlocProvider(
-          create: (_) => LojasCubit(apiClient)..fetchLojas(perPage: 10),
-          child: const LojasListScreen(),
-        ),
-      ),
-      // 5: Categorias
-      ModuleNavigator(
-        key: _navKeys[5],
-        moduleName: 'Categorias',
-        initialScreen: BlocProvider(
-          create: (_) => CategoriasCubit(apiClient)..fetchCategorias(),
-          child: const CategoriasListScreen(),
-        ),
-      ),
-      // 6: Pedidos
-      ModuleNavigator(
-        key: _navKeys[6],
-        moduleName: 'Pedidos',
-        initialScreen: const Center(child: Text('Pedidos Screen')),
-      ),
-      // 7: Configurações
-      ModuleNavigator(
-        key: _navKeys[7],
-        moduleName: 'Configurações',
-        initialScreen: const Center(child: Text('Configurações Screen')),
-      ),
-      // 8: Subcategorias
-      ModuleNavigator(
-        key: _navKeys[8],
-        moduleName: 'Subcategorias',
-        initialScreen: BlocProvider(
-          create: (_) => getIt<SubcategoriaCubit>(),
-          child: const SubcategoriasListScreen(),
-        ),
-      ),
-    ];
 
     // Configurar callbacks de reset no Cubit
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -130,6 +58,102 @@ class HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  /// Cria o ModuleNavigator sob demanda, apenas quando o menu é acessado
+  ModuleNavigator _createModuleNavigator(int index) {
+    final apiClient = context.read<ApiClient>();
+
+    switch (index) {
+      case 0:
+        return ModuleNavigator(
+          key: _navKeys[0],
+          moduleName: 'Dashboard',
+          initialScreen: BlocProvider(
+            create: (_) => DashboardCubit(apiClient),
+            child: const DashboardScreen(),
+          ),
+        );
+      case 1:
+        return ModuleNavigator(
+          key: _navKeys[1],
+          moduleName: 'Gestores',
+          initialScreen: BlocProvider(
+            create: (_) => GestoresCubit(apiClient)..fetchGestores(perPage: 10),
+            child: const GestoresListScreen(),
+          ),
+        );
+      case 2:
+        return ModuleNavigator(
+          key: _navKeys[2],
+          moduleName: 'Lojistas',
+          initialScreen: BlocProvider(
+            create: (_) => getIt<LojistasCubit>(),
+            child: const LojistasListPage(),
+          ),
+        );
+      case 3:
+        return ModuleNavigator(
+          key: _navKeys[3],
+          moduleName: 'Clientes',
+          initialScreen: const Center(child: Text('Clientes Screen')),
+        );
+      case 4:
+        return ModuleNavigator(
+          key: _navKeys[4],
+          moduleName: 'Lojas',
+          initialScreen: BlocProvider(
+            create: (_) => LojasCubit(apiClient)..fetchLojas(perPage: 10),
+            child: const LojasListScreen(),
+          ),
+        );
+      case 5:
+        return ModuleNavigator(
+          key: _navKeys[5],
+          moduleName: 'Categorias',
+          initialScreen: BlocProvider(
+            create: (_) => CategoriasCubit(apiClient)..fetchCategorias(),
+            child: const CategoriasListScreen(),
+          ),
+        );
+      case 6:
+        return ModuleNavigator(
+          key: _navKeys[6],
+          moduleName: 'Pedidos',
+          initialScreen: const Center(child: Text('Pedidos Screen')),
+        );
+      case 7:
+        return ModuleNavigator(
+          key: _navKeys[7],
+          moduleName: 'Configurações',
+          initialScreen: const Center(child: Text('Configurações Screen')),
+        );
+      case 8:
+        return ModuleNavigator(
+          key: _navKeys[8],
+          moduleName: 'Subcategorias',
+          initialScreen: BlocProvider(
+            create: (_) => getIt<SubcategoriaCubit>(),
+            child: const SubcategoriasListScreen(),
+          ),
+        );
+      default:
+        throw Exception('Módulo inválido: $index');
+    }
+  }
+
+  /// Recria o módulo do zero (para refresh ao trocar de menu)
+  ModuleNavigator _refreshModuleNavigator(int index) {
+    // Remove do cache para forçar recriação
+    _moduleCache.remove(index);
+    // Cria um novo GlobalKey para o módulo
+    _navKeys[index] = GlobalKey<ModuleNavigatorState>();
+    return _getModuleNavigator(index);
+  }
+
+  /// Retorna o ModuleNavigator do cache ou cria um novo
+  ModuleNavigator _getModuleNavigator(int index) {
+    return _moduleCache.putIfAbsent(index, () => _createModuleNavigator(index));
+  }
+
   /// Método genérico para empilhar uma tela no módulo atual
   void navigateTo(Widget content) {
     final state = context.read<HomeCubit>().state;
@@ -138,7 +162,6 @@ class HomeScreenState extends State<HomeScreen> {
         MaterialPageRoute(builder: (_) => content),
       );
     } else {
-      // Caso esteja no dashboard ou estado inicial (índice 0)
       _navKeys[0].currentState?.push(
         MaterialPageRoute(builder: (_) => content),
       );
@@ -210,6 +233,7 @@ class HomeScreenState extends State<HomeScreen> {
             final bool showSidebar = constraints.maxWidth > 600;
 
             return Scaffold(
+              key: HomeScreen.scaffoldKey,
               drawer: !showSidebar ? const SideMenu() : null,
               body: Row(
                 children: [
@@ -217,6 +241,18 @@ class HomeScreenState extends State<HomeScreen> {
                   Expanded(
                     child: Scaffold(
                       appBar: AppBar(
+                        leading: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final bool showSidebar = MediaQuery.of(context).size.width > 600;
+                            if (!showSidebar) {
+                              return IconButton(
+                                icon: const Icon(Icons.menu),
+                                onPressed: () => HomeScreen.scaffoldKey.currentState?.openDrawer(),
+                              );
+                            }
+                            return const SizedBox.shrink();
+                          },
+                        ),
                         title: Text(currentTitle),
                         actions: [
                           BlocBuilder<ThemeCubit, ThemeState>(
@@ -237,10 +273,8 @@ class HomeScreenState extends State<HomeScreen> {
                         alignment: Alignment.topCenter,
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 820),
-                          child: IndexedStack(
-                            index: currentIndex,
-                            children: _moduleNavigators,
-                          ),
+                          // Usa o módulo atual SEM IndexedStack para forçar recriação
+                          child: _getModuleNavigator(currentIndex),
                         ),
                       ),
                     ),

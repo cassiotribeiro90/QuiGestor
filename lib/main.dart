@@ -2,15 +2,9 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:quigestor/app/modules/auth/bloc/auth_cubit.dart';
-import 'package:quigestor/app/modules/dashboard/bloc/dashboard_cubit.dart';
 import 'package:quigestor/app/modules/theme/bloc/theme_cubit.dart';
 import 'package:quigestor/app/modules/theme/bloc/theme_state.dart';
 import 'package:quigestor/app/modules/home/bloc/home_cubit.dart';
-import 'package:quigestor/app/modules/gestores/bloc/gestores_cubit.dart';
-import 'package:quigestor/app/modules/loja/bloc/loja_cubit.dart';
-import 'package:quigestor/app/modules/lojas/bloc/lojas_cubit.dart';
-import 'package:quigestor/app/modules/categorias/bloc/categorias_cubit.dart';
-import 'package:quigestor/app/modules/usuarios/usuario_state.dart';
 import 'package:quigestor/app/routes/app_router.dart';
 import 'package:quigestor/app/routes/app_routes.dart';
 import 'package:quigestor/app/di/dependencies.dart';
@@ -39,13 +33,7 @@ class QuiGestorApp extends StatelessWidget {
         providers: [
           BlocProvider<ThemeCubit>(create: (_) => ThemeCubit()),
           BlocProvider<AuthCubit>(create: (_) => AuthCubit(apiClient)),
-          BlocProvider<DashboardCubit>(create: (_) => DashboardCubit(apiClient)),
           BlocProvider<HomeCubit>(create: (_) => HomeCubit()),
-          BlocProvider<GestoresCubit>(create: (_) => GestoresCubit(apiClient)),
-          BlocProvider<LojaCubit>(create: (_) => LojaCubit(apiClient)),
-          BlocProvider<LojasCubit>(create: (_) => LojasCubit(apiClient)),
-          BlocProvider<CategoriasCubit>(create: (_) => CategoriasCubit(apiClient)),
-          BlocProvider<UsuarioCubit>(create: (_) => UsuarioCubit(apiClient)),
         ],
         child: BlocBuilder<ThemeCubit, ThemeState>(
           builder: (context, themeState) {

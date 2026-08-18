@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../apparte/widgets/quigestor_card.dart';
-import '../../../../apparte/widgets/main_card_dash.dart';
-import '../../../../apparte/widgets/app_text.dart';
 import '../bloc/dashboard_cubit.dart';
-import '../../../../apparte/widgets/responsive_layout.dart';
 import '../bloc/dashboard_state.dart';
-import '../../../core/constants/icon_constants.dart';
+import '../widgets/dashboard_charts.dart';
+import '../widgets/dashboard_header.dart';
+import '../widgets/dashboard_kpis.dart';
+import '../widgets/dashboard_lists.dart';
+import '../widgets/dashboard_metrics.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -16,418 +16,150 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  final ScrollController _faturamentoScrollController = ScrollController();
-  bool _showLeftFade = false;
-  bool _showRightFade = true;
-
   @override
   void initState() {
     super.initState();
-    context.read<DashboardCubit>().fetchDashboard();
-    _faturamentoScrollController.addListener(_updateFadeVisibility);
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => _updateFadeVisibility());
-  }
-
-  @override
-  void dispose() {
-    _faturamentoScrollController.removeListener(_updateFadeVisibility);
-    _faturamentoScrollController.dispose();
-    super.dispose();
-  }
-
-  void _updateFadeVisibility() {
-    if (!_faturamentoScrollController.hasClients) return;
-
-    final maxScroll = _faturamentoScrollController.position.maxScrollExtent;
-    final currentScroll = _faturamentoScrollController.offset;
-
-    setState(() {
-      _showLeftFade = currentScroll > 0;
-      _showRightFade = currentScroll < maxScroll;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<DashboardCubit>().fetchDashboard();
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return BlocBuilder<DashboardCubit, DashboardState>(
       builder: (context, state) {
         if (state is DashboardLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        if (state is DashboardError) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(AppIcons.error,
-                      size: 80, color: theme.colorScheme.error),
-                  const SizedBox(height: 16),
-                  TextH2(
-                    'Erro ao carregar dashboard',
-                    color: theme.colorScheme.error,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  const SizedBox(height: 8),
-                  TextBody1(
-                    state.message,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton.icon(
-                    onPressed: () =>
-                        context.read<DashboardCubit>().fetchDashboard(),
-                    icon:
-                        const Icon(AppIcons.refresh, color: Colors.white),
-                    label: const TextBody2('Tentar novamente',
-                        color: Colors.white, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-          );
+          return const _SkeletonDashboard();
         }
 
         if (state is DashboardLoaded) {
-          final data = state.data;
-          final lojas = data['lojas'] as Map;
-          final pedidos = data['pedidos'] as Map;
-          final metricas = data['metricas'] as Map;
-
-          return RefreshIndicator(
-            onRefresh: () => context.read<DashboardCubit>().fetchDashboard(),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              physics: const AlwaysScrollableScrollPhysics(),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(AppIcons.barChart, color: theme.colorScheme.primary),
-                      const SizedBox(width: 8),
-                      TextH2(
-                        'Lojas e Pedidos',
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Center(
-                    child: Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
-                      alignment: WrapAlignment.center,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        _buildWrapItem(
-                          context,
-                          MainCardDash(
-                            titulo: 'Lojas',
-                            valor: '${lojas['total']}',
-                            icone: AppIcons.store,
-                            cor: Colors.blue,
-                          ),
-                        ),
-                        _buildWrapItem(
-                          context,
-                          MainCardDash(
-                            titulo: 'Lojas Ativas',
-                            valor: '${lojas['ativas']}',
-                            icone: AppIcons.check,
-                            cor: Colors.indigo,
-                          ),
-                        ),
-                        _buildWrapItem(
-                          context,
-                          MainCardDash(
-                            titulo: 'Pedidos Hoje',
-                            valor: '${pedidos['hoje']}',
-                            icone: AppIcons.calendar,
-                            cor: Colors.green,
-                          ),
-                        ),
-                        _buildWrapItem(
-                          context,
-                          MainCardDash(
-                            titulo: 'Esta Semana',
-                            valor: '${pedidos['semana']}',
-                            icone: AppIcons.calendar,
-                            cor: Colors.orange,
-                          ),
-                        ),
-                        _buildWrapItem(
-                          context,
-                          MainCardDash(
-                            titulo: 'Este Mês',
-                            valor: '${pedidos['mes']}',
-                            icone: AppIcons.calendar,
-                            cor: Colors.purple,
-                          ),
-                        ),
-                        _buildWrapItem(
-                          context,
-                          MainCardDash(
-                            titulo: 'Este Ano',
-                            valor: '${pedidos['ano']}',
-                            icone: AppIcons.calendar,
-                            cor: Colors.teal,
-                          ),
-                        ),
-                        _buildWrapItem(
-                          context,
-                          MainCardDash(
-                            titulo: 'Total Acumulado',
-                            valor: '${pedidos['total']}',
-                            icone: AppIcons.inventory,
-                            cor: Colors.brown,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  QuiGestorCard(
-                    horizontalScroll: false,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(AppIcons.money,
-                                color: theme.colorScheme.primary),
-                            const SizedBox(width: 8),
-                            TextH2(
-                              'Faturamento',
-                              color: theme.colorScheme.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            return Stack(
-                              children: [
-                                SingleChildScrollView(
-                                  controller: _faturamentoScrollController,
-                                  scrollDirection: Axis.horizontal,
-                                  padding: const EdgeInsets.only(right: 32),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: [
-                                      _buildFaturamentoItem(context, 'Hoje',
-                                          data['faturamento']['hoje']),
-                                      const SizedBox(width: 16),
-                                      _buildFaturamentoItem(context, 'Semana',
-                                          data['faturamento']['semana']),
-                                      const SizedBox(width: 16),
-                                      _buildFaturamentoItem(context, 'Mês',
-                                          data['faturamento']['mes']),
-                                      const SizedBox(width: 16),
-                                      _buildFaturamentoItem(context, 'Ano',
-                                          data['faturamento']['ano']),
-                                    ],
-                                  ),
-                                ),
-                                if (_showLeftFade)
-                                  Positioned(
-                                    left: 0,
-                                    top: 0,
-                                    bottom: 0,
-                                    child: Container(
-                                      width: 30,
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.centerLeft,
-                                          end: Alignment.centerRight,
-                                          colors: [
-                                            theme.cardTheme.color ??
-                                                theme.colorScheme.surface,
-                                            (theme.cardTheme.color ??
-                                                    theme.colorScheme.surface)
-                                                .withOpacity(0.0),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                if (_showRightFade)
-                                  Positioned(
-                                    right: 0,
-                                    top: 0,
-                                    bottom: 0,
-                                    child: Container(
-                                      width: 30,
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.centerRight,
-                                          end: Alignment.centerLeft,
-                                          colors: [
-                                            theme.cardTheme.color ??
-                                                theme.colorScheme.surface,
-                                            (theme.cardTheme.color ??
-                                                    theme.colorScheme.surface)
-                                                .withOpacity(0.0),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  QuiGestorCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(AppIcons.barChart,
-                                color: theme.colorScheme.primary),
-                            const SizedBox(width: 8),
-                            TextH2(
-                              'Métricas',
-                              color: theme.colorScheme.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            _buildMetricaItem(
-                              context,
-                              'Ticket Médio',
-                              metricas['ticket_medio'],
-                              AppIcons.shoppingBag,
-                            ),
-                            _buildMetricaItem(
-                              context,
-                              'Lojas Ativas',
-                              '${metricas['lojas_ativas_percent']}%',
-                              Icons.percent,
-                            ),
-                            _buildMetricaItem(
-                              context,
-                              'Crescimento',
-                              metricas['crescimento_mensal'],
-                              AppIcons.trendingUp,
-                              cor: Colors.green,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Center(
-                    child: TextCaption(
-                      'Última atualização: ${pedidos['ultima_atualizacao']}',
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-              ),
-            ),
-          );
+          return _buildDashboard(state.data);
         }
 
-        return const SizedBox();
+        if (state is DashboardError) {
+          return _buildError(state.message);
+        }
+
+        return const Center(child: CircularProgressIndicator());
       },
     );
   }
 
-  Widget _buildWrapItem(BuildContext context, Widget child) {
-    final isWeb = ResponsiveLayout.isWeb(context);
-    final screenWidth = MediaQuery.of(context).size.width;
+  Widget _buildDashboard(Map<String, dynamic> dados) {
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 600;
 
-    final availableWidth = screenWidth;
-
-    int itemsPerRow;
-
-    if (isWeb) {
-      if (availableWidth > 1200) {
-        itemsPerRow = 4;  // MUITO LARGO: 4 colunas
-      } else if (availableWidth > 900) {
-        itemsPerRow = 4;  // LARGO: ainda 4 colunas
-      } else if (availableWidth > 600) {
-        itemsPerRow = 3;  // MÉDIO: 3 colunas
-      } else {
-        itemsPerRow = 2;  // PEQUENO: 2 colunas
-      }
-    } else {
-      // Mobile
-      if (availableWidth > 700) {
-        itemsPerRow = 4;  // Tablet: 3 colunas
-      } else if (availableWidth > 500) {
-        itemsPerRow = 3;  // Mobile grande: 2 colunas
-      } else {
-        itemsPerRow = 2;  // Mobile pequeno: 1 coluna
-      }
-    }
-
-    // Log para debug (remova em produção)
-    debugPrint('📊 Dashboard - Screen: ${screenWidth.toStringAsFixed(0)}px, '
-        'Available: ${availableWidth.toStringAsFixed(0)}px, '
-        'Colunas: $itemsPerRow');
-
-    // Calcula largura do card
-    final spacing = 12.0;
-    final totalSpacing = (itemsPerRow - 1) * spacing;
-    final itemWidth = (availableWidth - totalSpacing) / itemsPerRow;
-
-    // Garante largura mínima e máxima
-    final cardWidth = itemWidth.clamp(150.0, 350.0) - totalSpacing;
-
-    return SizedBox(
-      width: cardWidth,
-      child: child,
-    );
-  }
-
-  Widget _buildFaturamentoItem(
-      BuildContext context, String periodo, String valor) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        TextCaption(periodo, color: Colors.grey[600]),
-        const SizedBox(height: 4),
-        TextBody1(valor, fontWeight: FontWeight.bold),
-      ],
-    );
-  }
-
-  Widget _buildMetricaItem(
-      BuildContext context, String label, String valor, IconData icone,
-      {Color? cor}) {
-    final theme = Theme.of(context);
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-              color: (cor ?? theme.colorScheme.primary).withOpacity(0.1),
-              shape: BoxShape.circle),
-          child: Icon(icone, color: cor ?? theme.colorScheme.primary, size: 20),
+    return RefreshIndicator(
+      onRefresh: () async {
+        context.read<DashboardCubit>().fetchDashboard();
+        await Future.delayed(const Duration(milliseconds: 500));
+      },
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const DashboardHeader(),
+            const SizedBox(height: 20),
+            DashboardKpis(kpis: dados['kpis'] ?? {}),
+            _buildDivider(context),
+            const SizedBox(height: 20),
+            DashboardCharts(
+              pedidosPorDia: dados['pedidos_por_dia'] ?? [],
+              faturamentoPorMes: dados['faturamento_por_mes'] ?? [],
+              pedidosPorStatus: dados['pedidos_por_status'] ?? [],
+              pedidosPorPagamento: dados['pedidos_por_pagamento'] ?? [],
+              isMobile: isMobile,
+            ),
+            _buildDivider(context),
+            const SizedBox(height: 20),
+            DashboardLists(
+              topLojasFaturamento: dados['top_lojas_faturamento'] ?? [],
+              topLojasPedidos: dados['top_lojas_pedidos'] ?? [],
+              topProdutos: dados['top_produtos'] ?? [],
+              topClientes: dados['top_clientes'] ?? [],
+              lojasPorCategoria: dados['lojas_por_categoria'] ?? [],
+              lojasPorCidade: dados['lojas_por_cidade'] ?? [],
+              isMobile: isMobile,
+            ),
+            _buildDivider(context),
+            const SizedBox(height: 20),
+            DashboardMetrics(
+              horariosPico: dados['horarios_pico'] ?? [],
+              satisfacao: dados['satisfacao'] ?? {},
+              isMobile: isMobile,
+            ),
+          ],
         ),
-        const SizedBox(height: 8),
-        TextBody1(valor, fontWeight: FontWeight.bold),
-        TextCaption(label, color: Colors.grey[600]),
-      ],
+      ),
+    );
+  }
+
+  Widget _buildDivider(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      height: 1,
+      color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
+    );
+  }
+
+  Widget _buildError(String message) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 60, color: Colors.red.shade300),
+          const SizedBox(height: 12),
+          Text(message, textAlign: TextAlign.center),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () => context.read<DashboardCubit>().fetchDashboard(),
+            child: const Text('Tentar novamente'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SkeletonDashboard extends StatelessWidget {
+  const _SkeletonDashboard();
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          Container(
+            height: 60,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: List.generate(6, (_) => _skeletonCard()),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _skeletonCard() {
+    return Container(
+      width: 200,
+      height: 120,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade200,
+        borderRadius: BorderRadius.circular(16),
+      ),
     );
   }
 }

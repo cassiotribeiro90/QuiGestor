@@ -17,31 +17,31 @@ class CategoriaCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return QuiGestorCard(
       onTap: onTap,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), // Reduzido para 4
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
           Container(
-            width: 32, // Reduzido de 36
-            height: 32, // Reduzido de 36
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               color: categoria.colorValue.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(6), 
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Center(
               child: categoria.icone != null && categoria.icone!.isNotEmpty
                   ? Text(
                       categoria.icone!,
-                      style: const TextStyle(fontSize: 16), // Reduzido
+                      style: const TextStyle(fontSize: 22),
                       textAlign: TextAlign.center,
                     )
                   : Icon(
                       Icons.category_outlined,
                       color: categoria.colorValue,
-                      size: 16, // Reduzido de 18
+                      size: 22,
                     ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -50,41 +50,47 @@ class CategoriaCard extends StatelessWidget {
                 Text(
                   categoria.nome,
                   style: const TextStyle(
-                    fontSize: 11, // Fonte menor
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 1),
+                const SizedBox(height: 4),
                 Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 1,
-                      ),
-                      decoration: BoxDecoration(
-                        color: categoria.ativo
-                            ? Colors.green.withOpacity(0.1)
-                            : Colors.grey.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        categoria.statusLabel,
-                        style: TextStyle(
-                          color: categoria.ativo ? Colors.green : Colors.grey,
-                          fontSize: 7, // Ainda menor
-                          fontWeight: FontWeight.bold,
+                    Flexible(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: categoria.ativo
+                              ? Colors.green.withOpacity(0.1)
+                              : Colors.grey.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          categoria.statusLabel,
+                          style: TextStyle(
+                            color: categoria.ativo ? Colors.green : Colors.grey,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '#${categoria.ordem}',
-                      style: TextStyle(
-                        color: Colors.grey[400],
-                        fontSize: 7,
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        '#${categoria.ordem}',
+                        style: TextStyle(
+                          color: Colors.grey[400],
+                          fontSize: 11,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],

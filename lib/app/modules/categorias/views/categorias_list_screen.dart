@@ -23,7 +23,11 @@ class _CategoriasListScreenState extends State<CategoriasListScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<CategoriasCubit>().fetchCategorias();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<CategoriasCubit>().fetchCategorias();
+      }
+    });
   }
 
   @override
@@ -97,11 +101,11 @@ class _CategoriasListScreenState extends State<CategoriasListScreen> {
           if (state is CategoriasLoading) {
             return GridView.builder(
               padding: const EdgeInsets.all(12),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 3.2, // Aumentado para reduzir altura
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 300,
+                childAspectRatio: 1.8,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
               ),
               itemCount: 6,
               itemBuilder: (_, __) => const CardSkeleton(),
@@ -128,11 +132,11 @@ class _CategoriasListScreenState extends State<CategoriasListScreen> {
               onRefresh: () => context.read<CategoriasCubit>().fetchCategorias(),
               child: GridView.builder(
                 padding: const EdgeInsets.all(12),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 2.8, // Ainda mais compacto
-                  crossAxisSpacing: 8,
-                  mainAxisSpacing: 8,
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 300,
+                  childAspectRatio: 1.8,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
                 ),
                 itemCount: categorias.length,
                 itemBuilder: (context, index) {

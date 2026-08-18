@@ -80,6 +80,17 @@ class _LojistaFormPageState extends State<LojistaFormPage> {
           return const SizedBox.shrink();
         },
       ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(16),
+        child: ElevatedButton(
+          onPressed: _salvar,
+          style: ElevatedButton.styleFrom(
+            minimumSize: const Size(double.infinity, 52),
+            textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          child: Text(widget.id != null ? 'Atualizar' : 'Cadastrar'),
+        ),
+      ),
     );
   }
 
@@ -96,141 +107,192 @@ class _LojistaFormPageState extends State<LojistaFormPage> {
   Widget _buildForm(BuildContext context, LojistaFormInitial state) {
     final isEdit = widget.id != null;
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
+    return Form(
+      key: _formKey,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextFormField(
+              controller: _nomeController,
+              decoration: _inputDecoration(
+                label: 'Nome *',
+                icon: Icons.person_outline,
+              ),
+              textCapitalization: TextCapitalization.words,
+              validator: (v) => v!.trim().isEmpty ? 'Nome obrigatório' : null,
+            ),
+            const SizedBox(height: 16),
+
+            TextFormField(
+              controller: _emailController,
+              decoration: _inputDecoration(
+                label: 'E-mail *',
+                icon: Icons.email_outlined,
+              ),
+              keyboardType: TextInputType.emailAddress,
+              autocorrect: false,
+              validator: (v) {
+                if (v!.trim().isEmpty) return 'E-mail obrigatório';
+                if (!v.contains('@')) return 'E-mail inválido';
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+
+            TextFormField(
+              controller: _telefoneController,
+              decoration: _inputDecoration(
+                label: 'Telefone',
+                icon: Icons.phone_outlined,
+              ),
+              keyboardType: TextInputType.phone,
+            ),
+            const SizedBox(height: 16),
+
+            TextFormField(
+              controller: _cpfCnpjController,
+              decoration: _inputDecoration(
+                label: 'CPF/CNPJ',
+                icon: Icons.badge_outlined,
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            if (!isEdit)
               TextFormField(
-                controller: _nomeController,
-                decoration: const InputDecoration(
-                  labelText: 'Nome *',
-                  border: OutlineInputBorder(),
+                controller: _senhaController,
+                decoration: _inputDecoration(
+                  label: 'Senha',
+                  icon: Icons.lock_outline,
+                  hint: 'Deixe em branco para gerar automática',
                 ),
-                validator: (v) => v!.isEmpty ? 'Nome obrigatório' : null,
+                obscureText: true,
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: 'E-mail *',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.emailAddress,
-                validator: (v) => v!.isEmpty ? 'E-mail obrigatório' : null,
+
+            const SizedBox(height: 16),
+
+            DropdownButtonFormField<String>(
+              value: _funcao,
+              decoration: _inputDecoration(
+                label: 'Função *',
+                icon: Icons.work_outline,
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _telefoneController,
-                decoration: const InputDecoration(
-                  labelText: 'Telefone',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.phone,
+              items: const [
+                DropdownMenuItem(value: 'proprietario', child: Text('Proprietário')),
+                DropdownMenuItem(value: 'gerente', child: Text('Gerente')),
+                DropdownMenuItem(value: 'vendedor', child: Text('Vendedor')),
+              ],
+              onChanged: (v) => setState(() => _funcao = v!),
+              validator: (v) => v == null ? 'Selecione uma função' : null,
+            ),
+            const SizedBox(height: 16),
+
+            DropdownButtonFormField<int>(
+              value: _status,
+              decoration: _inputDecoration(
+                label: 'Status',
+                icon: Icons.circle_outlined,
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _cpfCnpjController,
-                decoration: const InputDecoration(
-                  labelText: 'CPF/CNPJ',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              if (!isEdit)
-                TextFormField(
-                  controller: _senhaController,
-                  decoration: const InputDecoration(
-                    labelText: 'Senha',
-                    border: OutlineInputBorder(),
-                    hintText: 'Deixe em branco para gerar automática',
-                  ),
-                  obscureText: true,
-                ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: _funcao,
-                decoration: const InputDecoration(
-                  labelText: 'Função *',
-                  border: OutlineInputBorder(),
-                ),
-                items: const [
-                  DropdownMenuItem(value: 'proprietario', child: Text('Proprietário')),
-                  DropdownMenuItem(value: 'gerente', child: Text('Gerente')),
-                  DropdownMenuItem(value: 'vendedor', child: Text('Vendedor')),
-                ],
-                onChanged: (v) => setState(() => _funcao = v!),
-                validator: (v) => v == null ? 'Selecione uma função' : null,
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<int>(
-                value: _status,
-                decoration: const InputDecoration(
-                  labelText: 'Status',
-                  border: OutlineInputBorder(),
-                ),
-                items: const [
-                  DropdownMenuItem(value: 1, child: Text('Ativo')),
-                  DropdownMenuItem(value: 0, child: Text('Inativo')),
-                ],
-                onChanged: (v) => setState(() => _status = v!),
-              ),
-              const SizedBox(height: 16),
-              _buildLojasSelection(state.lojas),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: _salvar,
-                  child: Text(isEdit ? 'Atualizar' : 'Cadastrar'),
-                ),
-              ),
-            ],
-          ),
+              items: const [
+                DropdownMenuItem(value: 1, child: Text('Ativo')),
+                DropdownMenuItem(value: 0, child: Text('Inativo')),
+              ],
+              onChanged: (v) => setState(() => _status = v!),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Seleção de lojas via modal
+            _buildLojasField(state.lojas),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildLojasSelection(List<LojaOptionModel> lojas) {
-    if (lojas.isEmpty) return const SizedBox.shrink();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('Lojas *', style: TextStyle(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: lojas.length,
-            itemBuilder: (context, index) {
-              final loja = lojas[index];
-              return CheckboxListTile(
-                title: Text(loja.nome),
-                value: _lojasSelecionadas.contains(loja.id),
-                onChanged: (selected) {
-                  setState(() {
-                    if (selected == true) {
-                      _lojasSelecionadas.add(loja.id);
-                    } else {
-                      _lojasSelecionadas.remove(loja.id);
-                    }
-                  });
-                },
-              );
-            },
-          ),
+  InputDecoration _inputDecoration({
+    required String label,
+    IconData? icon,
+    String? hint,
+  }) {
+    return InputDecoration(
+      labelText: label,
+      hintText: hint,
+      prefixIcon: icon != null ? Icon(icon, size: 20) : null,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(
+          color: Theme.of(context).primaryColor,
+          width: 2,
         ),
-      ],
+      ),
+      filled: true,
+      fillColor: Colors.grey.shade50,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+    );
+  }
+
+  Widget _buildLojasField(List<LojaOptionModel> lojas) {
+    final selecionadas = lojas.where((l) => _lojasSelecionadas.contains(l.id)).toList();
+
+    return InkWell(
+      onTap: () => _abrirModalLojas(context, lojas),
+      borderRadius: BorderRadius.circular(10),
+      child: InputDecorator(
+        decoration: _inputDecoration(
+          label: 'Lojas *',
+          icon: Icons.store_outlined,
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: selecionadas.isEmpty
+                  ? Text(
+                'Selecione as lojas',
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+              )
+                  : Text(
+                selecionadas.map((l) => l.nome).join(', '),
+                style: const TextStyle(fontSize: 13),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const Icon(Icons.arrow_drop_down, color: Colors.grey),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _abrirModalLojas(BuildContext context, List<LojaOptionModel> lojas) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (modalContext) {
+        return _LojasSelectionModal(
+          lojas: lojas,
+          selecionadas: _lojasSelecionadas,
+          onConfirm: (selecionadas) {
+            setState(() {
+              _lojasSelecionadas = selecionadas;
+            });
+            Navigator.pop(modalContext);
+          },
+        );
+      },
     );
   }
 
@@ -238,16 +300,19 @@ class _LojistaFormPageState extends State<LojistaFormPage> {
     if (!_formKey.currentState!.validate()) return;
     if (_lojasSelecionadas.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selecione pelo menos uma loja')),
+        const SnackBar(
+          content: Text('Selecione pelo menos uma loja'),
+          backgroundColor: Colors.orange,
+        ),
       );
       return;
     }
 
     final dados = {
-      'nome': _nomeController.text,
-      'email': _emailController.text,
-      'telefone': _telefoneController.text,
-      'cpf_cnpj': _cpfCnpjController.text,
+      'nome': _nomeController.text.trim(),
+      'email': _emailController.text.trim(),
+      'telefone': _telefoneController.text.trim(),
+      'cpf_cnpj': _cpfCnpjController.text.trim(),
       'funcao': _funcao,
       'status': _status,
       'loja_ids': _lojasSelecionadas,
@@ -258,8 +323,219 @@ class _LojistaFormPageState extends State<LojistaFormPage> {
     }
 
     context.read<LojistaFormCubit>().salvar(
-          dados,
-          id: widget.id,
-        );
+      dados,
+      id: widget.id,
+    );
+  }
+}
+
+// ==================== MODAL DE SELEÇÃO DE LOJAS ====================
+
+class _LojasSelectionModal extends StatefulWidget {
+  final List<LojaOptionModel> lojas;
+  final List<int> selecionadas;
+  final ValueChanged<List<int>> onConfirm;
+
+  const _LojasSelectionModal({
+    Key? key,
+    required this.lojas,
+    required this.selecionadas,
+    required this.onConfirm,
+  }) : super(key: key);
+
+  @override
+  State<_LojasSelectionModal> createState() => _LojasSelectionModalState();
+}
+
+class _LojasSelectionModalState extends State<_LojasSelectionModal> {
+  late List<int> _selecionadasTemp;
+  final _filtroController = TextEditingController();
+  String _filtro = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _selecionadasTemp = List.from(widget.selecionadas);
+  }
+
+  @override
+  void dispose() {
+    _filtroController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final lojasFiltradas = _filtro.isEmpty
+        ? widget.lojas
+        : widget.lojas.where((loja) {
+      return loja.nome.toLowerCase().contains(_filtro.toLowerCase());
+    }).toList();
+
+    final todasSelecionadas = _selecionadasTemp.length == widget.lojas.length;
+
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: SizedBox(
+        height: MediaQuery.of(context).size.height * 0.7,
+        child: Column(
+          children: [
+            // Handle
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Título
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Selecionar Lojas',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
+
+            // Campo de pesquisa
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: TextField(
+                controller: _filtroController,
+                decoration: InputDecoration(
+                  hintText: 'Pesquisar lojas...',
+                  prefixIcon: const Icon(Icons.search, size: 20),
+                  suffixIcon: _filtro.isNotEmpty
+                      ? IconButton(
+                    icon: const Icon(Icons.clear, size: 18),
+                    onPressed: () {
+                      _filtroController.clear();
+                      setState(() => _filtro = '');
+                    },
+                  )
+                      : null,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                ),
+                onChanged: (value) {
+                  setState(() => _filtro = value);
+                },
+              ),
+            ),
+
+            // Botão selecionar todas
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '${_selecionadasTemp.length} de ${widget.lojas.length} selecionada(s)',
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        if (todasSelecionadas) {
+                          _selecionadasTemp.clear();
+                        } else {
+                          _selecionadasTemp = widget.lojas.map((l) => l.id).toList();
+                        }
+                      });
+                    },
+                    child: Text(
+                      todasSelecionadas ? 'Desmarcar todas' : 'Selecionar todas',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Lista de lojas
+            Expanded(
+              child: lojasFiltradas.isEmpty
+                  ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.search_off, size: 48, color: Colors.grey.shade400),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Nenhuma loja encontrada',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ],
+                ),
+              )
+                  : ListView.builder(
+                itemCount: lojasFiltradas.length,
+                itemBuilder: (context, index) {
+                  final loja = lojasFiltradas[index];
+                  final selecionada = _selecionadasTemp.contains(loja.id);
+                  return CheckboxListTile(
+                    dense: true,
+                    title: Text(
+                      loja.nome,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: selecionada ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                    secondary: Icon(
+                      selecionada ? Icons.store : Icons.store_outlined,
+                      size: 20,
+                      color: selecionada ? Theme.of(context).primaryColor : Colors.grey,
+                    ),
+                    value: selecionada,
+                    activeColor: Theme.of(context).primaryColor,
+                    onChanged: (selected) {
+                      setState(() {
+                        if (selected == true) {
+                          _selecionadasTemp.add(loja.id);
+                        } else {
+                          _selecionadasTemp.remove(loja.id);
+                        }
+                      });
+                    },
+                  );
+                },
+              ),
+            ),
+
+            // Botão confirmar
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: ElevatedButton(
+                onPressed: () => widget.onConfirm(_selecionadasTemp),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                  textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                child: const Text('Confirmar'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
