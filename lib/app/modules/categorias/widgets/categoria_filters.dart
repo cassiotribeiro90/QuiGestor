@@ -7,7 +7,9 @@ import '../../../../apparte/widgets/qui_button.dart';
 import '../bloc/categorias_cubit.dart';
 
 class CategoriaFilters extends StatefulWidget {
-  const CategoriaFilters({super.key});
+  final CategoriasCubit categoriasCubit; // ✅ Recebe o Cubit
+
+  const CategoriaFilters({super.key, required this.categoriasCubit});
 
   @override
   State<CategoriaFilters> createState() => _CategoriaFiltersState();
@@ -20,9 +22,12 @@ class _CategoriaFiltersState extends State<CategoriaFilters> {
   @override
   void initState() {
     super.initState();
-    final cubit = context.read<CategoriasCubit>();
+    _inicializarFiltros();
+  }
 
-    // STATUS (Ativo/Inativo)
+  void _inicializarFiltros() {
+    final cubit = widget.categoriasCubit;
+
     _statusSection = FilterSectionModel(
       id: 'ativo',
       title: 'STATUS',
@@ -43,7 +48,6 @@ class _CategoriaFiltersState extends State<CategoriaFilters> {
       ],
     );
 
-    // DESTAQUE
     _destaqueSection = FilterSectionModel(
       id: 'destaque',
       title: 'DESTAQUE',
@@ -74,6 +78,7 @@ class _CategoriaFiltersState extends State<CategoriaFilters> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Container(
       padding: EdgeInsets.only(
@@ -83,69 +88,148 @@ class _CategoriaFiltersState extends State<CategoriaFilters> {
         bottom: MediaQuery.of(context).padding.bottom + 20,
       ),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        color: isDark ? Colors.grey.shade900 : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: [
+          BoxShadow(
+            color: isDark ? Colors.black.withOpacity(0.4) : Colors.black.withOpacity(0.1),
+            blurRadius: 20,
+            offset: const Offset(0, -4),
+          ),
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Handle (indicador visual)
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Título
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const TextH2('Filtrar Categorias', fontWeight: FontWeight.bold),
+              Text(
+                'Filtrar Categorias',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
               IconButton(
-                icon: const Icon(Icons.close),
+                icon: Icon(
+                  Icons.close,
+                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                ),
                 onPressed: () => Navigator.pop(context),
               ),
             ],
           ),
           const SizedBox(height: 20),
-          
+
+          // Seção STATUS
+          _buildSectionTitle('STATUS', isDark),
+          const SizedBox(height: 8),
           FilterSectionWidget(
             section: _statusSection,
             onOptionTap: (val) => _handleOptionTap(_statusSection, val),
           ),
-          const SizedBox(height: 20),
-          
+          const SizedBox(height: 24),
+
+          // Seção DESTAQUE
+          _buildSectionTitle('DESTAQUE', isDark),
+          const SizedBox(height: 8),
           FilterSectionWidget(
             section: _destaqueSection,
             onOptionTap: (val) => _handleOptionTap(_destaqueSection, val),
           ),
-          
+
           const SizedBox(height: 32),
-          
+
+          // Botões
           Row(
             children: [
               Expanded(
-                child: TextButton(
+                child: OutlinedButton(
                   onPressed: () {
-                    context.read<CategoriasCubit>().clearFilters();
+                    widget.categoriasCubit.clearFilters();
                     Navigator.pop(context);
                   },
-                  child: const TextBody2('limpar'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    side: BorderSide(
+                      color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    'LIMPAR',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: QuiButton(
-                  label: 'APLICAR',
-                  height: 48,
+                child: ElevatedButton(
                   onPressed: () {
                     final statusVal = _statusSection.getSelectedValues().firstOrNull;
                     final destaqueVal = _destaqueSection.getSelectedValues().firstOrNull;
-                    
-                    context.read<CategoriasCubit>().applyFilters(
+
+                    widget.categoriasCubit.applyFilters(
                       ativo: statusVal == '1' ? true : (statusVal == '0' ? false : null),
                       destaque: destaqueVal == '1' ? true : (destaqueVal == '0' ? false : null),
                     );
                     Navigator.pop(context);
                   },
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    backgroundColor: Theme.of(context).primaryColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'APLICAR',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title, bool isDark) {
+    return Text(
+      title,
+      style: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.bold,
+        letterSpacing: 1.2,
+        color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
       ),
     );
   }

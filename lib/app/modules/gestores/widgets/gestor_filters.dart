@@ -7,7 +7,8 @@ import '../../../../apparte/widgets/filter_section_widget.dart';
 import '../../../../apparte/widgets/qui_button.dart';
 
 class GestorFilters extends StatefulWidget {
-  const GestorFilters({super.key});
+  final GestoresCubit gestoresCubit; // ✅ Recebe o Cubit
+  const GestorFilters({super.key, required this.gestoresCubit});
 
   @override
   State<GestorFilters> createState() => _GestorFiltersState();
@@ -20,7 +21,7 @@ class _GestorFiltersState extends State<GestorFilters> {
   @override
   void initState() {
     super.initState();
-    final cubit = context.read<GestoresCubit>();
+    final cubit = widget.gestoresCubit; // ✅ Usa o Cubit do widget
     final counts = cubit.getFilterCounts();
 
     _nivelSection = FilterSectionModel(
@@ -98,6 +99,7 @@ class _GestorFiltersState extends State<GestorFilters> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Container(
       padding: EdgeInsets.only(
@@ -107,53 +109,121 @@ class _GestorFiltersState extends State<GestorFilters> {
         bottom: MediaQuery.of(context).padding.bottom + 20,
       ),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        color: isDark ? Colors.grey.shade900 : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: [
+          BoxShadow(
+            color: isDark ? Colors.black.withOpacity(0.4) : Colors.black.withOpacity(0.1),
+            blurRadius: 20,
+            offset: const Offset(0, -4),
+          ),
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const TextH2('Filtrar Gestores', fontWeight: FontWeight.bold),
+          // Handle
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Filtrar Gestores',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
+              IconButton(
+                icon: Icon(
+                  Icons.close,
+                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                ),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
+          ),
           const SizedBox(height: 20),
-          
+
           FilterSectionWidget(
             section: _nivelSection,
             onOptionTap: (val) => _handleOptionTap(_nivelSection, val),
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           FilterSectionWidget(
             section: _statusSection,
             onOptionTap: (val) => _handleOptionTap(_statusSection, val),
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           Row(
             children: [
               Expanded(
-                child: TextButton(
+                child: OutlinedButton(
                   onPressed: () {
-                    context.read<GestoresCubit>().clearFilters();
+                    widget.gestoresCubit.clearFilters(); // ✅ Usa o Cubit do widget
                     Navigator.pop(context);
                   },
-                  child: const TextBody2('limpar'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    side: BorderSide(
+                      color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    'LIMPAR',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: QuiButton(
-                  label: 'APLICAR',
-                  height: 48,
+                child: ElevatedButton(
                   onPressed: () {
-                    context.read<GestoresCubit>().applyFilters(
+                    widget.gestoresCubit.applyFilters( // ✅ Usa o Cubit do widget
                       niveis: _nivelSection.getSelectedValues(),
                       status: _statusSection.getSelectedValues().map(int.parse).toList(),
                     );
                     Navigator.pop(context);
                   },
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    backgroundColor: Theme.of(context).primaryColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'APLICAR',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
             ],

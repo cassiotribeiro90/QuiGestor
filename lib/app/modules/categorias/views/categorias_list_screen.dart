@@ -37,11 +37,15 @@ class _CategoriasListScreenState extends State<CategoriasListScreen> {
   }
 
   void _showFilters() {
+    final categoriasCubit = context.read<CategoriasCubit>();
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => const CategoriaFilters(),
+      builder: (bottomSheetContext) => CategoriaFilters(
+        categoriasCubit: categoriasCubit, // ✅ Passa o Cubit
+      ),
     );
   }
 

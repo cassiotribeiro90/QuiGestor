@@ -70,6 +70,30 @@ class _SubcategoriaFormScreenState extends State<SubcategoriaFormScreen> {
     });
   }
 
+  void _confirmarExclusao() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const TextH3('Excluir Subcategoria'),
+        content: TextBody2('Deseja realmente excluir a subcategoria "${widget.subcategoria?.nome}"?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const TextBody2('Cancelar')),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.read<SubcategoriaCubit>().deletar(widget.subcategoria!.id).then((success) {
+                if (success && mounted) {
+                  Navigator.pop(context); // Volta para a listagem
+                }
+              });
+            },
+            child: const TextBody2('Excluir', color: Colors.red),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -77,6 +101,14 @@ class _SubcategoriaFormScreenState extends State<SubcategoriaFormScreen> {
     return Scaffold(
       appBar: AppBar(
         title: TextH2(_isEditing ? 'Editar Subcategoria' : 'Nova Subcategoria', fontWeight: FontWeight.bold),
+        actions: [
+          if (_isEditing)
+            IconButton(
+              icon: const Icon(AppIcons.delete, color: Colors.red, size: 22),
+              onPressed: _confirmarExclusao,
+              tooltip: 'Excluir subcategoria',
+            ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -129,6 +161,22 @@ class _SubcategoriaFormScreenState extends State<SubcategoriaFormScreen> {
                 label: 'SALVAR',
                 onPressed: _salvar,
               ),
+              if (_isEditing) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: _confirmarExclusao,
+                    icon: const Icon(AppIcons.delete, size: 18, color: Colors.red),
+                    label: const TextBody1('EXCLUIR', color: Colors.red, fontWeight: FontWeight.bold),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      side: const BorderSide(color: Colors.red, width: 1.5),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),

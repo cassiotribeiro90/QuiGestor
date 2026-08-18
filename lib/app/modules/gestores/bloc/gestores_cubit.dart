@@ -211,4 +211,27 @@ class GestoresCubit extends Cubit<GestoresState> {
     _currentNiveis = [];
     _todosGestores = [];
   }
+
+  String getFiltrosAtivosResumo() {
+    final partes = <String>[];
+
+    if (currentNiveis.isNotEmpty) {
+      partes.add(currentNiveis.join(', '));
+    }
+
+    if (currentStatusList.isNotEmpty) {
+      final statusLabels = currentStatusList.map((s) {
+        switch (s) {
+          case 1: return 'Ativo';
+          case 0: return 'Inativo';
+          case 2: return 'Bloqueado';
+          default: return '$s';
+        }
+      }).toList();
+      partes.add(statusLabels.join(', '));
+    }
+
+    if (partes.isEmpty) return '';
+    return partes.join(' | ');
+  }
 }

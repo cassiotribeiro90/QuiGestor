@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../apparte/widgets/app_text.dart';
@@ -21,6 +23,7 @@ class LojasListScreen extends StatefulWidget {
 class _LojasListScreenState extends State<LojasListScreen> {
   final _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  StreamSubscription? _lojasSubscription;
 
   bool _isLoadingMore = false;
   bool _hasMorePages = true;
@@ -31,13 +34,29 @@ class _LojasListScreenState extends State<LojasListScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+
+    _lojasSubscription = context.read<LojasCubit>().stream.listen((_) {
+      _atualizarTextoFiltros();
+    });
   }
 
   @override
   void dispose() {
+    _lojasSubscription?.cancel();
     _searchController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _atualizarTextoFiltros() {
+    final cubit = context.read<LojasCubit>();
+    final filtros = cubit.getFiltrosAtivosResumo();
+
+    if (mounted) {
+      setState(() {
+        _searchController.text = filtros;
+      });
+    }
   }
 
   void _resetPagination() {
@@ -64,10 +83,10 @@ class _LojasListScreenState extends State<LojasListScreen> {
     });
 
     await context.read<LojasCubit>().fetchLojas(
-          page: _currentPage,
-          perPage: _perPage,
-          isLoadMore: true,
-        );
+      page: _currentPage,
+      perPage: _perPage,
+      isLoadMore: true,
+    );
 
     if (mounted) {
       setState(() {
@@ -96,7 +115,6 @@ class _LojasListScreenState extends State<LojasListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final lojasCubit = context.read<LojasCubit>();
 
     return Scaffold(
@@ -114,26 +132,24 @@ class _LojasListScreenState extends State<LojasListScreen> {
             padding: const EdgeInsets.all(16),
             child: TextField(
               controller: _searchController,
+              readOnly: true, // ✅ Impede edição manual
               decoration: InputDecoration(
                 hintText: 'Buscar lojas por nome, cidade...',
                 prefixIcon: const Icon(AppIcons.search),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(AppIcons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          context.read<LojasCubit>().applySearch('');
-                        },
-                      )
+                  icon: const Icon(AppIcons.clear),
+                  onPressed: () {
+                    _searchController.clear();
+                    context.read<LojasCubit>().clearFilters();
+                  },
+                )
                     : null,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              onChanged: (value) {
-                _resetPagination();
-                context.read<LojasCubit>().applySearch(value);
-              },
+              onTap: () => _showFilters(lojasCubit), // ✅ Abre filtro ao tocar
             ),
           ),
         ),

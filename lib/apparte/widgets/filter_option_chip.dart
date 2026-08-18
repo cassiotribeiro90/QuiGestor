@@ -24,72 +24,111 @@ class FilterOptionChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected 
-              ? (isRadio 
-                  ? theme.colorScheme.primary 
-                  : theme.colorScheme.primary.withOpacity(0.1))
-              : Colors.grey[100],
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected 
-                ? theme.colorScheme.primary 
-                : Colors.transparent,
-            width: isRadio ? 1 : 0,
+    final isDark = theme.brightness == Brightness.dark;
+
+    final bgColor = isSelected
+        ? (isRadio
+        ? theme.colorScheme.primary
+        : theme.colorScheme.primary.withOpacity(isDark ? 0.3 : 0.1))
+        : (isDark ? Colors.grey.shade800 : Colors.grey.shade100);
+
+    final borderColor = isSelected
+        ? theme.colorScheme.primary
+        : (isDark ? Colors.grey.shade700 : Colors.transparent);
+
+    final textColor = isSelected && isRadio
+        ? Colors.white
+        : (isSelected
+        ? theme.colorScheme.primary
+        : (isDark ? Colors.grey.shade300 : Colors.black87));
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: borderColor, width: 1.2),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (emoji != null) ...[
+                _NoSelectText(emoji!), // ✅ Impede seleção
+                const SizedBox(width: 6),
+              ],
+              if (icon != null) ...[
+                Icon(icon, size: 16, color: textColor),
+                const SizedBox(width: 6),
+              ],
+              _NoSelectText(label, color: textColor, fontWeight: isSelected ? FontWeight.bold : FontWeight.w500), // ✅
+              if (count != null && count! > 0) ...[
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: isSelected && isRadio
+                        ? Colors.white.withOpacity(0.2)
+                        : (isDark ? Colors.grey.shade700 : Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: _NoSelectText(
+                    '$count',
+                    color: isSelected && isRadio
+                        ? Colors.white
+                        : (isDark ? Colors.grey.shade300 : Colors.grey.shade700),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+              if (isSelected && !isRadio)
+                Padding(
+                  padding: const EdgeInsets.only(left: 6),
+                  child: Icon(
+                    Icons.check_circle,
+                    size: 16,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+            ],
           ),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (emoji != null) ...[
-              TextBody2(emoji!),
-              const SizedBox(width: 4),
-            ],
-            if (icon != null) ...[
-              Icon(icon, size: 16, color: isSelected && isRadio ? Colors.white : (isSelected ? theme.colorScheme.primary : Colors.grey[600])),
-              const SizedBox(width: 4),
-            ],
-            TextBody2(
-              label,
-              color: isSelected && isRadio 
-                  ? Colors.white 
-                  : (isSelected ? theme.colorScheme.primary : Colors.black87),
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            ),
-            if (count != null && count! > 0) ...[
-              const SizedBox(width: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: isSelected && isRadio 
-                      ? Colors.white.withOpacity(0.2)
-                      : Colors.grey[300],
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: TextBody3(
-                  '$count',
-                  color: isSelected && isRadio ? Colors.white : Colors.grey[700],
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-            if (isSelected && !isRadio)
-              Padding(
-                padding: const EdgeInsets.only(left: 4),
-                child: Icon(
-                  Icons.check,
-                  size: 14,
-                  color: theme.colorScheme.primary,
-                ),
-              ),
-          ],
-        ),
       ),
+    );
+  }
+}
+
+/// Widget que impede seleção de texto
+class _NoSelectText extends StatelessWidget {
+  final String text;
+  final Color? color;
+  final FontWeight? fontWeight;
+  final double? fontSize;
+
+  const _NoSelectText(
+      this.text, {
+        this.color,
+        this.fontWeight,
+        this.fontSize,
+      });
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: TextStyle(
+        color: color,
+        fontWeight: fontWeight,
+        fontSize: fontSize,
+      ),
+      // ✅ Impede seleção de texto
+      selectionColor: Colors.transparent,
+      softWrap: false,
     );
   }
 }

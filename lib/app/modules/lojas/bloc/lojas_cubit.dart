@@ -106,11 +106,11 @@ class LojasCubit extends Cubit<LojasState> {
     String? search,
   }) async {
     if (status != null) _currentStatusList = status;
-    if (destaque != null || destaque == null) _currentDestaque = destaque;
-    if (verificado != null || verificado == null) _currentVerificado = verificado;
+    if (destaque != null) _currentDestaque = destaque;
+    if (verificado != null) _currentVerificado = verificado;
     if (categorias != null) _currentCategorias = categorias;
     if (search != null) _currentSearch = search;
-    
+
     await fetchLojas(page: 1);
   }
 
@@ -208,8 +208,46 @@ class LojasCubit extends Cubit<LojasState> {
   void resetFilters() {
     _currentSearch = null;
     _currentDestaque = null;
+    _currentVerificado = null;
     _currentStatusList = [];
     _currentCategorias = [];
     _todasLojas = [];
+  }
+
+  // ✅ RESUMO DOS FILTROS ATIVOS
+  String getFiltrosAtivosResumo() {
+    final partes = <String>[];
+
+    // Status
+    if (_currentStatusList.isNotEmpty) {
+      final statusLabels = _currentStatusList.map((s) {
+        switch (s) {
+          case 'ativo': return 'Ativo';
+          case 'inativo': return 'Inativo';
+          case 'fechado': return 'Fechado';
+          case 'revisao': return 'Revisão';
+          default: return s;
+        }
+      }).toList();
+      partes.add(statusLabels.join(', '));
+    }
+
+    // Categorias
+    if (_currentCategorias.isNotEmpty) {
+      partes.add(_currentCategorias.join(', '));
+    }
+
+    // Destaque
+    if (_currentDestaque != null) {
+      partes.add(_currentDestaque == true ? 'Destaque' : 'Sem destaque');
+    }
+
+    // Verificado
+    if (_currentVerificado != null) {
+      partes.add(_currentVerificado == true ? 'Verificado' : 'Não verificado');
+    }
+
+    if (partes.isEmpty) return '';
+    return partes.join(' | ');
   }
 }

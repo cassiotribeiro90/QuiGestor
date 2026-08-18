@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../apparte/widgets/app_text.dart';
@@ -21,6 +23,7 @@ class GestoresListScreen extends StatefulWidget {
 class _GestoresListScreenState extends State<GestoresListScreen> {
   final _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  StreamSubscription? _gestoresSubscription;
 
   bool _isLoadingMore = false;
   bool _hasMorePages = true;
@@ -31,13 +34,29 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+
+    _gestoresSubscription = context.read<GestoresCubit>().stream.listen((_) {
+      _atualizarTextoFiltros();
+    });
   }
 
   @override
   void dispose() {
+    _gestoresSubscription?.cancel();
     _searchController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _atualizarTextoFiltros() {
+    final cubit = context.read<GestoresCubit>();
+    final filtros = cubit.getFiltrosAtivosResumo();
+
+    if (mounted) {
+      setState(() {
+        _searchController.text = filtros;
+      });
+    }
   }
 
   void _resetPagination() {
@@ -83,18 +102,20 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
   }
 
   void _showFilters() {
+    final gestoresCubit = context.read<GestoresCubit>();
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => const GestorFilters(),
+      builder: (bottomSheetContext) => GestorFilters(
+        gestoresCubit: gestoresCubit,
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       appBar: AppBar(
         title: const TextH2('Gestores'),
@@ -110,26 +131,24 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
             padding: const EdgeInsets.all(16),
             child: TextField(
               controller: _searchController,
+              readOnly: true,
               decoration: InputDecoration(
                 hintText: 'Buscar gestores por nome, email...',
                 prefixIcon: const Icon(AppIcons.search),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(AppIcons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          context.read<GestoresCubit>().applySearch('');
-                        },
-                      )
+                  icon: const Icon(AppIcons.clear),
+                  onPressed: () {
+                    _searchController.clear();
+                    context.read<GestoresCubit>().clearFilters();
+                  },
+                )
                     : null,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              onChanged: (value) {
-                _resetPagination();
-                context.read<GestoresCubit>().applySearch(value);
-              },
+              onTap: _showFilters,
             ),
           ),
         ),

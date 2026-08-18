@@ -6,6 +6,7 @@ import 'package:quigestor/app/modules/categorias/bloc/categorias_state.dart';
 import 'package:quigestor/app/modules/categorias/models/categoria.dart';
 
 class FiltrosSubcategorias extends StatelessWidget {
+  final CategoriasCubit categoriasCubit; // ✅ Novo campo
   final int? categoriaId;
   final String searchQuery;
   final int? statusFiltro;
@@ -17,6 +18,7 @@ class FiltrosSubcategorias extends StatelessWidget {
 
   const FiltrosSubcategorias({
     Key? key,
+    required this.categoriasCubit, // ✅ Obrigatório
     required this.categoriaId,
     required this.searchQuery,
     required this.statusFiltro,
@@ -31,8 +33,9 @@ class FiltrosSubcategorias extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Dropdown de categorias (largura total)
+        // Dropdown de categorias (usando bloc explicitamente)
         BlocBuilder<CategoriasCubit, CategoriasState>(
+          bloc: categoriasCubit, // ✅ Usa o Cubit passado
           builder: (context, state) {
             List<Categoria> cats = [];
             if (state is CategoriasLoaded) {
@@ -45,7 +48,7 @@ class FiltrosSubcategorias extends StatelessWidget {
                 labelText: 'Categoria',
                 border: OutlineInputBorder(),
                 contentPadding:
-                    EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               ),
               items: [
                 const DropdownMenuItem(
@@ -53,7 +56,7 @@ class FiltrosSubcategorias extends StatelessWidget {
                   child: Text('Todas', style: TextStyle(fontSize: 15)),
                 ),
                 ...cats.map(
-                  (c) => DropdownMenuItem(
+                      (c) => DropdownMenuItem(
                     value: c.id,
                     child: Text(
                       c.nome,
@@ -77,7 +80,7 @@ class FiltrosSubcategorias extends StatelessWidget {
             prefixIcon: Icon(Icons.search, size: 24),
             border: OutlineInputBorder(),
             contentPadding:
-                EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             isDense: true,
           ),
           style: const TextStyle(fontSize: 15),
@@ -93,7 +96,7 @@ class FiltrosSubcategorias extends StatelessWidget {
             labelText: 'Status',
             border: OutlineInputBorder(),
             contentPadding:
-                EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           ),
           items: const [
             DropdownMenuItem(

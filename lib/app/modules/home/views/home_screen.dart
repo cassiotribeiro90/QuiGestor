@@ -130,8 +130,15 @@ class HomeScreenState extends State<HomeScreen> {
         return ModuleNavigator(
           key: _navKeys[8],
           moduleName: 'Subcategorias',
-          initialScreen: BlocProvider(
-            create: (_) => getIt<SubcategoriaCubit>(),
+          initialScreen: MultiBlocProvider(
+            providers: [
+              BlocProvider(
+                create: (_) => getIt<SubcategoriaCubit>(),
+              ),
+              BlocProvider(
+                create: (_) => CategoriasCubit(apiClient), // ✅ Cria diretamente
+              ),
+            ],
             child: const SubcategoriasListScreen(),
           ),
         );
