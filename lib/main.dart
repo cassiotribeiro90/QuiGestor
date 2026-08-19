@@ -32,6 +32,7 @@ class QuiGestorApp extends StatelessWidget {
       child: MultiBlocProvider(
         providers: [
           BlocProvider<ThemeCubit>(create: (_) => ThemeCubit()),
+          // ✅ SEM checkAuth() aqui! A SplashScreen chama.
           BlocProvider<AuthCubit>(create: (_) => AuthCubit(apiClient)),
           BlocProvider<HomeCubit>(create: (_) => HomeCubit()),
         ],

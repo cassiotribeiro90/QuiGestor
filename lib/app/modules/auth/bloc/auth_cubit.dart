@@ -15,9 +15,9 @@ class AuthCubit extends Cubit<AuthState> {
 
     try {
       print('📱 [LOGIN] Tentando login com email: $email');
-      
+
       final response = await _apiClient.post(
-        AppConfig.LOGIN, 
+        AppConfig.LOGIN,
         data: {'email': email, 'senha': senha},
         requiresAuth: false,
       );
@@ -30,44 +30,41 @@ class AuthCubit extends Cubit<AuthState> {
         final String accessToken = data['access_token']?.toString() ?? '';
         final String? refreshToken = data['refresh_token']?.toString();
         final int expiresIn = data['expires_in'] ?? 7200;
-        
+
         if (accessToken.isNotEmpty) {
           final int tokenLength = accessToken.length;
           final int displayLength = min<int>(20, tokenLength);
-          
+
           print('📱 [LOGIN] Token recebido: ${accessToken.substring(0, displayLength)}...');
-          
+
           await _apiClient.tokenService.saveTokens(
-            accessToken, 
-            refreshToken, 
-            expiresIn: expiresIn
+            accessToken,
+            refreshToken,
+            expiresIn: expiresIn,
           );
-          
+
           await _apiClient.tokenService.saveBaseUrl(_apiClient.dio.options.baseUrl);
-          
+
           final savedToken = _apiClient.tokenService.getAccessToken();
           print('📱 [LOGIN] Token recuperado após salvar: ${savedToken != null ? 'OK' : 'FALHOU'}');
-          
+
           emit(AuthSuccess(accessToken: accessToken));
         } else {
           print('📱 [LOGIN] Erro: Token não recebido');
           emit(const AuthError(message: 'Token não recebido'));
         }
-      } 
-      else if (response.statusCode == 401 || response.data['success'] == false) {
+      } else if (response.statusCode == 401 || response.data['success'] == false) {
         final message = response.data['message'] ?? 'Email ou senha inválidos';
         print('📱 [LOGIN] Falha: $message');
         emit(AuthError(message: message));
-      } 
-      else {
+      } else {
         final message = response.data['message'] ?? 'Erro no login';
         print('📱 [LOGIN] Erro inesperado no status code: ${response.statusCode} - $message');
         emit(AuthError(message: message));
       }
-      
     } on DioException catch (e) {
       print('📱 [LOGIN] DioException: ${e.response?.statusCode} - ${e.response?.data}');
-      
+
       if (e.response?.statusCode == 401) {
         final message = e.response?.data['message'] ?? 'Email ou senha inválidos';
         emit(AuthError(message: message));
@@ -87,33 +84,54 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthInitial());
   }
 
+  // ✅ CORRIGIDO: com logs e tratamento completo
   Future<void> checkAuth() async {
-    final String? token = _apiClient.tokenService.getAccessToken();
-    if (token != null && token.isNotEmpty) {
-      if (_apiClient.tokenService.isTokenExpired()) {
-        await _attemptRefresh();
+    print('🔐 [CHECK_AUTH] Iniciando verificação...');
+
+    try {
+      final String? token = _apiClient.tokenService.getAccessToken();
+      print('🔐 [CHECK_AUTH] Token: ${token != null ? 'ENCONTRADO (${token.substring(0, min(20, token.length))}...)' : 'NÃO ENCONTRADO'}');
+
+      if (token != null && token.isNotEmpty) {
+        if (_apiClient.tokenService.isTokenExpired()) {
+          print('🔐 [CHECK_AUTH] Token expirado → tentando refresh');
+          await _attemptRefresh();
+        } else {
+          print('🔐 [CHECK_AUTH] Token válido → AuthSuccess');
+          emit(AuthSuccess(accessToken: token));
+        }
       } else {
-        emit(AuthSuccess(accessToken: token));
+        print('🔐 [CHECK_AUTH] Sem token → AuthUnauthenticated');
+        emit(AuthUnauthenticated());
       }
-    } else {
-      emit(AuthInitial());
+    } catch (e) {
+      print('🔐 [CHECK_AUTH] Erro: $e');
+      emit(AuthUnauthenticated());
     }
   }
 
   Future<void> _attemptRefresh() async {
+    print('🔄 [REFRESH] Iniciando refresh...');
+
     final refreshToken = _apiClient.tokenService.getRefreshToken();
-    
+    print('🔄 [REFRESH] Refresh token: ${refreshToken != null ? 'ENCONTRADO' : 'NÃO ENCONTRADO'}');
+
     if (refreshToken == null || refreshToken.isEmpty) {
-      emit(AuthInitial());
+      print('🔄 [REFRESH] Sem refresh → limpar e deslogar');
+      await _apiClient.tokenService.clearTokens();
+      emit(AuthUnauthenticated());
       return;
     }
 
     try {
+      print('🔄 [REFRESH] Chamando API...');
       final response = await _apiClient.post(
         AppConfig.REFRESH_TOKEN,
         data: {'refresh_token': refreshToken},
         requiresAuth: false,
-      );
+      ).timeout(const Duration(seconds: 10));
+
+      print('🔄 [REFRESH] Status: ${response.statusCode}');
 
       if (response.statusCode == 200 && response.data['success'] == true) {
         final data = response.data['data'];
@@ -121,18 +139,28 @@ class AuthCubit extends Cubit<AuthState> {
         final newRefreshToken = data['refresh_token']?.toString();
         final expiresIn = data['expires_in'] ?? 7200;
 
-        await _apiClient.tokenService.saveTokens(
-          newAccessToken, 
-          newRefreshToken, 
-          expiresIn: expiresIn
-        );
-        
-        emit(AuthSuccess(accessToken: newAccessToken));
+        if (newAccessToken.isNotEmpty) {
+          print('🔄 [REFRESH] Novo token recebido');
+          await _apiClient.tokenService.saveTokens(
+            newAccessToken,
+            newRefreshToken,
+            expiresIn: expiresIn,
+          );
+          emit(AuthSuccess(accessToken: newAccessToken));
+        } else {
+          print('🔄 [REFRESH] Token vazio → deslogar');
+          await _apiClient.tokenService.clearTokens();
+          emit(AuthUnauthenticated());
+        }
       } else {
-        emit(AuthInitial());
+        print('🔄 [REFRESH] Falha na API → deslogar');
+        await _apiClient.tokenService.clearTokens();
+        emit(AuthUnauthenticated());
       }
     } catch (e) {
-      emit(AuthInitial());
+      print('🔄 [REFRESH] Erro: $e → deslogar');
+      await _apiClient.tokenService.clearTokens();
+      emit(AuthUnauthenticated());
     }
   }
 }
