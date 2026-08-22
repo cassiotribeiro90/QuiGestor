@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -19,16 +20,22 @@ class AuthRepository {
       
       // 🔥 OBTÉM DEVICE TOKEN
       String? deviceToken;
-      try {
-        deviceToken = await FirebaseMessaging.instance.getToken();
-        if (kDebugMode) {
-          print('[LOGIN] 📱 Device Token: ${deviceToken?.substring(0, 20)}...');
+      if (!Platform.isWindows) {
+        try {
+          deviceToken = await FirebaseMessaging.instance.getToken();
+          if (kDebugMode) {
+            print('[LOGIN] 📱 Device Token: ${deviceToken?.substring(0, 20)}...');
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('[LOGIN] ⚠️ Erro ao obter device token: $e');
+          }
+          deviceToken = '';
         }
-      } catch (e) {
+      } else {
         if (kDebugMode) {
-          print('[LOGIN] ⚠️ Erro ao obter device token: $e');
+          print('[LOGIN] ⏳ Windows detectado: ignorando FCM Token');
         }
-        deviceToken = '';
       }
       
       if (kDebugMode) {
