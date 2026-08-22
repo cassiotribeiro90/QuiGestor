@@ -5,10 +5,10 @@ class CarregarMaisButton extends StatelessWidget {
   final VoidCallback onTap;
 
   const CarregarMaisButton({
-    Key? key,
+    super.key,
     required this.hasMore,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

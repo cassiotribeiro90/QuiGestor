@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'app_text.dart';
 
 class FilterOptionChip extends StatelessWidget {
   final String label;

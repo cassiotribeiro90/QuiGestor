@@ -87,7 +87,7 @@ class DashboardMetrics extends StatelessWidget {
               topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
               rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
             ),
-            gridData: FlGridData(show: false),
+            gridData: const FlGridData(show: false),
             borderData: FlBorderData(show: false),
             barGroups: _getHorarioGroups(isDark, barColor),
           ),

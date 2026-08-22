@@ -8,11 +8,11 @@ class LojistaCard extends StatelessWidget {
   final VoidCallback onDelete;
 
   const LojistaCard({
-    Key? key,
+    super.key,
     required this.lojista,
     required this.onEdit,
     required this.onDelete,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

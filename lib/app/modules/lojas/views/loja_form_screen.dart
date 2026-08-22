@@ -403,7 +403,7 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
                         _buildSectionHeader(context, AppIcons.info, 'Status e Destaque'),
                         const SizedBox(height: 24),
                         DropdownButtonFormField<String>(
-                          value: _status,
+                          initialValue: _status,
                           decoration: _inputDecoration(theme, 'Status *', AppIcons.info),
                           items: _statusOptions.map((opt) => DropdownMenuItem(value: opt['value'], child: TextBody2(opt['label']!))).toList(),
                           onChanged: (val) => setState(() => _status = val!),

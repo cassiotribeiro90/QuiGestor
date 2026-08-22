@@ -368,7 +368,7 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> {
           
           if (uniqueCategorias.isNotEmpty)
             DropdownButtonFormField<int?>(
-              value: effectiveCategoriaId,
+              initialValue: effectiveCategoriaId,
               decoration: const InputDecoration(labelText: 'Categoria *', prefixIcon: Icon(Icons.category_outlined)),
               items: [
                 const DropdownMenuItem(value: null, child: TextBody2('Selecione uma categoria')),
@@ -404,7 +404,7 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> {
             ))
           else if (uniqueSubcategorias.isNotEmpty || _categoriaId != null)
             DropdownButtonFormField<int?>(
-              value: effectiveSubcategoriaId,
+              initialValue: effectiveSubcategoriaId,
               decoration: const InputDecoration(labelText: 'Subcategoria', prefixIcon: Icon(Icons.account_tree_outlined)),
               items: [
                 const DropdownMenuItem(value: null, child: TextBody2('Sem subcategoria')),

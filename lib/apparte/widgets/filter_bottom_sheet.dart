@@ -319,7 +319,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                             visualDensity: VisualDensity.compact,
                           ),
                         );
-                      }).toList(),
+                      }),
 
                       const SizedBox(height: 24),
                     ],

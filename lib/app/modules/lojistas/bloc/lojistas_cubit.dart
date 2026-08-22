@@ -7,7 +7,7 @@ import '../models/loja_option_model.dart';
 class LojistasCubit extends Cubit<LojistasState> {
   final LojistaRepository _repository;
   int _page = 1;
-  int _perPage = 20;
+  final int _perPage = 20;
   int? _filtroLojaId;
   String? _filtroFuncao;
   int? _filtroStatus;

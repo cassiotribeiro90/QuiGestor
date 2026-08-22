@@ -111,7 +111,7 @@ class ProdutoCubit extends Cubit<ProdutoState> {
     try {
       final response = await _apiClient.delete('/gestor/produto/delete?id=$id');
       if (response.data['success'] == true) {
-        emit(ProdutoOperationSuccess('Produto removido com sucesso', isDeletion: true));
+        emit(const ProdutoOperationSuccess('Produto removido com sucesso', isDeletion: true));
         return true;
       } else {
         emit(ProdutoError(response.data['message'] ?? 'Erro ao remover produto'));

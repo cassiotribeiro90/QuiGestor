@@ -76,9 +76,9 @@ class _FilterSheetState extends State<FilterSheet> {
     final activeCount = _config.activeFilterCount;
 
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.background,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -235,7 +235,7 @@ class _FilterSheetState extends State<FilterSheet> {
                             visualDensity: VisualDensity.compact,
                           ),
                         );
-                      }).toList(),
+                      }),
 
                       const SizedBox(height: 24),
                     ],

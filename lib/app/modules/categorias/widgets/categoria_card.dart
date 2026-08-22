@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../apparte/widgets/app_text.dart';
 import '../../../../apparte/widgets/quigestor_card.dart';
 import '../models/categoria.dart';
 

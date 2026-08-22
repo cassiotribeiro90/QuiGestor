@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../apparte/widgets/app_text.dart';
 import '../../../../apparte/widgets/filter_option.dart';
 import '../../../../apparte/widgets/filter_section_widget.dart';
-import '../../../../apparte/widgets/qui_button.dart';
 import '../bloc/categorias_cubit.dart';
 
 class CategoriaFilters extends StatefulWidget {

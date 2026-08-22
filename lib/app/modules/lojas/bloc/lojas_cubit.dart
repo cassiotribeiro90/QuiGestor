@@ -153,7 +153,7 @@ class LojasCubit extends Cubit<LojasState> {
       final response = await _apiClient.post(AppConfig.LOJA_CREATE, data: data);
       if (response.statusCode == 201 && response.data['success'] == true) {
         await refreshList();
-        emit(LojaOperationSuccess(message: 'Loja criada com sucesso'));
+        emit(const LojaOperationSuccess(message: 'Loja criada com sucesso'));
         return true;
       }
       emit(LojasError(response.data['message'] ?? 'Erro ao criar loja'));
@@ -170,7 +170,7 @@ class LojasCubit extends Cubit<LojasState> {
       final response = await _apiClient.post('${AppConfig.LOJA_UPDATE}/$id', data: data);
       if (response.statusCode == 200 && response.data['success'] == true) {
         await refreshList();
-        emit(LojaOperationSuccess(message: 'Loja atualizada com sucesso'));
+        emit(const LojaOperationSuccess(message: 'Loja atualizada com sucesso'));
         return true;
       }
       emit(LojasError(response.data['message'] ?? 'Erro ao atualizar loja'));

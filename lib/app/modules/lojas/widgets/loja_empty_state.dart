@@ -27,7 +27,7 @@ class LojaEmptyState extends StatelessWidget {
             color: Colors.grey[400],
           ),
           const SizedBox(height: 16),
-          TextBody1(
+          const TextBody1(
             'Nenhuma loja encontrada',
           ),
           const SizedBox(height: 8),

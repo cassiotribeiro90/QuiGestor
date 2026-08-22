@@ -5,7 +5,7 @@ import '../bloc/lojistas_state.dart';
 import '../../../core/constants/icon_constants.dart';
 
 class FiltrosLojistas extends StatefulWidget {
-  const FiltrosLojistas({Key? key}) : super(key: key);
+  const FiltrosLojistas({super.key});
 
   @override
   State<FiltrosLojistas> createState() => _FiltrosLojistasState();
@@ -70,7 +70,7 @@ class _FiltrosLojistasState extends State<FiltrosLojistas> {
               const SizedBox(height: 8),
               // Primeira linha de filtros: Todas as lojas (100% de largura)
               DropdownButtonFormField<int>(
-                value: _lojaId,
+                initialValue: _lojaId,
                 hint: const Text('Todas lojas'),
                 isDense: true,
                 decoration: const InputDecoration(
@@ -89,7 +89,7 @@ class _FiltrosLojistasState extends State<FiltrosLojistas> {
                 children: [
                   Expanded(
                     child: DropdownButtonFormField<String>(
-                      value: _funcao,
+                      initialValue: _funcao,
                       hint: const Text('Função'),
                       isDense: true,
                       decoration: const InputDecoration(
@@ -111,7 +111,7 @@ class _FiltrosLojistasState extends State<FiltrosLojistas> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: DropdownButtonFormField<int>(
-                      value: _status,
+                      initialValue: _status,
                       hint: const Text('Status'),
                       isDense: true,
                       decoration: const InputDecoration(

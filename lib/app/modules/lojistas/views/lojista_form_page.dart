@@ -7,7 +7,7 @@ import '../models/loja_option_model.dart';
 
 class LojistaFormPage extends StatefulWidget {
   final int? id;
-  const LojistaFormPage({Key? key, this.id}) : super(key: key);
+  const LojistaFormPage({super.key, this.id});
 
   @override
   State<LojistaFormPage> createState() => _LojistaFormPageState();
@@ -174,7 +174,7 @@ class _LojistaFormPageState extends State<LojistaFormPage> {
             const SizedBox(height: 16),
 
             DropdownButtonFormField<String>(
-              value: _funcao,
+              initialValue: _funcao,
               decoration: _inputDecoration(
                 label: 'Função *',
                 icon: Icons.work_outline,
@@ -190,7 +190,7 @@ class _LojistaFormPageState extends State<LojistaFormPage> {
             const SizedBox(height: 16),
 
             DropdownButtonFormField<int>(
-              value: _status,
+              initialValue: _status,
               decoration: _inputDecoration(
                 label: 'Status',
                 icon: Icons.circle_outlined,
@@ -337,11 +337,10 @@ class _LojasSelectionModal extends StatefulWidget {
   final ValueChanged<List<int>> onConfirm;
 
   const _LojasSelectionModal({
-    Key? key,
     required this.lojas,
     required this.selecionadas,
     required this.onConfirm,
-  }) : super(key: key);
+  });
 
   @override
   State<_LojasSelectionModal> createState() => _LojasSelectionModalState();

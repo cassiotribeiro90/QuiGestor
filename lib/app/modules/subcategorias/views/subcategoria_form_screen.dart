@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../apparte/widgets/app_text.dart';
 import '../../../../apparte/widgets/qui_button.dart';
-import '../../../../shared/api/api_client.dart';
 import '../../../core/constants/icon_constants.dart';
 import '../../categorias/bloc/categorias_cubit.dart';
 import '../../categorias/bloc/categorias_state.dart';
@@ -130,7 +129,7 @@ class _SubcategoriaFormScreenState extends State<SubcategoriaFormScreen> {
                   }
                   if (state is CategoriasLoaded) {
                     return DropdownButtonFormField<int>(
-                      value: _categoriaId,
+                      initialValue: _categoriaId,
                       decoration: _inputDecoration(theme, 'Categoria Pai *', Icons.account_tree),
                       items: state.categorias.map((cat) => DropdownMenuItem(
                         value: cat.id,

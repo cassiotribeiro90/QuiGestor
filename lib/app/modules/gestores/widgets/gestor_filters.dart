@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/gestores_cubit.dart';
-import '../../../../apparte/widgets/app_text.dart';
 import '../../../../apparte/widgets/filter_option.dart';
 import '../../../../apparte/widgets/filter_section_widget.dart';
-import '../../../../apparte/widgets/qui_button.dart';
 
 class GestorFilters extends StatefulWidget {
   final GestoresCubit gestoresCubit; // ✅ Recebe o Cubit

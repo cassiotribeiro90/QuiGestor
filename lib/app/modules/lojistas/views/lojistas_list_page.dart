@@ -11,7 +11,7 @@ import 'lojista_form_page.dart';
 import '../../../core/constants/icon_constants.dart';
 
 class LojistasListPage extends StatefulWidget {
-  const LojistasListPage({Key? key}) : super(key: key);
+  const LojistasListPage({super.key});
 
   @override
   State<LojistasListPage> createState() => _LojistasListPageState();

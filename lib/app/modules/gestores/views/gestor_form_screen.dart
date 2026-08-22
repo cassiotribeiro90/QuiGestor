@@ -279,7 +279,7 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
                         ),
                         const SizedBox(height: 20),
                         DropdownButtonFormField<String>(
-                          value: _nivel,
+                          initialValue: _nivel,
                           decoration: _inputDecoration(theme, 'Nível de Acesso *', AppIcons.admin),
                           items: _niveis.map((nivel) => DropdownMenuItem(value: nivel['value'], child: TextBody2(nivel['label']!))).toList(),
                           onChanged: (value) => setState(() => _nivel = value!),

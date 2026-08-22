@@ -106,7 +106,7 @@ class GestoresCubit extends Cubit<GestoresState> {
       final response = await _apiClient.post(AppConfig.GESTOR_CREATE, data: data);
       if (response.statusCode == 201 && response.data['success'] == true) {
         await refreshList();
-        emit(GestorOperationSuccess(message: 'Gestor criado com sucesso'));
+        emit(const GestorOperationSuccess(message: 'Gestor criado com sucesso'));
         return true;
       }
       emit(GestoresError(response.data['message'] ?? 'Erro ao criar gestor'));
@@ -123,7 +123,7 @@ class GestoresCubit extends Cubit<GestoresState> {
       final response = await _apiClient.post('${AppConfig.GESTOR_UPDATE}/$id', data: data);
       if (response.statusCode == 200 && response.data['success'] == true) {
         await refreshList();
-        emit(GestorOperationSuccess(message: 'Gestor atualizado com sucesso'));
+        emit(const GestorOperationSuccess(message: 'Gestor atualizado com sucesso'));
         return true;
       }
       emit(GestoresError(response.data['message'] ?? 'Erro ao atualizar gestor'));

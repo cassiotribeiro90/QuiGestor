@@ -1,4 +1,3 @@
-import '../../categorias/models/categoria.dart';
 
 class Produto {
   final int id;

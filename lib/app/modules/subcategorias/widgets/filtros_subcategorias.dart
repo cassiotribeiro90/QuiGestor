@@ -17,7 +17,7 @@ class FiltrosSubcategorias extends StatelessWidget {
   final VoidCallback onClearFilters;
 
   const FiltrosSubcategorias({
-    Key? key,
+    super.key,
     required this.categoriasCubit, // ✅ Obrigatório
     required this.categoriaId,
     required this.searchQuery,
@@ -27,7 +27,7 @@ class FiltrosSubcategorias extends StatelessWidget {
     required this.onSearchChanged,
     required this.onStatusChanged,
     required this.onClearFilters,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +42,7 @@ class FiltrosSubcategorias extends StatelessWidget {
               cats = state.categorias;
             }
             return DropdownButtonFormField<int?>(
-              value: categoriaId,
+              initialValue: categoriaId,
               isDense: true,
               decoration: const InputDecoration(
                 labelText: 'Categoria',
@@ -90,7 +90,7 @@ class FiltrosSubcategorias extends StatelessWidget {
 
         // Dropdown de status (largura total)
         DropdownButtonFormField<int?>(
-          value: statusFiltro,
+          initialValue: statusFiltro,
           isDense: true,
           decoration: const InputDecoration(
             labelText: 'Status',

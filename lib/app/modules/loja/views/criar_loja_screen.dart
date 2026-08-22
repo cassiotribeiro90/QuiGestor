@@ -111,7 +111,7 @@ class _CriarLojaScreenState extends State<CriarLojaScreen> {
               ),
               const SizedBox(height: 20),
               DropdownButtonFormField<String>(
-                value: _categoriaSelecionada,
+                initialValue: _categoriaSelecionada,
                 onChanged: (value) => setState(() => _categoriaSelecionada = value),
                 decoration: const InputDecoration(
                   labelText: 'Categoria',
