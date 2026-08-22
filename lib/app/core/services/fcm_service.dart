@@ -2,7 +2,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'device_service.dart';
-import '../../../shared/api/api_client.dart';
+import '../../../../shared/api/api_client.dart';
 
 /// Serviço para gerenciar FCM e notificações push
 class FcmService {

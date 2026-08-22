@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
-import '../../../../core/services/device_service.dart';
+import '../../../core/services/device_service.dart';
 import '../../../../shared/api/api_client.dart';
 import '../../../../app/app_config.dart';
 import '../models/login_response.dart';

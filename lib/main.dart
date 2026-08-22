@@ -13,8 +13,8 @@ import 'package:quigestor/app/theme/app_theme.dart';
 import 'package:quigestor/shared/auth/auth_observer.dart';
 import 'package:quigestor/shared/api/api_client.dart';
 import 'package:quigestor/shared/services/token_service.dart';
-import 'core/services/fcm_service.dart';
-import 'firebase_options.dart'; // 🔥 Certifique-se de que este arquivo existe (gerado pelo FlutterFire)
+import 'package:quigestor/app/core/services/fcm_service.dart';
+import 'package:quigestor/firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,7 +28,8 @@ void main() async {
   await TokenService.initialize();
 
   // 🔥 INICIALIZA FCM
-  await FcmService().init();
+  final fcmService = getIt<FcmService>();
+  await fcmService.init();
 
   final apiClient = ApiClient();
   runApp(QuiGestorApp(apiClient: apiClient));
@@ -45,8 +46,8 @@ class QuiGestorApp extends StatelessWidget {
       child: MultiBlocProvider(
         providers: [
           BlocProvider<ThemeCubit>(create: (_) => ThemeCubit()),
-          // ✅ SEM checkAuth() aqui! A SplashScreen chama.
-          BlocProvider<AuthCubit>(create: (_) => AuthCubit(apiClient)),
+          // ✅ Recuperado do GetIt para usar a instância com repositório
+          BlocProvider<AuthCubit>(create: (_) => getIt<AuthCubit>()),
           BlocProvider<HomeCubit>(create: (_) => HomeCubit()),
         ],
         child: BlocBuilder<ThemeCubit, ThemeState>(
