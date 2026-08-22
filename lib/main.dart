@@ -1,6 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:quigestor/app/modules/auth/bloc/auth_cubit.dart';
 import 'package:quigestor/app/modules/theme/bloc/theme_cubit.dart';
 import 'package:quigestor/app/modules/theme/bloc/theme_state.dart';
@@ -12,11 +13,23 @@ import 'package:quigestor/app/theme/app_theme.dart';
 import 'package:quigestor/shared/auth/auth_observer.dart';
 import 'package:quigestor/shared/api/api_client.dart';
 import 'package:quigestor/shared/services/token_service.dart';
+import 'core/services/fcm_service.dart';
+import 'firebase_options.dart'; // 🔥 Certifique-se de que este arquivo existe (gerado pelo FlutterFire)
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 🔥 INICIALIZA FIREBASE
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   await setupDependencies();
   await TokenService.initialize();
+
+  // 🔥 INICIALIZA FCM
+  await FcmService().init();
+
   final apiClient = ApiClient();
   runApp(QuiGestorApp(apiClient: apiClient));
 }
