@@ -1,10 +1,8 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
-import '../storage/auth_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'device_service.dart';
-import '../config/api_config.dart';
+import '../../../shared/api/api_client.dart';
 
 /// Serviço para gerenciar FCM e notificações push
 class FcmService {
@@ -21,6 +19,7 @@ class FcmService {
     if (_isInitialized) return;
 
     try {
+      // Solicita permissão
       NotificationSettings settings = await _fcm.requestPermission(
         alert: true,
         badge: true,
@@ -34,6 +33,7 @@ class FcmService {
         return;
       }
 
+      // Obtém o token
       _token = await _fcm.getToken();
       if (kDebugMode) {
         print('[FCM] 📱 Token: $_token');
@@ -89,25 +89,11 @@ class FcmService {
   /// 🔥 ENVIA O TOKEN PARA O BACKEND
   Future<void> _sendTokenToBackend(String token) async {
     try {
-      final authToken = await AuthStorage().getAccessToken();
-      if (authToken == null) {
-        if (kDebugMode) {
-          print('[FCM] ⚠️ Usuário não autenticado');
-        }
-        return;
-      }
-
+      final apiClient = ApiClient();
       final deviceId = await DeviceService().getDeviceId();
 
-      final dio = Dio();
-      await dio.post(
-        '${ApiConfig.baseUrl}gestor/gestor-usuarios/device-token',
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $authToken',
-            'Content-Type': 'application/json',
-          },
-        ),
+      await apiClient.post(
+        '/gestor/gestor-usuarios/device-token',
         data: {
           'device_token': token,
           'device_id': deviceId,
@@ -134,7 +120,7 @@ class FcmService {
   void _handleNotificationTap(RemoteMessage message) {
     final pedidoId = message.data['pedido_id'];
     if (pedidoId != null) {
-      // Navegar para a tela de pedidos (gestor)
+      // Navegar para a tela de pedidos
     }
   }
 
