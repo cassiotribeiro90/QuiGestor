@@ -16,11 +16,15 @@ class FcmService {
 
   /// 🔥 INICIALIZA O FCM E OBTÉM O TOKEN
   Future<void> init() async {
+    // 🔥 Se for Web, pula inicialização completa por enquanto
+    if (kIsWeb) {
+      debugPrint('⚠️ [FCM] Web detectado - pulando inicialização completa');
+      return;
+    }
+
     // 🔥 Se for Windows, não inicializa
     if (Platform.isWindows) {
-      if (kDebugMode) {
-        debugPrint('[FCM] ⏳ Windows não suporta Firebase Messaging');
-      }
+      debugPrint('[FCM] ⏳ Windows não suporta Firebase Messaging');
       return;
     }
     if (_isInitialized) return;
@@ -85,10 +89,8 @@ class FcmService {
 
   /// 🔥 ENVIA O TOKEN PARA O BACKEND (chamado após login)
   Future<void> sendTokenToBackend(String authToken) async {
-    if (Platform.isWindows) {
-      if (kDebugMode) {
-        debugPrint('[FCM] ⏳ Windows: não enviando token');
-      }
+    if (kIsWeb || Platform.isWindows) {
+      debugPrint('[FCM] ⏳ Web/Windows: não enviando token');
       return;
     }
     if (_token == null) {

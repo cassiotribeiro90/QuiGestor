@@ -19,7 +19,7 @@ class AuthRepository {
       
       // 🔥 OBTÉM DEVICE TOKEN
       String? deviceToken;
-      if (!Platform.isWindows) {
+      if (!kIsWeb && !Platform.isWindows) {
         try {
           deviceToken = await FirebaseMessaging.instance.getToken();
           if (kDebugMode) {
@@ -33,7 +33,7 @@ class AuthRepository {
         }
       } else {
         if (kDebugMode) {
-          debugPrint('[LOGIN] ⏳ Windows detectado: ignorando FCM Token');
+          debugPrint('[LOGIN] ⏳ Web/Windows detectado: ignorando FCM Token');
         }
       }
       

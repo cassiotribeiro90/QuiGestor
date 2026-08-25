@@ -31,9 +31,9 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: BlocConsumer<AuthCubit, AuthState>(
+    return Material(
+      color: Colors.white,
+      child: BlocConsumer<AuthCubit, AuthState>(
         listener: (context, state) {
           debugPrint('🖥️ [SPLASH] Estado recebido no listener: ${state.runtimeType}');
 

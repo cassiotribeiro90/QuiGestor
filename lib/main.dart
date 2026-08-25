@@ -27,9 +27,9 @@ void main() async {
   await setupDependencies();
   await TokenService.initialize();
 
-  // 🔥 INICIALIZA FCM
+  // 🔥 INICIALIZA FCM (Sem bloquear a inicialização do app)
   final fcmService = getIt<FcmService>();
-  await fcmService.init();
+  fcmService.init();
 
   final apiClient = ApiClient();
   runApp(QuiGestorApp(apiClient: apiClient));
