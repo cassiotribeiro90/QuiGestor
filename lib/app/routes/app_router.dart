@@ -1,112 +1,183 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../apparte/widgets/app_text.dart';
-import '../modules/auth/views/login_screen.dart';
-import '../modules/auth/views/splash_screen.dart';
-import '../modules/home/views/home_screen.dart';
-import '../modules/debug/debug_screen.dart';
-import '../modules/lojas/views/lojas_list_screen.dart';
-import '../modules/lojas/views/loja_form_screen.dart';
-import '../modules/lojas/models/loja.dart';
-import '../modules/produtos/views/produtos_list_screen.dart';
-import '../modules/produtos/views/produto_form_screen.dart';
-import '../modules/produtos/bloc/produtos_cubit.dart';
-import '../modules/produtos/bloc/produto_cubit.dart';
-import '../modules/lojistas/views/lojistas_list_page.dart';
-import '../modules/lojistas/views/lojista_form_page.dart';
-import '../modules/lojistas/bloc/lojistas_cubit.dart';
-import '../modules/lojistas/bloc/lojista_form_cubit.dart';
-import '../modules/subcategorias/views/subcategorias_list_screen.dart';
-import '../modules/subcategorias/views/subcategoria_form_screen.dart';
-import '../modules/subcategorias/bloc/subcategoria_cubit.dart';
-import '../di/dependencies.dart';
+import 'package:go_router/go_router.dart';
 import '../../shared/api/api_client.dart';
-import 'app_routes.dart';
+import '../modules/auth/views/splash_screen.dart';
+import '../modules/auth/views/login_screen.dart';
+import '../modules/dashboard/bloc/dashboard_cubit.dart';
+import '../modules/dashboard/views/DashboardScreen.dart';
+import '../modules/lojas/bloc/lojas_cubit.dart';
+import '../modules/lojas/views/lojas_list_screen.dart';
+import '../modules/lojistas/bloc/lojistas_cubit.dart';
+import '../modules/lojistas/views/lojistas_list_page.dart';
+import '../modules/gestores/bloc/gestores_cubit.dart';
+import '../modules/gestores/views/gestores_list_screen.dart';
+import '../modules/produtos/bloc/produtos_cubit.dart';
+import '../modules/produtos/views/produtos_list_screen.dart';
+import '../modules/categorias/bloc/categorias_cubit.dart';
+import '../modules/categorias/views/categorias_list_screen.dart';
+import '../modules/settings/views/settings_screen.dart';
+import '../modules/subcategorias/bloc/subcategoria_cubit.dart';
+import '../modules/subcategorias/views/subcategorias_list_screen.dart';
+import '../di/dependencies.dart';
+import '../widgets/main_shell.dart';
 
-class AppRouter {
-  static Route<dynamic> onGenerateRoute(RouteSettings settings) {
-    switch (settings.name) {
-      case Routes.SPLASH:
-        return MaterialPageRoute(builder: (_) => const SplashScreen());
-      case Routes.LOGIN:
-        return MaterialPageRoute(builder: (_) => const LoginScreen());
-      case Routes.HOME:
-        return MaterialPageRoute(builder: (_) => const HomeScreen());
-      case Routes.LOJAS:
-        return MaterialPageRoute(builder: (_) => const LojasListScreen());
-      case Routes.LOJA_FORM:
-        return MaterialPageRoute(
-          builder: (_) => LojaFormScreen(
-            loja: settings.arguments as Loja?,
-          ),
-        );
-      case Routes.PRODUTOS:
-        final args = settings.arguments as Map<String, dynamic>;
-        return MaterialPageRoute(
-          builder: (_) => BlocProvider(
-            create: (context) => ProdutosCubit(
-              context.read<ApiClient>(),
-              args['lojaId'],
-            ),
-            child: ProdutosListScreen(
-              lojaId: args['lojaId'],
-              lojaNome: args['lojaNome'],
-            ),
-          ),
-        );
-      case Routes.PRODUTO_FORM:
-        final args = settings.arguments as Map<String, dynamic>? ?? {};
-        return MaterialPageRoute(
-          builder: (_) => BlocProvider(
-            create: (context) => ProdutoCubit(context.read<ApiClient>()),
-            child: ProdutoFormScreen(
-              produtoId: args['produtoId'],
-              initialLojaId: args['lojaId'],
-            ),
-          ),
-        );
-      case Routes.LOJISTAS:
-        return MaterialPageRoute(
-          builder: (_) => BlocProvider(
-            create: (_) => getIt<LojistasCubit>(),
-            child: const LojistasListPage(),
-          ),
-        );
-      case Routes.LOJISTA_FORM:
-        final id = settings.arguments as int?;
-        return MaterialPageRoute(
-          builder: (_) => BlocProvider(
-            create: (_) => getIt<LojistaFormCubit>(),
-            child: LojistaFormPage(id: id),
-          ),
-        );
-      case Routes.SUBCATEGORIAS:
-        final catId = settings.arguments as int?;
-        return MaterialPageRoute(
-          builder: (_) => BlocProvider(
-            create: (_) => getIt<SubcategoriaCubit>(),
-            child: SubcategoriasListScreen(categoriaId: catId),
-          ),
-        );
-      case Routes.SUBCATEGORIA_FORM:
-        final args = settings.arguments as Map<String, dynamic>? ?? {};
-        return MaterialPageRoute(
-          builder: (_) => BlocProvider(
-            create: (_) => getIt<SubcategoriaCubit>(),
-            child: SubcategoriaFormScreen(
-              subcategoria: args['subcategoria'],
-              initialCategoriaId: args['categoriaId'],
-            ),
-          ),
-        );
-      case '/debug':
-        return MaterialPageRoute(builder: (_) => const DebugScreen());
-      default:
-        return MaterialPageRoute(
-          builder: (_) => Scaffold(
-            body: Center(child: TextBody1('Rota não encontrada: ${settings.name}')),
-          ),
-        );
-    }
-  }
-}
+// Chaves de navegação
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
+final GlobalKey<NavigatorState> _shellNavigatorKey = GlobalKey<NavigatorState>();
+final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
+
+final GoRouter appRouter = GoRouter(
+  navigatorKey: rootNavigatorKey,
+  initialLocation: '/splash',
+  debugLogDiagnostics: true,
+  routes: [
+    // ============================================================
+    // ROTAS PÚBLICAS
+    // ============================================================
+    GoRoute(
+      path: '/splash',
+      name: 'splash',
+      builder: (context, state) {
+        debugPrint('🔄 [ROUTER] Abrindo Splash');
+        return const SplashScreen();
+      },
+    ),
+    GoRoute(
+      path: '/login',
+      name: 'login',
+      builder: (context, state) {
+        debugPrint('🔐 [ROUTER] Abrindo Login');
+        return const LoginScreen();
+      },
+    ),
+
+    // ============================================================
+    // ROTAS PROTEGIDAS (com ShellRoute)
+    // ============================================================
+    ShellRoute(
+      navigatorKey: _shellNavigatorKey,
+      builder: (context, state, child) {
+        debugPrint('🏠 [ROUTER] Construindo Shell (MainShell)');
+        return MainShell(scaffoldKey: scaffoldKey, child: child);
+      },
+      routes: [
+        // ---------- DASHBOARD ----------
+        GoRoute(
+          path: '/dashboard',
+          name: 'dashboard',
+          builder: (context, state) {
+            debugPrint('📊 [ROUTER] Abrindo Dashboard');
+            return BlocProvider(
+              create: (context) => DashboardCubit(context.read<ApiClient>()),
+              child: const DashboardScreen(),
+            );
+          },
+        ),
+
+        // ---------- GESTORES ----------
+        GoRoute(
+          path: '/gestores',
+          name: 'gestores',
+          builder: (context, state) {
+            debugPrint('👤 [ROUTER] Abrindo Gestores');
+            return BlocProvider(
+              create: (context) => GestoresCubit(context.read<ApiClient>())..fetchGestores(perPage: 10),
+              child: const GestoresListScreen(),
+            );
+          },
+        ),
+
+        // ---------- LOJISTAS ----------
+        GoRoute(
+          path: '/lojistas',
+          name: 'lojistas',
+          builder: (context, state) {
+            debugPrint('👥 [ROUTER] Abrindo Lojistas');
+            return BlocProvider(
+              create: (context) => getIt<LojistasCubit>(),
+              child: const LojistasListPage(),
+            );
+          },
+        ),
+
+        // ---------- CLIENTES (placeholder) ----------
+        GoRoute(
+          path: '/clientes',
+          name: 'clientes',
+          builder: (context, state) {
+            debugPrint('👤 [ROUTER] Abrindo Clientes');
+            return const Scaffold(
+              body: Center(child: Text('Clientes - Em breve')),
+            );
+          },
+        ),
+
+        // ---------- LOJAS ----------
+        GoRoute(
+          path: '/lojas',
+          name: 'lojas',
+          builder: (context, state) {
+            debugPrint('🏪 [ROUTER] Abrindo Lojas');
+            return BlocProvider(
+              create: (context) => LojasCubit(context.read<ApiClient>())..fetchLojas(perPage: 10),
+              child: const LojasListScreen(),
+            );
+          },
+        ),
+
+        // ---------- CATEGORIAS ----------
+        GoRoute(
+          path: '/categorias',
+          name: 'categorias',
+          builder: (context, state) {
+            debugPrint('📋 [ROUTER] Abrindo Categorias');
+            return BlocProvider(
+              create: (context) => CategoriasCubit(context.read<ApiClient>())..fetchCategorias(),
+              child: const CategoriasListScreen(),
+            );
+          },
+        ),
+
+        // ---------- SUBCATEGORIAS ----------
+        GoRoute(
+          path: '/subcategorias',
+          name: 'subcategorias',
+          builder: (context, state) {
+            debugPrint('📂 [ROUTER] Abrindo Subcategorias');
+            return MultiBlocProvider(
+              providers: [
+                BlocProvider(create: (context) => getIt<SubcategoriaCubit>()),
+                BlocProvider(create: (context) => CategoriasCubit(context.read<ApiClient>())..fetchCategorias()),
+              ],
+              child: const SubcategoriasListScreen(),
+            );
+          },
+        ),
+
+        // ---------- PEDIDOS ----------
+        GoRoute(
+          path: '/pedidos',
+          name: 'pedidos',
+          builder: (context, state) {
+            debugPrint('📦 [ROUTER] Abrindo Pedidos');
+            return BlocProvider(
+              create: (context) => ProdutosCubit(context.read<ApiClient>(), 0),
+              child: const ProdutosListScreen(lojaId: 0, lojaNome: 'Pedidos'),
+            );
+          },
+        ),
+
+        // ---------- CONFIGURAÇÕES ----------
+        GoRoute(
+          path: '/configuracoes',
+          name: 'configuracoes',
+          builder: (context, state) {
+            debugPrint('⚙️ [ROUTER] Abrindo Configurações');
+            return const SettingsScreen();
+          },
+        ),
+      ],
+    ),
+  ],
+);

@@ -1,22 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../apparte/widgets/app_text.dart';
 import '../../auth/bloc/auth_cubit.dart';
-import '../../../routes/app_routes.dart';
-import '../bloc/home_cubit.dart';
 import '../../theme/bloc/theme_cubit.dart';
 import '../../theme/bloc/theme_state.dart';
 import '../../../core/constants/icon_constants.dart';
 
 class SideMenu extends StatelessWidget {
   final bool isCompact;
-  
+
   const SideMenu({super.key, this.isCompact = false});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Container(
       width: isCompact ? 72 : 260,
       decoration: BoxDecoration(
@@ -42,9 +41,9 @@ class SideMenu extends StatelessWidget {
                   height: isCompact ? 40 : 60,
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) => const Icon(
-                    AppIcons.admin, 
-                    size: 40, 
-                    color: Colors.white
+                      AppIcons.admin,
+                      size: 40,
+                      color: Colors.white
                   ),
                 ),
                 if (!isCompact) ...[
@@ -64,7 +63,7 @@ class SideMenu extends StatelessWidget {
               ],
             ),
           ),
-          
+
           // Menu Items
           Expanded(
             child: ListView(
@@ -76,72 +75,72 @@ class SideMenu extends StatelessWidget {
                     context,
                     icon: AppIcons.dashboard,
                     label: 'Dashboard',
-                    index: 0,
+                    route: '/dashboard',
                     isCompact: isCompact,
                   ),
                 ),
-                
+
                 _buildSectionHeader(context, 'USUÁRIOS', isCompact),
                 _buildMenuItem(
                   context,
                   icon: AppIcons.admin,
                   label: 'Gestores',
-                  index: 1,
+                  route: '/gestores',
                   isCompact: isCompact,
                 ),
                 _buildMenuItem(
                   context,
                   icon: AppIcons.people,
                   label: 'Lojistas',
-                  index: 2,
+                  route: '/lojistas',
                   isCompact: isCompact,
                 ),
                 _buildMenuItem(
                   context,
                   icon: AppIcons.person,
                   label: 'Clientes',
-                  index: 3,
+                  route: '/clientes',
                   isCompact: isCompact,
                 ),
-                
+
                 _buildSectionHeader(context, 'LOJAS', isCompact),
                 _buildMenuItem(
                   context,
                   icon: AppIcons.store,
                   label: 'Todas as Lojas',
-                  index: 4,
+                  route: '/lojas',
                   isCompact: isCompact,
                 ),
                 _buildMenuItem(
                   context,
                   icon: AppIcons.category,
                   label: 'Categorias',
-                  index: 5,
+                  route: '/categorias',
                   isCompact: isCompact,
                 ),
                 _buildMenuItem(
                   context,
                   icon: Icons.subdirectory_arrow_right,
                   label: 'Subcategorias',
-                  index: 8,
+                  route: '/subcategorias',
                   isCompact: isCompact,
                 ),
-                
+
                 _buildSectionHeader(context, 'PEDIDOS', isCompact),
                 _buildMenuItem(
                   context,
                   icon: AppIcons.inventory,
                   label: 'Todos os Pedidos',
-                  index: 6,
+                  route: '/pedidos',
                   isCompact: isCompact,
                 ),
-                
+
                 _buildSectionHeader(context, 'SISTEMA', isCompact),
                 _buildMenuItem(
                   context,
                   icon: AppIcons.settings,
                   label: 'Configurações',
-                  index: 7,
+                  route: '/configuracoes',
                   isCompact: isCompact,
                 ),
 
@@ -150,7 +149,7 @@ class SideMenu extends StatelessWidget {
                   child: Divider(),
                 ),
 
-                // Theme Toggle dentro do scroll
+                // Theme Toggle
                 BlocBuilder<ThemeCubit, ThemeState>(
                   builder: (context, state) {
                     final isDark = state.themeMode == ThemeMode.dark;
@@ -165,17 +164,17 @@ class SideMenu extends StatelessWidget {
                   },
                 ),
 
-                // Logout dentro do scroll
+                // Logout
                 ListTile(
                   leading: const Icon(AppIcons.logout, color: Colors.red),
                   title: isCompact ? null : const TextBody2('Sair', color: Colors.red, selectable: false),
                   onTap: () {
                     context.read<AuthCubit>().logout();
-                    Navigator.pushReplacementNamed(context, Routes.LOGIN);
+                    // 🔥 Navega para login usando GoRouter
+                    context.go('/login');
                   },
                 ),
-                
-                // Espaço extra no final da lista
+
                 SizedBox(height: MediaQuery.of(context).padding.bottom + 20),
               ],
             ),
@@ -199,25 +198,26 @@ class SideMenu extends StatelessWidget {
   }
 
   Widget _buildMenuItem(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required int index,
-    required bool isCompact,
-  }) {
+      BuildContext context, {
+        required IconData icon,
+        required String label,
+        required String route,
+        required bool isCompact,
+      }) {
     return ListTile(
       leading: Icon(icon),
       title: isCompact ? null : TextBody2(label, selectable: false),
       dense: true,
       onTap: () {
-        // Fecha drawer se estiver aberto (Mobile)
+        // Fecha drawer se estiver aberto
         try {
           if (Scaffold.of(context).isDrawerOpen) {
             Navigator.pop(context);
           }
         } catch (_) {}
-        
-        context.read<HomeCubit>().changeModule(index, label);
+
+        // 🔥 Navega usando GoRouter
+        context.go(route);
       },
     );
   }

@@ -79,4 +79,20 @@ class AuthRepository {
       }
     }
   }
+
+  Future<Map<String, dynamic>> refreshToken(String token) async {
+    try {
+      final response = await _apiClient.post(
+        AppConfig.REFRESH_TOKEN,
+        data: {'refresh_token': token},
+        requiresAuth: false,
+      );
+      return response.data;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[REFRESH] ❌ Erro: $e');
+      }
+      rethrow;
+    }
+  }
 }

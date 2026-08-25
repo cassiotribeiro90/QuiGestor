@@ -1,9 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../app/di/dependencies.dart';
 import '../../apparte/widgets/app_text.dart';
 import '../services/token_service.dart';
-import '../../app/routes/app_routes.dart';
+import '../../app/routes/app_router.dart';
 import '../../app/modules/auth/bloc/auth_cubit.dart';
 
 class RefreshInterceptor extends QueuedInterceptor {
@@ -28,15 +29,22 @@ class RefreshInterceptor extends QueuedInterceptor {
     debugPrint('📤 [Interceptor] ${options.method} ${options.path} - requiresAuth: $requiresAuth');
 
     if (requiresAuth) {
-      final headers = _tokenService.getAuthHeader();
-      if (headers.isNotEmpty) {
-        options.headers.addAll(headers);
-        debugPrint('🔐 [Interceptor] Token adicionado ao header');
-      } else {
-        debugPrint('⚠️ [Interceptor] Requisição requer auth mas não há token');
-      }
+      // 🔥 AGORA USAMOS `then` PARA LIDAR COM O FUTURE
+      _tokenService.getAuthHeader().then((headers) {
+        if (headers.isNotEmpty) {
+          options.headers.addAll(headers);
+          debugPrint('🔐 [Interceptor] Token adicionado ao header: ${headers['Authorization']?.substring(0, 30)}...');
+        } else {
+          debugPrint('⚠️ [Interceptor] Requisição requer auth mas não há token');
+        }
+        handler.next(options);
+      }).catchError((e) {
+        debugPrint('❌ [Interceptor] Erro ao obter token: $e');
+        handler.next(options);
+      });
+    } else {
+      handler.next(options);
     }
-    handler.next(options);
   }
 
   @override
@@ -49,9 +57,12 @@ class RefreshInterceptor extends QueuedInterceptor {
     debugPrint('❌ [Interceptor] Resposta: ${err.response?.data}');
 
     // 🔥 NUNCA tenta refresh em endpoints de autenticação
-    if (err.requestOptions.path.contains('/login') ||
-        err.requestOptions.path.contains('/refresh')) {
-      debugPrint('🚫 [Interceptor] Ignorando refresh para endpoint de auth: ${err.requestOptions.path}');
+    final path = err.requestOptions.path;
+    if (path.contains('/login') ||
+        path.contains('/refresh') ||
+        path.contains('/verify-otp') ||
+        path.contains('/phone')) {
+      debugPrint('🚫 [Interceptor] Ignorando refresh para endpoint de auth: $path');
       handler.next(err);
       return;
     }
@@ -85,29 +96,39 @@ class RefreshInterceptor extends QueuedInterceptor {
     _refreshAttempts.add(requestKey);
     debugPrint('🔄 [Interceptor] Token 401 detectado, INICIANDO PROCESSO DE REFRESH...');
     debugPrint('🔄 [Interceptor] RequestKey: $requestKey');
-    debugPrint('🔄 [Interceptor] Refresh token disponível? ${_tokenService.getRefreshToken() != null}');
+
+    // 🔥 VERIFICA SE TEM REFRESH TOKEN SALVO
+    final refreshToken = await _tokenService.getRefreshToken();
+    debugPrint('🔄 [Interceptor] Refresh token disponível? ${refreshToken != null}');
+
+    if (refreshToken == null) {
+      debugPrint('❌ [Interceptor] SEM REFRESH TOKEN DISPONÍVEL!');
+      _refreshAttempts.remove(requestKey);
+      _redirectToLogin(showMessage: true);
+      handler.next(err);
+      return;
+    }
 
     try {
-      // Verifica se tem refresh token
-      final hasRefreshToken = _tokenService.getRefreshToken() != null;
-      if (!hasRefreshToken) {
-        debugPrint('❌ [Interceptor] SEM REFRESH TOKEN DISPONÍVEL!');
-        _refreshAttempts.remove(requestKey);
-        _redirectToLogin(showMessage: true);
-        handler.next(err);
-        return;
-      }
-
-      debugPrint('🔄 [Interceptor] Chamando TokenService.refreshToken()...');
-      final success = await _tokenService.refreshToken(_dio);
+      debugPrint('🔄 [Interceptor] Chamando AuthCubit.refreshToken()...');
+      final success = await getIt<AuthCubit>().refreshToken();
 
       if (success) {
         debugPrint('✅ [Interceptor] REFRESH BEM-SUCEDIDO! Novo token obtido.');
 
-        final newHeaders = _tokenService.getAuthHeader();
-        debugPrint('✅ [Interceptor] Novo token: ${newHeaders.toString().substring(0, 30)}...');
+        // 🔥 OBTÉM O NOVO HEADER DE AUTENTICAÇÃO (ASSÍNCRONO)
+        final newHeaders = await _tokenService.getAuthHeader();
+        if (newHeaders.isNotEmpty) {
+          debugPrint('✅ [Interceptor] Novo token adicionado: ${newHeaders['Authorization']?.substring(0, 30)}...');
+        } else {
+          debugPrint('⚠️ [Interceptor] Novo token não encontrado após refresh');
+          _refreshAttempts.remove(requestKey);
+          _redirectToLogin(showMessage: true);
+          handler.next(err);
+          return;
+        }
 
-        // Reconfigura a requisição original
+        // Reconfigura a requisição original com o novo token
         final newRequest = err.requestOptions;
         newRequest.headers.addAll(newHeaders);
 
@@ -163,10 +184,7 @@ class RefreshInterceptor extends QueuedInterceptor {
           debugPrint('⚠️ [Interceptor] Context é null, pulando AuthCubit.logout()');
         }
 
-        navigator.pushNamedAndRemoveUntil(
-          Routes.LOGIN,
-              (route) => false,
-        );
+        appRouter.go('/login');
         debugPrint('✅ [Interceptor] Navegação para login executada');
 
         if (showMessage) {

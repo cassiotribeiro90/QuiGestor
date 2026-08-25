@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 import '../../../shared/api/api_client.dart';
+import '../../../shared/services/token_service.dart';
 import '../modules/auth/bloc/auth_cubit.dart';
 import '../modules/auth/repository/auth_repository.dart';
 import '../modules/lojistas/services/lojista_service.dart';
@@ -14,6 +15,11 @@ import '../core/services/fcm_service.dart';
 final getIt = GetIt.instance;
 
 Future<void> setupDependencies() async {
+  // Token Service
+  if (!getIt.isRegistered<TokenService>()) {
+    getIt.registerLazySingleton(() => TokenService());
+  }
+
   // Device & FCM Services
   if (!getIt.isRegistered<DeviceService>()) {
     getIt.registerLazySingleton(() => DeviceService());
@@ -37,7 +43,7 @@ Future<void> setupDependencies() async {
   if (!getIt.isRegistered<AuthCubit>()) {
     getIt.registerFactory(() => AuthCubit(
       getIt<AuthRepository>(),
-      getIt<ApiClient>(),
+      getIt<TokenService>(),
     ));
   }
 

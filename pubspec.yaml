@@ -22,22 +22,27 @@ dependencies:
   get_it: ^7.6.7
 
   # Rede
-  dio: ^5.7.0
+  dio: ^5.4.0
 
   # Armazenamento
   shared_preferences: ^2.3.3
+  flutter_secure_storage: ^9.2.4
   uuid: ^4.5.1
 
   # Firebase
-  firebase_core: ^3.12.0
-  firebase_messaging: ^15.2.0
+  firebase_core: ^3.15.2
+  firebase_messaging: ^15.2.10
 
   fl_chart: ^0.68.0
+  go_router: ^13.0.0
+  url_strategy: ^0.2.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.1
+  shelf: ^1.4.2
+  shelf_router: ^1.1.4
 
 flutter:
   uses-material-design: true

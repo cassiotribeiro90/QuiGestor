@@ -1,138 +1,107 @@
-import 'package:dio/dio.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/foundation.dart';
-import '../../../../shared/api/api_client.dart';
-import '../../../core/services/fcm_service.dart';
-import '../repository/auth_repository.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'auth_state.dart';
-import 'dart:math';
+import '../repository/auth_repository.dart';
+import '../../../../shared/services/token_service.dart';
 
 class AuthCubit extends Cubit<AuthState> {
   final AuthRepository _authRepository;
-  final ApiClient _apiClient;
+  final TokenService _tokenService;
 
-  AuthCubit(this._authRepository, this._apiClient) : super(AuthInitial());
+  AuthCubit(this._authRepository, this._tokenService)
+      : super(const AuthInitial()) {
+    debugPrint('🔐 [AUTH] Cubit inicializado');
+  }
 
-  Future<void> login(String email, String senha) async {
-    emit(AuthLoading());
-
+  Future<void> checkAuthStatus() async {
+    debugPrint('🚀 [AUTH] Verificando status...');
     try {
-      if (kDebugMode) {
-        debugPrint('📱 [LOGIN] Tentando login com email: $email');
-      }
-
-      final response = await _authRepository.login(email, senha);
-      
-      if (response.success) {
-        final data = response.data;
-        
-        if (data.accessToken.isNotEmpty) {
-          if (kDebugMode) {
-            debugPrint('📱 [LOGIN] Token recebido: ${data.accessToken.substring(0, min(20, data.accessToken.length))}...');
-          }
-
-          await _apiClient.tokenService.saveTokens(
-            data.accessToken,
-            data.refreshToken,
-            expiresIn: data.expiresIn,
-          );
-
-          await _apiClient.tokenService.saveBaseUrl(_apiClient.dio.options.baseUrl);
-
-          // 🔥 ENVIA O TOKEN FCM PARA O BACKEND
-          try {
-            await FcmService().sendTokenToBackend(data.accessToken);
-            if (kDebugMode) {
-              debugPrint('[LOGIN] 📱 Token FCM enviado ao backend');
-            }
-          } catch (e) {
-            if (kDebugMode) {
-              debugPrint('[LOGIN] ⚠️ Erro ao enviar token FCM: $e');
-            }
-          }
-
-          emit(AuthSuccess(accessToken: data.accessToken));
-        } else {
-          emit(const AuthError(message: 'Token não recebido'));
-        }
+      final hasToken = await _tokenService.hasValidToken();
+      if (hasToken) {
+        debugPrint('✅ [AUTH] Autenticado com tokens válidos');
+        emit(const AuthAuthenticated({}));
       } else {
-        emit(AuthError(message: response.message));
+        debugPrint('❌ [AUTH] Sem tokens');
+        emit(const AuthUnauthenticated());
       }
-    } on DioException catch (e) {
-      final message = e.response?.data['message'] ?? 'Erro de conexão';
-      emit(AuthError(message: message));
     } catch (e) {
-      emit(const AuthError(message: 'Erro inesperado'));
+      debugPrint('❌ [AUTH] Erro: $e');
+      emit(const AuthUnauthenticated());
+    }
+  }
+
+  Future<void> login(String email, String password) async {
+    debugPrint('🔐 [AUTH] Tentando login...');
+    emit(const AuthLoading());
+    try {
+      final loginResponse = await _authRepository.login(email, password);
+      final accessToken = loginResponse.data.accessToken;
+      final refreshToken = loginResponse.data.refreshToken;
+
+      if (accessToken.isNotEmpty) {
+        await _tokenService.saveTokens(
+          accessToken: accessToken,
+          refreshToken: refreshToken ?? '',
+          tokenType: loginResponse.data.tokenType,
+          expiresIn: loginResponse.data.expiresIn,
+        );
+      }
+      debugPrint('✅ [AUTH] Login bem-sucedido');
+      emit(AuthAuthenticated({
+        'id': loginResponse.data.id,
+        'nome': loginResponse.data.nome,
+        'email': loginResponse.data.email,
+        'nivel': loginResponse.data.nivel,
+      }));
+    } catch (e) {
+      debugPrint('❌ [AUTH] Falha no login: $e');
+      emit(AuthError(e.toString()));
+    }
+  }
+
+  Future<bool> refreshToken() async {
+    debugPrint('🔄 [AUTH] Tentando refresh...');
+    try {
+      final refreshTokenVal = await _tokenService.getRefreshToken();
+      if (refreshTokenVal == null) {
+        debugPrint('❌ [AUTH] Refresh token não disponível');
+        return false;
+      }
+
+      final response = await _authRepository.refreshToken(refreshTokenVal);
+      if (response['success'] == true) {
+        final data = response['data'];
+        final newAccessToken = data['access_token'];
+        if (newAccessToken != null) {
+          await _tokenService.saveAccessToken(newAccessToken);
+
+          // Se o backend retornar um novo refresh_token, salve-o também
+          final newRefreshToken = data['refresh_token'];
+          if (newRefreshToken != null && newRefreshToken != refreshTokenVal) {
+            await _tokenService.saveTokens(
+              accessToken: newAccessToken,
+              refreshToken: newRefreshToken,
+              tokenType: data['token_type'],
+              expiresIn: data['expires_in'],
+            );
+          }
+
+          debugPrint('✅ [AUTH] Refresh bem-sucedido');
+          return true;
+        }
+      }
+
+      debugPrint('❌ [AUTH] Falha no refresh');
+      return false;
+    } catch (e) {
+      debugPrint('❌ [AUTH] Erro no refresh: $e');
+      return false;
     }
   }
 
   Future<void> logout() async {
-    if (kDebugMode) {
-      debugPrint('📱 [LOGOUT] Iniciando logout...');
-    }
-    
-    try {
-      await _authRepository.logout();
-    } catch (_) {}
-    
-    // 🔥 LIMPA DEVICE ID (Opcional, dependendo do roteiro)
-    // await DeviceService().clearDeviceId();
-    
-    await _apiClient.tokenService.clearTokens();
-    emit(AuthInitial());
-  }
-
-  Future<void> checkAuth() async {
-    try {
-      final String? token = _apiClient.tokenService.getAccessToken();
-      if (token != null && token.isNotEmpty) {
-        if (_apiClient.tokenService.isTokenExpired()) {
-          await _attemptRefresh();
-        } else {
-          emit(AuthSuccess(accessToken: token));
-        }
-      } else {
-        emit(AuthUnauthenticated());
-      }
-    } catch (e) {
-      emit(AuthUnauthenticated());
-    }
-  }
-
-  Future<void> _attemptRefresh() async {
-    final refreshToken = _apiClient.tokenService.getRefreshToken();
-    if (refreshToken == null || refreshToken.isEmpty) {
-      await _apiClient.tokenService.clearTokens();
-      emit(AuthUnauthenticated());
-      return;
-    }
-
-    try {
-      final response = await _apiClient.post(
-        '/gestor/gestor-usuarios/refresh-token',
-        data: {'refresh_token': refreshToken},
-        requiresAuth: false,
-      );
-
-      if (response.statusCode == 200 && response.data['success'] == true) {
-        final data = response.data['data'];
-        final newAccessToken = data['access_token']?.toString() ?? '';
-        final newRefreshToken = data['refresh_token']?.toString();
-        final expiresIn = data['expires_in'] ?? 7200;
-
-        await _apiClient.tokenService.saveTokens(
-          newAccessToken,
-          newRefreshToken,
-          expiresIn: expiresIn,
-        );
-        emit(AuthSuccess(accessToken: newAccessToken));
-      } else {
-        await _apiClient.tokenService.clearTokens();
-        emit(AuthUnauthenticated());
-      }
-    } catch (e) {
-      await _apiClient.tokenService.clearTokens();
-      emit(AuthUnauthenticated());
-    }
+    debugPrint('🔐 [AUTH] Logout');
+    await _tokenService.clearTokens();
+    emit(const AuthUnauthenticated());
   }
 }

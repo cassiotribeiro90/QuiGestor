@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../services/token_service.dart';
 import 'refresh_interceptor.dart';
+import '../../app/routes/app_router.dart';
 
 class ApiClient {
   // 🔥 Singleton manual
@@ -11,8 +12,6 @@ class ApiClient {
   
   late final TokenService _tokenService;
   late final Dio _dio;
-  
-  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   ApiClient._internal() {
     _tokenService = TokenService();
@@ -40,7 +39,7 @@ class ApiClient {
     _dio.interceptors.add(RefreshInterceptor(
       dio: _dio,
       tokenService: _tokenService,
-      navigatorKey: navigatorKey,
+      navigatorKey: rootNavigatorKey,
     ));
     
     if (kDebugMode) {

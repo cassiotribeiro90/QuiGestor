@@ -1,144 +1,100 @@
-import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart';
-import 'device_service.dart';
-import '../../../../shared/api/api_client.dart';
+import 'package:flutter/foundation.dart'; // ← ESSENCIAL para kIsWeb
 
-/// Serviço para gerenciar FCM e notificações push
 class FcmService {
   static final FcmService _instance = FcmService._internal();
   factory FcmService() => _instance;
   FcmService._internal();
 
-  final FirebaseMessaging _fcm = FirebaseMessaging.instance;
-  String? _token;
-  bool _isInitialized = false;
+  bool _initialized = false;
 
-  /// 🔥 INICIALIZA O FCM E OBTÉM O TOKEN
+  // 🔥 Inicialização não-bloqueante
   Future<void> init() async {
-    // 🔥 Se for Web, pula inicialização completa por enquanto
-    if (kIsWeb) {
-      debugPrint('⚠️ [FCM] Web detectado - pulando inicialização completa');
-      return;
-    }
+    if (_initialized) return;
 
-    // 🔥 Se for Windows, não inicializa
-    if (Platform.isWindows) {
-      debugPrint('[FCM] ⏳ Windows não suporta Firebase Messaging');
-      return;
-    }
-    if (_isInitialized) return;
+    // Usa Future.microtask para não bloquear a UI
+    Future.microtask(() async {
+      try {
+        if (kIsWeb) {
+          debugPrint('🌐 [FCM] Inicializando para Web...');
+          await _initWeb();
+        } else {
+          debugPrint('📱 [FCM] Inicializando para Mobile...');
+          await _initMobile();
+        }
+        _initialized = true;
+        debugPrint('✅ [FCM] Inicializado com sucesso');
+      } catch (e) {
+        debugPrint('⚠️ [FCM] Erro na inicialização: $e');
+        _initialized = true; // evita tentar novamente
+      }
+    });
+  }
 
+  // ========== INICIALIZAÇÃO WEB ==========
+  Future<void> _initWeb() async {
     try {
-      // Solicita permissão
-      NotificationSettings settings = await _fcm.requestPermission(
+      final messaging = FirebaseMessaging.instance;
+
+      // Solicita permissão (exibe popup do navegador)
+      final settings = await messaging.requestPermission(
         alert: true,
         badge: true,
         sound: true,
       );
 
-      if (settings.authorizationStatus != AuthorizationStatus.authorized) {
-        if (kDebugMode) {
-          debugPrint('[FCM] ❌ Permissão negada');
+      debugPrint('🔔 [FCM Web] Permissão: ${settings.authorizationStatus}');
+
+      if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+        final token = await messaging.getToken();
+        if (token != null) {
+          debugPrint('📱 [FCM Web] Token: ${token.substring(0, 20)}...');
         }
-        return;
       }
 
-      // Obtém o token
-      _token = await _fcm.getToken();
-      if (kDebugMode) {
-        debugPrint('[FCM] 📱 Token: $_token');
-      }
-
-      // 🔥 ESCUTA MENSAGENS EM FOREGROUND
+      // Listener para mensagens em foreground
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-        if (kDebugMode) {
-          debugPrint('[FCM] 📨 Mensagem recebida: ${message.notification?.title}');
-        }
-        _showInAppNotification(message);
+        debugPrint('📨 [FCM Web] Mensagem recebida: ${message.notification?.title}');
       });
 
-      // 🔥 ESCUTA QUANDO O APP É ABERTO POR NOTIFICAÇÃO
-      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-        if (kDebugMode) {
-          debugPrint('[FCM] 📨 App aberto por notificação');
-        }
-        _handleNotificationTap(message);
-      });
-
-      // 🔥 TOKEN REFRESH
-      FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
-        if (kDebugMode) {
-          debugPrint('[FCM] 🔄 Token atualizado: $newToken');
-        }
-        _token = newToken;
-        _sendTokenToBackend(newToken);
-      });
-
-      _isInitialized = true;
-      if (kDebugMode) {
-        debugPrint('[FCM] ✅ Inicializado com sucesso');
-      }
+      debugPrint('✅ [FCM Web] Configurado com sucesso');
 
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint('[FCM] ❌ Erro: $e');
-      }
+      debugPrint('⚠️ [FCM Web] Erro: $e');
     }
   }
 
-  /// 🔥 ENVIA O TOKEN PARA O BACKEND (chamado após login)
-  Future<void> sendTokenToBackend(String authToken) async {
-    if (kIsWeb || Platform.isWindows) {
-      debugPrint('[FCM] ⏳ Web/Windows: não enviando token');
-      return;
-    }
-    if (_token == null) {
-      _token = await _fcm.getToken();
-    }
-    if (_token != null) {
-      await _sendTokenToBackend(_token!);
-    }
-  }
-
-  /// 🔥 ENVIA O TOKEN PARA O BACKEND
-  Future<void> _sendTokenToBackend(String token) async {
+  // ========== INICIALIZAÇÃO MOBILE ==========
+  Future<void> _initMobile() async {
     try {
-      final apiClient = ApiClient();
-      final deviceId = await DeviceService().getDeviceId();
-
-      await apiClient.post(
-        '/gestor/gestor-usuarios/device-token',
-        data: {
-          'device_token': token,
-          'device_id': deviceId,
-        },
+      final messaging = FirebaseMessaging.instance;
+      final settings = await messaging.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
       );
-      if (kDebugMode) {
-        debugPrint('[FCM] ✅ Token enviado ao backend');
+
+      debugPrint('🔔 [FCM Mobile] Permissão: ${settings.authorizationStatus}');
+
+      if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+        final token = await messaging.getToken();
+        if (token != null) {
+          debugPrint('📱 [FCM Mobile] Token: ${token.substring(0, 20)}...');
+        }
       }
+
+      // Listener para mensagens em foreground
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        debugPrint('📨 [FCM Mobile] Mensagem recebida: ${message.notification?.title}');
+      });
+
+      debugPrint('✅ [FCM Mobile] Configurado com sucesso');
+
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint('[FCM] ❌ Erro ao enviar token: $e');
-      }
+      debugPrint('⚠️ [FCM Mobile] Erro: $e');
     }
   }
 
-  /// 🔥 MOSTRA NOTIFICAÇÃO IN-APP (FOREGROUND)
-  void _showInAppNotification(RemoteMessage message) {
-    if (kDebugMode) {
-      debugPrint('[FCM] 🔔 ${message.notification?.title}: ${message.notification?.body}');
-    }
-  }
-
-  /// 🔥 NAVEGA PARA A TELA CORRETA AO CLICAR NA NOTIFICAÇÃO
-  void _handleNotificationTap(RemoteMessage message) {
-    final pedidoId = message.data['pedido_id'];
-    if (pedidoId != null) {
-      // Navegar para a tela de pedidos
-    }
-  }
-
-  /// 🔥 GETTER
-  String? get token => _token;
+  Future<void> sendTokenToBackend(String authToken) async {}
+  String? get token => null;
 }
