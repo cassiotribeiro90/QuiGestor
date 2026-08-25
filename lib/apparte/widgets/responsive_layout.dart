@@ -20,7 +20,7 @@ class ResponsiveLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('📱 [ResponsiveLayout] Build - Width: ${MediaQuery.of(context).size.width}');
+    debugPrint('📱 [ResponsiveLayout] Build - Width: ${MediaQuery.of(context).size.width}');
     return LayoutBuilder(
       builder: (context, constraints) {
         if (constraints.maxWidth < breakpoint) {

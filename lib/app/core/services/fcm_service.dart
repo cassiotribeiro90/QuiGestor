@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'device_service.dart';
 import '../../../../shared/api/api_client.dart';
@@ -20,7 +19,7 @@ class FcmService {
     // 🔥 Se for Windows, não inicializa
     if (Platform.isWindows) {
       if (kDebugMode) {
-        print('[FCM] ⏳ Windows não suporta Firebase Messaging');
+        debugPrint('[FCM] ⏳ Windows não suporta Firebase Messaging');
       }
       return;
     }
@@ -36,7 +35,7 @@ class FcmService {
 
       if (settings.authorizationStatus != AuthorizationStatus.authorized) {
         if (kDebugMode) {
-          print('[FCM] ❌ Permissão negada');
+          debugPrint('[FCM] ❌ Permissão negada');
         }
         return;
       }
@@ -44,13 +43,13 @@ class FcmService {
       // Obtém o token
       _token = await _fcm.getToken();
       if (kDebugMode) {
-        print('[FCM] 📱 Token: $_token');
+        debugPrint('[FCM] 📱 Token: $_token');
       }
 
       // 🔥 ESCUTA MENSAGENS EM FOREGROUND
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
         if (kDebugMode) {
-          print('[FCM] 📨 Mensagem recebida: ${message.notification?.title}');
+          debugPrint('[FCM] 📨 Mensagem recebida: ${message.notification?.title}');
         }
         _showInAppNotification(message);
       });
@@ -58,7 +57,7 @@ class FcmService {
       // 🔥 ESCUTA QUANDO O APP É ABERTO POR NOTIFICAÇÃO
       FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
         if (kDebugMode) {
-          print('[FCM] 📨 App aberto por notificação');
+          debugPrint('[FCM] 📨 App aberto por notificação');
         }
         _handleNotificationTap(message);
       });
@@ -66,7 +65,7 @@ class FcmService {
       // 🔥 TOKEN REFRESH
       FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
         if (kDebugMode) {
-          print('[FCM] 🔄 Token atualizado: $newToken');
+          debugPrint('[FCM] 🔄 Token atualizado: $newToken');
         }
         _token = newToken;
         _sendTokenToBackend(newToken);
@@ -74,12 +73,12 @@ class FcmService {
 
       _isInitialized = true;
       if (kDebugMode) {
-        print('[FCM] ✅ Inicializado com sucesso');
+        debugPrint('[FCM] ✅ Inicializado com sucesso');
       }
 
     } catch (e) {
       if (kDebugMode) {
-        print('[FCM] ❌ Erro: $e');
+        debugPrint('[FCM] ❌ Erro: $e');
       }
     }
   }
@@ -88,7 +87,7 @@ class FcmService {
   Future<void> sendTokenToBackend(String authToken) async {
     if (Platform.isWindows) {
       if (kDebugMode) {
-        print('[FCM] ⏳ Windows: não enviando token');
+        debugPrint('[FCM] ⏳ Windows: não enviando token');
       }
       return;
     }
@@ -114,11 +113,11 @@ class FcmService {
         },
       );
       if (kDebugMode) {
-        print('[FCM] ✅ Token enviado ao backend');
+        debugPrint('[FCM] ✅ Token enviado ao backend');
       }
     } catch (e) {
       if (kDebugMode) {
-        print('[FCM] ❌ Erro ao enviar token: $e');
+        debugPrint('[FCM] ❌ Erro ao enviar token: $e');
       }
     }
   }
@@ -126,7 +125,7 @@ class FcmService {
   /// 🔥 MOSTRA NOTIFICAÇÃO IN-APP (FOREGROUND)
   void _showInAppNotification(RemoteMessage message) {
     if (kDebugMode) {
-      print('[FCM] 🔔 ${message.notification?.title}: ${message.notification?.body}');
+      debugPrint('[FCM] 🔔 ${message.notification?.title}: ${message.notification?.body}');
     }
   }
 

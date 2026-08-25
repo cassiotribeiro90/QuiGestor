@@ -66,7 +66,7 @@ class LojistasCubit extends Cubit<LojistasState> {
       );
 
       // ignore: avoid_print
-      print('📦 Lojistas recebidos: ${items.length}, Total: $total');
+      debugPrint('📦 Lojistas recebidos: ${items.length}, Total: $total');
 
       List<LojistaModel> currentItems = [];
       if (state is LojistasLoaded && carregarMais) {
@@ -89,7 +89,7 @@ class LojistasCubit extends Cubit<LojistasState> {
       ));
     } catch (e) {
       // ignore: avoid_print
-      print('❌ Erro ao carregar lojistas: $e');
+      debugPrint('❌ Erro ao carregar lojistas: $e');
       emit(LojistasError(e.toString()));
     }
   }
@@ -103,7 +103,7 @@ class LojistasCubit extends Cubit<LojistasState> {
       await carregar();
     } catch (e) {
       // ignore: avoid_print
-      print('❌ Erro ao carregar lojistas: $e');
+      debugPrint('❌ Erro ao carregar lojistas: $e');
       emit(LojistasError(e.toString()));
     }
   }

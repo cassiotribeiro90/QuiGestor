@@ -15,14 +15,14 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    print('🖥️ [SPLASH] initState');
+    debugPrint('🖥️ [SPLASH] initState');
     _startApp();
   }
 
   Future<void> _startApp() async {
-    print('🖥️ [SPLASH] Aguardando 2 segundos...');
+    debugPrint('🖥️ [SPLASH] Aguardando 2 segundos...');
     await Future.delayed(const Duration(seconds: 2));
-    print('🖥️ [SPLASH] Chamando checkAuth()');
+    debugPrint('🖥️ [SPLASH] Chamando checkAuth()');
 
     if (mounted) {
       context.read<AuthCubit>().checkAuth();
@@ -35,21 +35,21 @@ class _SplashScreenState extends State<SplashScreen> {
       backgroundColor: Colors.white,
       body: BlocConsumer<AuthCubit, AuthState>(
         listener: (context, state) {
-          print('🖥️ [SPLASH] Estado recebido no listener: ${state.runtimeType}');
+          debugPrint('🖥️ [SPLASH] Estado recebido no listener: ${state.runtimeType}');
 
           if (state is AuthSuccess) {
-            print('🖥️ [SPLASH] Navegando para HOME');
+            debugPrint('🖥️ [SPLASH] Navegando para HOME');
             Navigator.pushReplacementNamed(context, Routes.HOME);
           } else if (state is AuthUnauthenticated) {
-            print('🖥️ [SPLASH] Navegando para LOGIN');
+            debugPrint('🖥️ [SPLASH] Navegando para LOGIN');
             Navigator.pushReplacementNamed(context, Routes.LOGIN);
           } else if (state is AuthError) {
-            print('🖥️ [SPLASH] Navegando para LOGIN (erro: ${state.message})');
+            debugPrint('🖥️ [SPLASH] Navegando para LOGIN (erro: ${state.message})');
             Navigator.pushReplacementNamed(context, Routes.LOGIN);
           }
         },
         builder: (context, state) {
-          print('🖥️ [SPLASH] Build com estado: ${state.runtimeType}');
+          debugPrint('🖥️ [SPLASH] Build com estado: ${state.runtimeType}');
 
           // ✅ Navegação imediata no build (fallback)
           if (state is AuthSuccess) {

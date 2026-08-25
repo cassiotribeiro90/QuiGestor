@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/foundation.dart';
 import '../../../../shared/api/api_client.dart';
 import '../../../core/services/fcm_service.dart';
-import '../../../core/services/device_service.dart';
 import '../repository/auth_repository.dart';
 import 'auth_state.dart';
 import 'dart:math';
@@ -19,7 +18,7 @@ class AuthCubit extends Cubit<AuthState> {
 
     try {
       if (kDebugMode) {
-        print('📱 [LOGIN] Tentando login com email: $email');
+        debugPrint('📱 [LOGIN] Tentando login com email: $email');
       }
 
       final response = await _authRepository.login(email, senha);
@@ -29,7 +28,7 @@ class AuthCubit extends Cubit<AuthState> {
         
         if (data.accessToken.isNotEmpty) {
           if (kDebugMode) {
-            print('📱 [LOGIN] Token recebido: ${data.accessToken.substring(0, min(20, data.accessToken.length))}...');
+            debugPrint('📱 [LOGIN] Token recebido: ${data.accessToken.substring(0, min(20, data.accessToken.length))}...');
           }
 
           await _apiClient.tokenService.saveTokens(
@@ -44,11 +43,11 @@ class AuthCubit extends Cubit<AuthState> {
           try {
             await FcmService().sendTokenToBackend(data.accessToken);
             if (kDebugMode) {
-              print('[LOGIN] 📱 Token FCM enviado ao backend');
+              debugPrint('[LOGIN] 📱 Token FCM enviado ao backend');
             }
           } catch (e) {
             if (kDebugMode) {
-              print('[LOGIN] ⚠️ Erro ao enviar token FCM: $e');
+              debugPrint('[LOGIN] ⚠️ Erro ao enviar token FCM: $e');
             }
           }
 
@@ -69,7 +68,7 @@ class AuthCubit extends Cubit<AuthState> {
 
   Future<void> logout() async {
     if (kDebugMode) {
-      print('📱 [LOGOUT] Iniciando logout...');
+      debugPrint('📱 [LOGOUT] Iniciando logout...');
     }
     
     try {

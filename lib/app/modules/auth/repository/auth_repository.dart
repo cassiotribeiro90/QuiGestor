@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:dio/dio.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import '../../../core/services/device_service.dart';
@@ -24,22 +23,22 @@ class AuthRepository {
         try {
           deviceToken = await FirebaseMessaging.instance.getToken();
           if (kDebugMode) {
-            print('[LOGIN] 📱 Device Token: ${deviceToken?.substring(0, 20)}...');
+            debugPrint('[LOGIN] 📱 Device Token: ${deviceToken?.substring(0, 20)}...');
           }
         } catch (e) {
           if (kDebugMode) {
-            print('[LOGIN] ⚠️ Erro ao obter device token: $e');
+            debugPrint('[LOGIN] ⚠️ Erro ao obter device token: $e');
           }
           deviceToken = '';
         }
       } else {
         if (kDebugMode) {
-          print('[LOGIN] ⏳ Windows detectado: ignorando FCM Token');
+          debugPrint('[LOGIN] ⏳ Windows detectado: ignorando FCM Token');
         }
       }
       
       if (kDebugMode) {
-        print('[LOGIN] 📱 Device ID: $deviceId');
+        debugPrint('[LOGIN] 📱 Device ID: $deviceId');
       }
 
       final response = await _apiClient.post(
@@ -54,8 +53,8 @@ class AuthRepository {
       );
 
       if (kDebugMode) {
-        print('[LOGIN] 📱 Status: ${response.statusCode}');
-        print('[LOGIN] 📱 Response: ${response.data}');
+        debugPrint('[LOGIN] 📱 Status: ${response.statusCode}');
+        debugPrint('[LOGIN] 📱 Response: ${response.data}');
       }
 
       if (response.statusCode == 200 && response.data['success'] == true) {
@@ -65,7 +64,7 @@ class AuthRepository {
       throw Exception('Erro ao fazer login: ${response.data['message'] ?? 'Erro desconhecido'}');
     } catch (e) {
       if (kDebugMode) {
-        print('[LOGIN] ❌ Erro: $e');
+        debugPrint('[LOGIN] ❌ Erro: $e');
       }
       rethrow;
     }
@@ -76,7 +75,7 @@ class AuthRepository {
       await _apiClient.post('/gestor/gestor-usuarios/logout');
     } catch (e) {
       if (kDebugMode) {
-        print('[LOGOUT] ❌ Erro: $e');
+        debugPrint('[LOGOUT] ❌ Erro: $e');
       }
     }
   }

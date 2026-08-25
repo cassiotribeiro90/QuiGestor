@@ -25,15 +25,15 @@ class RefreshInterceptor extends QueuedInterceptor {
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     final bool requiresAuth = options.extra['requiresAuth'] ?? true;
 
-    print('📤 [Interceptor] ${options.method} ${options.path} - requiresAuth: $requiresAuth');
+    debugPrint('📤 [Interceptor] ${options.method} ${options.path} - requiresAuth: $requiresAuth');
 
     if (requiresAuth) {
       final headers = _tokenService.getAuthHeader();
       if (headers.isNotEmpty) {
         options.headers.addAll(headers);
-        print('🔐 [Interceptor] Token adicionado ao header');
+        debugPrint('🔐 [Interceptor] Token adicionado ao header');
       } else {
-        print('⚠️ [Interceptor] Requisição requer auth mas não há token');
+        debugPrint('⚠️ [Interceptor] Requisição requer auth mas não há token');
       }
     }
     handler.next(options);
@@ -41,24 +41,24 @@ class RefreshInterceptor extends QueuedInterceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    print('❌ [Interceptor] ========== ERRO DETECTADO ==========');
-    print('❌ [Interceptor] Path: ${err.requestOptions.path}');
-    print('❌ [Interceptor] Method: ${err.requestOptions.method}');
-    print('❌ [Interceptor] Status: ${err.response?.statusCode}');
-    print('❌ [Interceptor] requiresAuth: ${err.requestOptions.extra['requiresAuth']}');
-    print('❌ [Interceptor] Resposta: ${err.response?.data}');
+    debugPrint('❌ [Interceptor] ========== ERRO DETECTADO ==========');
+    debugPrint('❌ [Interceptor] Path: ${err.requestOptions.path}');
+    debugPrint('❌ [Interceptor] Method: ${err.requestOptions.method}');
+    debugPrint('❌ [Interceptor] Status: ${err.response?.statusCode}');
+    debugPrint('❌ [Interceptor] requiresAuth: ${err.requestOptions.extra['requiresAuth']}');
+    debugPrint('❌ [Interceptor] Resposta: ${err.response?.data}');
 
     // 🔥 NUNCA tenta refresh em endpoints de autenticação
     if (err.requestOptions.path.contains('/login') ||
         err.requestOptions.path.contains('/refresh')) {
-      print('🚫 [Interceptor] Ignorando refresh para endpoint de auth: ${err.requestOptions.path}');
+      debugPrint('🚫 [Interceptor] Ignorando refresh para endpoint de auth: ${err.requestOptions.path}');
       handler.next(err);
       return;
     }
 
     // Se não for 401, passa adiante
     if (err.response?.statusCode != 401) {
-      print('ℹ️ [Interceptor] Erro não é 401, repassando...');
+      debugPrint('ℹ️ [Interceptor] Erro não é 401, repassando...');
       handler.next(err);
       return;
     }
@@ -66,7 +66,7 @@ class RefreshInterceptor extends QueuedInterceptor {
     // Verifica se a requisição realmente requer autenticação
     final bool requiresAuth = err.requestOptions.extra['requiresAuth'] ?? true;
     if (!requiresAuth) {
-      print('ℹ️ [Interceptor] Requisição não requer auth, ignorando refresh');
+      debugPrint('ℹ️ [Interceptor] Requisição não requer auth, ignorando refresh');
       handler.next(err);
       return;
     }
@@ -74,8 +74,8 @@ class RefreshInterceptor extends QueuedInterceptor {
     // Evita loop infinito
     final requestKey = '${err.requestOptions.path}:${err.requestOptions.method}';
     if (_refreshAttempts.contains(requestKey)) {
-      print('🔄 [Interceptor] JÁ TENTOU REFRESH PARA ESTA REQUISIÇÃO: $requestKey');
-      print('🚫 [Interceptor] Abortando e redirecionando para login');
+      debugPrint('🔄 [Interceptor] JÁ TENTOU REFRESH PARA ESTA REQUISIÇÃO: $requestKey');
+      debugPrint('🚫 [Interceptor] Abortando e redirecionando para login');
       _refreshAttempts.remove(requestKey);
       _redirectToLogin(showMessage: true);
       handler.next(err);
@@ -83,52 +83,52 @@ class RefreshInterceptor extends QueuedInterceptor {
     }
 
     _refreshAttempts.add(requestKey);
-    print('🔄 [Interceptor] Token 401 detectado, INICIANDO PROCESSO DE REFRESH...');
-    print('🔄 [Interceptor] RequestKey: $requestKey');
-    print('🔄 [Interceptor] Refresh token disponível? ${_tokenService.getRefreshToken() != null}');
+    debugPrint('🔄 [Interceptor] Token 401 detectado, INICIANDO PROCESSO DE REFRESH...');
+    debugPrint('🔄 [Interceptor] RequestKey: $requestKey');
+    debugPrint('🔄 [Interceptor] Refresh token disponível? ${_tokenService.getRefreshToken() != null}');
 
     try {
       // Verifica se tem refresh token
       final hasRefreshToken = _tokenService.getRefreshToken() != null;
       if (!hasRefreshToken) {
-        print('❌ [Interceptor] SEM REFRESH TOKEN DISPONÍVEL!');
+        debugPrint('❌ [Interceptor] SEM REFRESH TOKEN DISPONÍVEL!');
         _refreshAttempts.remove(requestKey);
         _redirectToLogin(showMessage: true);
         handler.next(err);
         return;
       }
 
-      print('🔄 [Interceptor] Chamando TokenService.refreshToken()...');
+      debugPrint('🔄 [Interceptor] Chamando TokenService.refreshToken()...');
       final success = await _tokenService.refreshToken(_dio);
 
       if (success) {
-        print('✅ [Interceptor] REFRESH BEM-SUCEDIDO! Novo token obtido.');
+        debugPrint('✅ [Interceptor] REFRESH BEM-SUCEDIDO! Novo token obtido.');
 
         final newHeaders = _tokenService.getAuthHeader();
-        print('✅ [Interceptor] Novo token: ${newHeaders.toString().substring(0, 30)}...');
+        debugPrint('✅ [Interceptor] Novo token: ${newHeaders.toString().substring(0, 30)}...');
 
         // Reconfigura a requisição original
         final newRequest = err.requestOptions;
         newRequest.headers.addAll(newHeaders);
 
-        print('🔄 [Interceptor] Refazendo requisição original: ${newRequest.path}');
+        debugPrint('🔄 [Interceptor] Refazendo requisição original: ${newRequest.path}');
 
         // Refaz a requisição
         final response = await _dio.fetch(newRequest);
 
         // Limpa o cache
         _refreshAttempts.remove(requestKey);
-        print('✅ [Interceptor] REQUISIÇÃO ORIGINAL BEM-SUCEDIDA APÓS REFRESH');
+        debugPrint('✅ [Interceptor] REQUISIÇÃO ORIGINAL BEM-SUCEDIDA APÓS REFRESH');
 
         handler.resolve(response);
       } else {
-        print('❌ [Interceptor] REFRESH FALHOU! Token não renovado.');
+        debugPrint('❌ [Interceptor] REFRESH FALHOU! Token não renovado.');
         _refreshAttempts.remove(requestKey);
         _redirectToLogin(showMessage: true);
         handler.next(err);
       }
     } catch (e) {
-      print('❌ [Interceptor] EXCEÇÃO NO PROCESSO DE REFRESH: $e');
+      debugPrint('❌ [Interceptor] EXCEÇÃO NO PROCESSO DE REFRESH: $e');
       _refreshAttempts.remove(requestKey);
       _redirectToLogin(showMessage: true);
       handler.next(err);
@@ -136,38 +136,38 @@ class RefreshInterceptor extends QueuedInterceptor {
   }
 
   void _redirectToLogin({bool showMessage = true}) {
-    print('🚪 [Interceptor] ========== REDIRECIONANDO PARA LOGIN ==========');
-    print('🚪 [Interceptor] Limpando tokens...');
+    debugPrint('🚪 [Interceptor] ========== REDIRECIONANDO PARA LOGIN ==========');
+    debugPrint('🚪 [Interceptor] Limpando tokens...');
 
     _tokenService.clearTokens();
 
-    print('🚪 [Interceptor] Tokens limpos, agendando redirecionamento...');
+    debugPrint('🚪 [Interceptor] Tokens limpos, agendando redirecionamento...');
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      print('🚪 [Interceptor] Executando redirecionamento no próximo frame...');
+      debugPrint('🚪 [Interceptor] Executando redirecionamento no próximo frame...');
 
       final navigator = _navigatorKey.currentState;
       if (navigator != null) {
-        print('✅ [Interceptor] Navigator encontrado, redirecionando...');
+        debugPrint('✅ [Interceptor] Navigator encontrado, redirecionando...');
 
         final context = _navigatorKey.currentContext;
         if (context != null) {
           try {
-            print('🚪 [Interceptor] Chamando AuthCubit.logout()...');
+            debugPrint('🚪 [Interceptor] Chamando AuthCubit.logout()...');
             context.read<AuthCubit>().logout();
-            print('✅ [Interceptor] AuthCubit.logout() executado');
+            debugPrint('✅ [Interceptor] AuthCubit.logout() executado');
           } catch (e) {
-            print('⚠️ [Interceptor] Erro ao acessar AuthCubit: $e');
+            debugPrint('⚠️ [Interceptor] Erro ao acessar AuthCubit: $e');
           }
         } else {
-          print('⚠️ [Interceptor] Context é null, pulando AuthCubit.logout()');
+          debugPrint('⚠️ [Interceptor] Context é null, pulando AuthCubit.logout()');
         }
 
         navigator.pushNamedAndRemoveUntil(
           Routes.LOGIN,
               (route) => false,
         );
-        print('✅ [Interceptor] Navegação para login executada');
+        debugPrint('✅ [Interceptor] Navegação para login executada');
 
         if (showMessage) {
           try {
@@ -180,14 +180,14 @@ class RefreshInterceptor extends QueuedInterceptor {
                   duration: Duration(seconds: 3),
                 ),
               );
-              print('✅ [Interceptor] SnackBar exibido');
+              debugPrint('✅ [Interceptor] SnackBar exibido');
             }
           } catch (e) {
-            print('⚠️ [Interceptor] Erro ao mostrar SnackBar: $e');
+            debugPrint('⚠️ [Interceptor] Erro ao mostrar SnackBar: $e');
           }
         }
       } else {
-        print('❌ [Interceptor] NAVIGATOR NÃO ENCONTRADO!');
+        debugPrint('❌ [Interceptor] NAVIGATOR NÃO ENCONTRADO!');
       }
     });
   }
