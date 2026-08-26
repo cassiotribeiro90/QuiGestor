@@ -280,7 +280,7 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
     final id = widget.lojaId ?? widget.loja?.id;
     if (id == null) return;
 
-    context.push(Routes.lojaProdutos(id));
+    context.go(Routes.lojaProdutos(id));
   }
 
   @override

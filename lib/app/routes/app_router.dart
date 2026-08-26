@@ -12,7 +12,7 @@ import '../modules/lojas/views/loja_form_screen.dart';
 import '../modules/lojistas/bloc/lojistas_cubit.dart';
 import '../modules/lojistas/views/lojistas_list_page.dart';
 import '../modules/lojistas/views/lojista_form_page.dart';
-import '../modules/lojistas/bloc/lojista_form_cubit.dart'; // 🔥 ADICIONADO
+import '../modules/lojistas/bloc/lojista_form_cubit.dart';
 import '../modules/gestores/bloc/gestores_cubit.dart';
 import '../modules/gestores/views/gestores_list_screen.dart';
 import '../modules/gestores/views/gestor_form_screen.dart';
@@ -44,7 +44,7 @@ final GoRouter appRouter = GoRouter(
   debugLogDiagnostics: true,
   routes: [
     // ============================================================
-    // ROTAS PÚBLICAS
+    // ROTAS PÚBLICAS (fora do Shell)
     // ============================================================
     GoRoute(
       path: '/splash',
@@ -64,7 +64,7 @@ final GoRouter appRouter = GoRouter(
     ),
 
     // ============================================================
-    // ROTAS PROTEGIDAS (com ShellRoute)
+    // ROTAS PROTEGIDAS (todas filhas diretas da ShellRoute)
     // ============================================================
     ShellRoute(
       navigatorKey: _shellNavigatorKey,
@@ -77,6 +77,7 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: '/dashboard',
           name: 'dashboard',
+          parentNavigatorKey: _shellNavigatorKey,
           builder: (context, state) {
             debugPrint('📊 [ROUTER] Abrindo Dashboard');
             return BlocProvider(
@@ -90,6 +91,7 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: '/gestores',
           name: 'gestores',
+          parentNavigatorKey: _shellNavigatorKey,
           builder: (context, state) {
             debugPrint('👤 [ROUTER] Abrindo Gestores');
             return BlocProvider(
@@ -97,38 +99,38 @@ final GoRouter appRouter = GoRouter(
               child: const GestoresListScreen(),
             );
           },
-          routes: [
-            GoRoute(
-              path: 'novo',
-              name: 'gestor-novo',
-              builder: (context, state) {
-                debugPrint('➕ [ROUTER] Criando novo Gestor');
-                // 🔥 Usa GestoresCubit (já tem create/update)
-                return BlocProvider(
-                  create: (context) => GestoresCubit(context.read<ApiClient>()),
-                  child: const GestorFormScreen(),
-                );
-              },
-            ),
-            GoRoute(
-              path: ':id',
-              name: 'gestor-editar',
-              builder: (context, state) {
-                final id = int.parse(state.pathParameters['id']!);
-                debugPrint('✏️ [ROUTER] Editando Gestor ID: $id');
-                return BlocProvider(
-                  create: (context) => GestoresCubit(context.read<ApiClient>()),
-                  child: GestorFormScreen(gestorId: id),
-                );
-              },
-            ),
-          ],
+        ),
+        GoRoute(
+          path: '/gestores/novo',
+          name: 'gestor-novo',
+          parentNavigatorKey: _shellNavigatorKey,
+          builder: (context, state) {
+            debugPrint('➕ [ROUTER] Criando novo Gestor');
+            return BlocProvider(
+              create: (context) => GestoresCubit(context.read<ApiClient>()),
+              child: const GestorFormScreen(),
+            );
+          },
+        ),
+        GoRoute(
+          path: '/gestores/:id',
+          name: 'gestor-editar',
+          parentNavigatorKey: _shellNavigatorKey,
+          builder: (context, state) {
+            final id = int.parse(state.pathParameters['id']!);
+            debugPrint('✏️ [ROUTER] Editando Gestor ID: $id');
+            return BlocProvider(
+              create: (context) => GestoresCubit(context.read<ApiClient>()),
+              child: GestorFormScreen(gestorId: id),
+            );
+          },
         ),
 
         // ---------- LOJISTAS ----------
         GoRoute(
           path: '/lojistas',
           name: 'lojistas',
+          parentNavigatorKey: _shellNavigatorKey,
           builder: (context, state) {
             debugPrint('👥 [ROUTER] Abrindo Lojistas');
             return BlocProvider(
@@ -136,38 +138,38 @@ final GoRouter appRouter = GoRouter(
               child: const LojistasListPage(),
             );
           },
-          routes: [
-            GoRoute(
-              path: 'novo',
-              name: 'lojista-novo',
-              builder: (context, state) {
-                debugPrint('➕ [ROUTER] Criando novo Lojista');
-                // 🔥 Usa LojistaFormCubit (específico para o formulário)
-                return BlocProvider(
-                  create: (context) => getIt<LojistaFormCubit>(),
-                  child: const LojistaFormPage(),
-                );
-              },
-            ),
-            GoRoute(
-              path: ':id',
-              name: 'lojista-editar',
-              builder: (context, state) {
-                final id = int.parse(state.pathParameters['id']!);
-                debugPrint('✏️ [ROUTER] Editando Lojista ID: $id');
-                return BlocProvider(
-                  create: (context) => getIt<LojistaFormCubit>(),
-                  child: LojistaFormPage(id: id),
-                );
-              },
-            ),
-          ],
+        ),
+        GoRoute(
+          path: '/lojistas/novo',
+          name: 'lojista-novo',
+          parentNavigatorKey: _shellNavigatorKey,
+          builder: (context, state) {
+            debugPrint('➕ [ROUTER] Criando novo Lojista');
+            return BlocProvider(
+              create: (context) => getIt<LojistaFormCubit>(),
+              child: const LojistaFormPage(),
+            );
+          },
+        ),
+        GoRoute(
+          path: '/lojistas/:id',
+          name: 'lojista-editar',
+          parentNavigatorKey: _shellNavigatorKey,
+          builder: (context, state) {
+            final id = int.parse(state.pathParameters['id']!);
+            debugPrint('✏️ [ROUTER] Editando Lojista ID: $id');
+            return BlocProvider(
+              create: (context) => getIt<LojistaFormCubit>(),
+              child: LojistaFormPage(id: id),
+            );
+          },
         ),
 
         // ---------- CLIENTES (placeholder) ----------
         GoRoute(
           path: '/clientes',
           name: 'clientes',
+          parentNavigatorKey: _shellNavigatorKey,
           builder: (context, state) {
             debugPrint('👤 [ROUTER] Abrindo Clientes');
             return const Scaffold(
@@ -180,6 +182,7 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: '/lojas',
           name: 'lojas',
+          parentNavigatorKey: _shellNavigatorKey,
           builder: (context, state) {
             debugPrint('🏪 [ROUTER] Abrindo Lojas');
             return BlocProvider(
@@ -187,95 +190,97 @@ final GoRouter appRouter = GoRouter(
               child: const LojasListScreen(),
             );
           },
-          routes: [
-            GoRoute(
-              path: 'novo',
-              name: 'loja-novo',
-              builder: (context, state) {
-                debugPrint('➕ [ROUTER] Criando nova Loja');
-                return BlocProvider(
-                  create: (context) => LojasCubit(context.read<ApiClient>()),
-                  child: const LojaFormScreen(),
-                );
-              },
-            ),
-            GoRoute(
-              path: ':id',
-              name: 'loja-editar',
-              builder: (context, state) {
-                final id = int.parse(state.pathParameters['id']!);
-                debugPrint('✏️ [ROUTER] Editando Loja ID: $id');
-                return BlocProvider(
-                  create: (context) => LojasCubit(context.read<ApiClient>()),
-                  child: LojaFormScreen(lojaId: id),
-                );
-              },
-            ),
-            // 🔥 ROTA: Produtos da loja (lista)
-            GoRoute(
-              path: ':id/produtos',
-              name: 'loja-produtos',
-              builder: (context, state) {
-                final id = int.parse(state.pathParameters['id']!);
-                debugPrint('📦 [ROUTER] Abrindo Produtos da Loja ID: $id');
-                return BlocProvider(
-                  create: (context) => ProdutosCubit(
-                    context.read<ApiClient>(),
-                    id,
-                  ),
-                  child: ProdutosListScreen(
-                    lojaId: id,
-                    lojaNome: '',
-                  ),
-                );
-              },
-              routes: [
-                // 🔥 ROTA: Produto (novo)
-                GoRoute(
-                  path: 'novo',
-                  name: 'produto-novo',
-                  builder: (context, state) {
-                    final lojaId = int.parse(state.pathParameters['id']!);
-                    debugPrint('➕ [ROUTER] Criando novo Produto para Loja ID: $lojaId');
-                    return BlocProvider(
-                      create: (context) => ProdutoCubit(
-                        context.read<ApiClient>(),
-                      )..loadInitialData(produtoId: null),
-                      child: ProdutoFormScreen(
-                        produtoId: null,
-                        initialLojaId: lojaId,
-                      ),
-                    );
-                  },
-                ),
-                // 🔥 ROTA: Produto (editar)
-                GoRoute(
-                  path: ':produtoId',
-                  name: 'produto-editar',
-                  builder: (context, state) {
-                    final lojaId = int.parse(state.pathParameters['id']!);
-                    final produtoId = int.parse(state.pathParameters['produtoId']!);
-                    debugPrint('✏️ [ROUTER] Editando Produto ID: $produtoId da Loja ID: $lojaId');
-                    return BlocProvider(
-                      create: (context) => ProdutoCubit(
-                        context.read<ApiClient>(),
-                      )..loadInitialData(produtoId: produtoId),
-                      child: ProdutoFormScreen(
-                        produtoId: produtoId,
-                        initialLojaId: lojaId,
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ],
+        ),
+        GoRoute(
+          path: '/lojas/novo',
+          name: 'loja-novo',
+          parentNavigatorKey: _shellNavigatorKey,
+          builder: (context, state) {
+            debugPrint('➕ [ROUTER] Criando nova Loja');
+            return BlocProvider(
+              create: (context) => LojasCubit(context.read<ApiClient>()),
+              child: const LojaFormScreen(),
+            );
+          },
+        ),
+        GoRoute(
+          path: '/lojas/:id',
+          name: 'loja-editar',
+          parentNavigatorKey: _shellNavigatorKey,
+          builder: (context, state) {
+            final id = int.parse(state.pathParameters['id']!);
+            debugPrint('✏️ [ROUTER] Editando Loja ID: $id');
+            return BlocProvider(
+              create: (context) => LojasCubit(context.read<ApiClient>()),
+              child: LojaFormScreen(lojaId: id),
+            );
+          },
+        ),
+        // Produtos da loja (lista)
+        GoRoute(
+          path: '/lojas/:id/produtos',
+          name: 'loja-produtos',
+          parentNavigatorKey: _shellNavigatorKey,
+          builder: (context, state) {
+            final id = int.parse(state.pathParameters['id']!);
+            debugPrint('📦 [ROUTER] Abrindo Produtos da Loja ID: $id');
+            return BlocProvider(
+              create: (context) => ProdutosCubit(
+                context.read<ApiClient>(),
+                id,
+              ),
+              child: ProdutosListScreen(
+                lojaId: id,
+                lojaNome: '',
+              ),
+            );
+          },
+        ),
+        // Produto - Novo
+        GoRoute(
+          path: '/lojas/:id/produtos/novo',
+          name: 'produto-novo',
+          parentNavigatorKey: _shellNavigatorKey,
+          builder: (context, state) {
+            final lojaId = int.parse(state.pathParameters['id']!);
+            debugPrint('➕ [ROUTER] Criando novo Produto para Loja ID: $lojaId');
+            return BlocProvider(
+              create: (context) => ProdutoCubit(
+                context.read<ApiClient>(),
+              )..loadInitialData(produtoId: null),
+              child: ProdutoFormScreen(
+                produtoId: null,
+                initialLojaId: lojaId,
+              ),
+            );
+          },
+        ),
+        // Produto - Editar
+        GoRoute(
+          path: '/lojas/:id/produtos/:produtoId',
+          name: 'produto-editar',
+          parentNavigatorKey: _shellNavigatorKey,
+          builder: (context, state) {
+            final lojaId = int.parse(state.pathParameters['id']!);
+            final produtoId = int.parse(state.pathParameters['produtoId']!);
+            debugPrint('✏️ [ROUTER] Editando Produto ID: $produtoId da Loja ID: $lojaId');
+            return BlocProvider(
+              create: (context) => ProdutoCubit(
+                context.read<ApiClient>(),
+              )..loadInitialData(produtoId: produtoId),
+              child: ProdutoFormScreen(
+                produtoId: produtoId,
+                initialLojaId: lojaId,
+              ),
+            );
+          },
         ),
 
         // ---------- CATEGORIAS ----------
         GoRoute(
           path: '/categorias',
           name: 'categorias',
+          parentNavigatorKey: _shellNavigatorKey,
           builder: (context, state) {
             debugPrint('📋 [ROUTER] Abrindo Categorias');
             return BlocProvider(
@@ -283,37 +288,38 @@ final GoRouter appRouter = GoRouter(
               child: const CategoriasListScreen(),
             );
           },
-          routes: [
-            GoRoute(
-              path: 'novo',
-              name: 'categoria-novo',
-              builder: (context, state) {
-                debugPrint('➕ [ROUTER] Criando nova Categoria');
-                return BlocProvider(
-                  create: (context) => CategoriasCubit(context.read<ApiClient>()),
-                  child: const CategoriaFormScreen(),
-                );
-              },
-            ),
-            GoRoute(
-              path: ':id',
-              name: 'categoria-editar',
-              builder: (context, state) {
-                final id = int.parse(state.pathParameters['id']!);
-                debugPrint('✏️ [ROUTER] Editando Categoria ID: $id');
-                return BlocProvider(
-                  create: (context) => CategoriasCubit(context.read<ApiClient>()),
-                  child: CategoriaFormScreen(categoriaId: id),
-                );
-              },
-            ),
-          ],
+        ),
+        GoRoute(
+          path: '/categorias/novo',
+          name: 'categoria-novo',
+          parentNavigatorKey: _shellNavigatorKey,
+          builder: (context, state) {
+            debugPrint('➕ [ROUTER] Criando nova Categoria');
+            return BlocProvider(
+              create: (context) => CategoriasCubit(context.read<ApiClient>()),
+              child: const CategoriaFormScreen(),
+            );
+          },
+        ),
+        GoRoute(
+          path: '/categorias/:id',
+          name: 'categoria-editar',
+          parentNavigatorKey: _shellNavigatorKey,
+          builder: (context, state) {
+            final id = int.parse(state.pathParameters['id']!);
+            debugPrint('✏️ [ROUTER] Editando Categoria ID: $id');
+            return BlocProvider(
+              create: (context) => CategoriasCubit(context.read<ApiClient>()),
+              child: CategoriaFormScreen(categoriaId: id),
+            );
+          },
         ),
 
         // ---------- SUBCATEGORIAS ----------
         GoRoute(
           path: '/subcategorias',
           name: 'subcategorias',
+          parentNavigatorKey: _shellNavigatorKey,
           builder: (context, state) {
             debugPrint('📂 [ROUTER] Abrindo Subcategorias');
             return MultiBlocProvider(
@@ -324,43 +330,44 @@ final GoRouter appRouter = GoRouter(
               child: const SubcategoriasListScreen(),
             );
           },
-          routes: [
-            GoRoute(
-              path: 'novo',
-              name: 'subcategoria-novo',
-              builder: (context, state) {
-                debugPrint('➕ [ROUTER] Criando nova Subcategoria');
-                return MultiBlocProvider(
-                  providers: [
-                    BlocProvider(create: (context) => getIt<SubcategoriaCubit>()),
-                    BlocProvider(create: (context) => CategoriasCubit(context.read<ApiClient>())..fetchCategorias()),
-                  ],
-                  child: const SubcategoriaFormScreen(),
-                );
-              },
-            ),
-            GoRoute(
-              path: ':id',
-              name: 'subcategoria-editar',
-              builder: (context, state) {
-                final id = int.parse(state.pathParameters['id']!);
-                debugPrint('✏️ [ROUTER] Editando Subcategoria ID: $id');
-                return MultiBlocProvider(
-                  providers: [
-                    BlocProvider(create: (context) => getIt<SubcategoriaCubit>()),
-                    BlocProvider(create: (context) => CategoriasCubit(context.read<ApiClient>())..fetchCategorias()),
-                  ],
-                  child: SubcategoriaFormScreen(subcategoriaId: id),
-                );
-              },
-            ),
-          ],
+        ),
+        GoRoute(
+          path: '/subcategorias/novo',
+          name: 'subcategoria-novo',
+          parentNavigatorKey: _shellNavigatorKey,
+          builder: (context, state) {
+            debugPrint('➕ [ROUTER] Criando nova Subcategoria');
+            return MultiBlocProvider(
+              providers: [
+                BlocProvider(create: (context) => getIt<SubcategoriaCubit>()),
+                BlocProvider(create: (context) => CategoriasCubit(context.read<ApiClient>())..fetchCategorias()),
+              ],
+              child: const SubcategoriaFormScreen(),
+            );
+          },
+        ),
+        GoRoute(
+          path: '/subcategorias/:id',
+          name: 'subcategoria-editar',
+          parentNavigatorKey: _shellNavigatorKey,
+          builder: (context, state) {
+            final id = int.parse(state.pathParameters['id']!);
+            debugPrint('✏️ [ROUTER] Editando Subcategoria ID: $id');
+            return MultiBlocProvider(
+              providers: [
+                BlocProvider(create: (context) => getIt<SubcategoriaCubit>()),
+                BlocProvider(create: (context) => CategoriasCubit(context.read<ApiClient>())..fetchCategorias()),
+              ],
+              child: SubcategoriaFormScreen(subcategoriaId: id),
+            );
+          },
         ),
 
         // ---------- PEDIDOS ----------
         GoRoute(
           path: '/pedidos',
           name: 'pedidos',
+          parentNavigatorKey: _shellNavigatorKey,
           builder: (context, state) {
             debugPrint('📦 [ROUTER] Abrindo Pedidos');
             return BlocProvider(
@@ -368,26 +375,26 @@ final GoRouter appRouter = GoRouter(
               child: const PedidosListScreen(),
             );
           },
-          routes: [
-            GoRoute(
-              path: ':id',
-              name: 'pedido-detalhe',
-              builder: (context, state) {
-                final id = int.parse(state.pathParameters['id']!);
-                debugPrint('📄 [ROUTER] Abrindo Detalhe do Pedido ID: $id');
-                return BlocProvider(
-                  create: (context) => PedidosCubit(context.read<ApiClient>()),
-                  child: PedidoDetailScreen(pedidoId: id),
-                );
-              },
-            ),
-          ],
+        ),
+        GoRoute(
+          path: '/pedidos/:id',
+          name: 'pedido-detalhe',
+          parentNavigatorKey: _shellNavigatorKey,
+          builder: (context, state) {
+            final id = int.parse(state.pathParameters['id']!);
+            debugPrint('📄 [ROUTER] Abrindo Detalhe do Pedido ID: $id');
+            return BlocProvider(
+              create: (context) => PedidosCubit(context.read<ApiClient>()),
+              child: PedidoDetailScreen(pedidoId: id),
+            );
+          },
         ),
 
         // ---------- CONFIGURAÇÕES ----------
         GoRoute(
           path: '/configuracoes',
           name: 'configuracoes',
+          parentNavigatorKey: _shellNavigatorKey,
           builder: (context, state) {
             debugPrint('⚙️ [ROUTER] Abrindo Configurações');
             return const SettingsScreen();

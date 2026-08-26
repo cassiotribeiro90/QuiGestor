@@ -40,9 +40,9 @@ class _LojistasListPageState extends State<LojistasListPage> {
   // 🔥 CORRIGIDO: Usando GoRouter
   void _navegarParaForm(BuildContext context, [int? id]) {
     if (id != null) {
-      context.push(Routes.lojistaEditar(id));
+      context.go(Routes.lojistaEditar(id));
     } else {
-      context.push(Routes.lojistaNovo);
+      context.go(Routes.lojistaNovo);
     }
   }
 

@@ -37,9 +37,9 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
 
   void _navegarParaForm({int? produtoId}) {
     if (produtoId != null) {
-      context.push(Routes.produtoEditar(widget.lojaId, produtoId));
+      context.go(Routes.produtoEditar(widget.lojaId, produtoId));
     } else {
-      context.push(Routes.produtoNovo(widget.lojaId));
+      context.go(Routes.produtoNovo(widget.lojaId));
     }
   }
 

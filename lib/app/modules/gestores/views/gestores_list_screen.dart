@@ -297,9 +297,9 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
   // Substitua a função inteira por:
   void _abrirFormGestor(BuildContext context, {Gestor? gestor}) {
     if (gestor != null) {
-      context.push(Routes.gestorEditar(gestor.id));
+      context.go(Routes.gestorEditar(gestor.id));
     } else {
-      context.push(Routes.gestorNovo);
+      context.go(Routes.gestorNovo);
     }
   }
 

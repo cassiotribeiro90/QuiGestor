@@ -87,9 +87,9 @@ class _LojasListScreenState extends State<LojasListScreen> {
   // 🔥 CORRIGIDO: Usando GoRouter
   void _abrirFormLoja(BuildContext context, {Loja? loja}) {
     if (loja != null) {
-      context.push(Routes.lojaEditar(loja.id));
+      context.go(Routes.lojaEditar(loja.id));
     } else {
-      context.push(Routes.lojaNovo);
+      context.go(Routes.lojaNovo);
     }
   }
 

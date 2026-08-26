@@ -43,9 +43,9 @@ class _SubcategoriasListScreenState extends State<SubcategoriasListScreen> {
   // 🔥 CORRIGIDO: Usando GoRouter
   void _abrirFormSubcategoria(BuildContext context, {Subcategoria? subcategoria}) {
     if (subcategoria != null) {
-      context.push(Routes.subcategoriaEditar(subcategoria.id));
+      context.go(Routes.subcategoriaEditar(subcategoria.id));
     } else {
-      context.push(Routes.subcategoriaNovo);
+      context.go(Routes.subcategoriaNovo);
     }
   }
 

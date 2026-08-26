@@ -199,7 +199,7 @@ class LojaCardItem extends StatelessWidget {
                       ),
                       onPressed: () {
                         // Navegar para a tela de produtos da loja
-                        context.push('/lojas/${loja.id}/produtos');
+                        context.go('/lojas/${loja.id}/produtos');
                       },
                       iconSize: 22,
                     ),

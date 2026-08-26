@@ -154,9 +154,9 @@ class _CategoriasListScreenState extends State<CategoriasListScreen> {
   // ✅ SUBSTITUA a função inteira por:
   void _abrirFormCategoria(BuildContext context, {Categoria? categoria}) {
     if (categoria != null) {
-      context.push('/categorias/${categoria.id}');
+      context.go('/categorias/${categoria.id}');
     } else {
-      context.push('/categorias/novo');
+      context.go('/categorias/novo');
     }
   }
 }

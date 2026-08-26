@@ -226,7 +226,7 @@ class _PedidosListScreenState extends State<PedidosListScreen> {
               child: _PedidoCard(
                 pedido: pedido,
                 onTap: () {
-                  context.push('/pedidos/${pedido.id}');
+                  context.go('/pedidos/${pedido.id}');
                 },
               ),
             );
