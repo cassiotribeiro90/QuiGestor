@@ -141,8 +141,7 @@ class _LojistasListPageState extends State<LojistasListPage> {
             return RepaintBoundary(
               child: LojistaCard(
                 lojista: lojista,
-                onEdit: () => _navegarParaForm(context, lojista.id),
-                onDelete: () => _confirmarExclusao(context, lojista.id),
+                onTap: () => _navegarParaForm(context, lojista.id),
               ),
             );
           },

@@ -50,10 +50,17 @@ class LojaCardItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final statusColor = _getStatusColor();
-    final String? logoUrl = (loja.logo != null && loja.logo!.isNotEmpty) 
-        ? _ajustarUrl(loja.logo!) 
+    final String? logoUrl = (loja.logo != null && loja.logo!.isNotEmpty)
+        ? _ajustarUrl(loja.logo!)
         : null;
+
+    // Cores adaptativas para dark/light
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtitleColor = isDark ? Colors.grey[400] : Colors.grey[700];
+    final iconColor = isDark ? Colors.grey[400] : Colors.grey[700];
+    final chevronColor = isDark ? Colors.grey[500] : Colors.grey[400];
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -63,6 +70,7 @@ class LojaCardItem extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Avatar com logo ou emoji
             Container(
               width: 48,
               height: 48,
@@ -73,25 +81,35 @@ class LojaCardItem extends StatelessWidget {
               child: Center(
                 child: logoUrl != null
                     ? ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.network(
-                          logoUrl,
-                          width: 48,
-                          height: 48,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => TextH3(loja.categoriaEmoji, textAlign: TextAlign.center),
-                        )
-                    )
-                    : TextH3(loja.categoriaEmoji, textAlign: TextAlign.center),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    logoUrl,
+                    width: 48,
+                    height: 48,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => TextH3(
+                      loja.categoriaEmoji,
+                      textAlign: TextAlign.center,
+                      color: textColor,
+                    ),
+                  ),
+                )
+                    : TextH3(
+                  loja.categoriaEmoji,
+                  textAlign: TextAlign.center,
+                  color: textColor,
+                ),
               ),
             ),
-            
+
             const SizedBox(width: 12),
 
+            // Conteúdo principal
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Nome, destaque e status
                   Row(
                     children: [
                       Expanded(
@@ -99,62 +117,103 @@ class LojaCardItem extends StatelessWidget {
                           loja.nome,
                           maxLines: 1,
                           fontWeight: FontWeight.w600,
+                          color: textColor,
                         ),
                       ),
                       if (loja.destaque) ...[
                         Container(
                           margin: const EdgeInsets.only(right: 4),
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(color: Colors.amber.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-                          child: const TextBody3('⭐'),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: TextBody3(
+                            '⭐',
+                            color: isDark ? Colors.amber[300] : Colors.amber[700],
+                          ),
                         ),
                       ],
                       LojaStatusChip(status: loja.status),
                     ],
                   ),
                   const SizedBox(height: 4),
+
+                  // Categoria
                   Row(
                     children: [
-                      Icon(Icons.category_outlined, size: 13, color: Colors.grey[600]),
+                      Icon(
+                        Icons.category_outlined,
+                        size: 13,
+                        color: iconColor,
+                      ),
                       const SizedBox(width: 4),
-                      Expanded(child: TextBody3(loja.categoriaNome, color: Colors.grey[600])),
+                      Expanded(
+                        child: TextBody3(
+                          loja.categoriaNome,
+                          color: subtitleColor,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 2),
+
+                  // Tempo de entrega e pedido mínimo
                   Row(
                     children: [
-                      Icon(Icons.access_time_outlined, size: 13, color: Colors.grey[600]),
+                      Icon(
+                        Icons.access_time_outlined,
+                        size: 13,
+                        color: iconColor,
+                      ),
                       const SizedBox(width: 4),
-                      TextBody3(_formatarTempoEntrega(), color: Colors.grey[600]),
+                      TextBody3(
+                        _formatarTempoEntrega(),
+                        color: subtitleColor,
+                      ),
                       const SizedBox(width: 12),
-                      Icon(Icons.attach_money_outlined, size: 13, color: Colors.grey[600]),
+                      Icon(
+                        Icons.attach_money_outlined,
+                        size: 13,
+                        color: iconColor,
+                      ),
                       const SizedBox(width: 4),
-                      TextBody3('R\$ ${loja.pedidoMinimo.toStringAsFixed(2)}', color: Colors.grey[600], fontWeight: FontWeight.w500),
+                      TextBody3(
+                        'R\$ ${loja.pedidoMinimo.toStringAsFixed(2)}',
+                        color: subtitleColor,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ],
                   ),
                 ],
               ),
             ),
-            
+
+            // Ações - botão de produtos e setinha
             Row(
               children: [
                 Stack(
                   clipBehavior: Clip.none,
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.restaurant_menu_outlined),
+                      icon: Icon(
+                        Icons.restaurant_menu_outlined,
+                        color: theme.colorScheme.primary,
+                      ),
                       onPressed: () {
                         final apiClient = context.read<ApiClient>();
                         Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (_) => BlocProvider(
                               create: (_) => ProdutosCubit(apiClient, loja.id),
-                              child: ProdutosListScreen(lojaId: loja.id, lojaNome: loja.nome),
+                              child: ProdutosListScreen(
+                                lojaId: loja.id,
+                                lojaNome: loja.nome,
+                              ),
                             ),
                           ),
                         );
                       },
-                      color: theme.colorScheme.primary,
                       iconSize: 22,
                     ),
                     if (loja.totalProdutos > 0)
@@ -163,14 +222,28 @@ class LojaCardItem extends StatelessWidget {
                         right: 4,
                         child: Container(
                           padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(color: theme.colorScheme.primary, shape: BoxShape.circle),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary,
+                            shape: BoxShape.circle,
+                          ),
                           constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                          child: Center(child: TextBody3('${loja.totalProdutos}', color: Colors.white, fontWeight: FontWeight.bold)),
+                          child: Center(
+                            child: TextBody3(
+                              '${loja.totalProdutos}',
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 10,
+                            ),
+                          ),
                         ),
                       ),
                   ],
                 ),
-                Icon(Icons.chevron_right_rounded, color: Colors.grey[400], size: 20),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: chevronColor,
+                  size: 20,
+                ),
               ],
             ),
           ],

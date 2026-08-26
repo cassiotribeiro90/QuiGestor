@@ -49,6 +49,9 @@ class _LojistaFormPageState extends State<LojistaFormPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.id != null ? 'Editar Lojista' : 'Novo Lojista'),
@@ -57,12 +60,24 @@ class _LojistaFormPageState extends State<LojistaFormPage> {
         listener: (context, state) {
           if (state is LojistaFormSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Salvo com sucesso!')),
+              SnackBar(
+                content: Text(
+                  'Salvo com sucesso!',
+                  style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+                ),
+                backgroundColor: Colors.green,
+              ),
             );
             Navigator.pop(context, true);
           } else if (state is LojistaFormError) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
+              SnackBar(
+                content: Text(
+                  state.message,
+                  style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+                ),
+                backgroundColor: Colors.red,
+              ),
             );
           }
         },
@@ -105,6 +120,8 @@ class _LojistaFormPageState extends State<LojistaFormPage> {
   }
 
   Widget _buildForm(BuildContext context, LojistaFormInitial state) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final isEdit = widget.id != null;
 
     return Form(
@@ -117,6 +134,7 @@ class _LojistaFormPageState extends State<LojistaFormPage> {
             TextFormField(
               controller: _nomeController,
               decoration: _inputDecoration(
+                context,
                 label: 'Nome *',
                 icon: Icons.person_outline,
               ),
@@ -128,6 +146,7 @@ class _LojistaFormPageState extends State<LojistaFormPage> {
             TextFormField(
               controller: _emailController,
               decoration: _inputDecoration(
+                context,
                 label: 'E-mail *',
                 icon: Icons.email_outlined,
               ),
@@ -144,6 +163,7 @@ class _LojistaFormPageState extends State<LojistaFormPage> {
             TextFormField(
               controller: _telefoneController,
               decoration: _inputDecoration(
+                context,
                 label: 'Telefone',
                 icon: Icons.phone_outlined,
               ),
@@ -154,6 +174,7 @@ class _LojistaFormPageState extends State<LojistaFormPage> {
             TextFormField(
               controller: _cpfCnpjController,
               decoration: _inputDecoration(
+                context,
                 label: 'CPF/CNPJ',
                 icon: Icons.badge_outlined,
               ),
@@ -164,18 +185,19 @@ class _LojistaFormPageState extends State<LojistaFormPage> {
               TextFormField(
                 controller: _senhaController,
                 decoration: _inputDecoration(
+                  context,
                   label: 'Senha',
                   icon: Icons.lock_outline,
                   hint: 'Deixe em branco para gerar automática',
                 ),
                 obscureText: true,
               ),
-
             const SizedBox(height: 16),
 
             DropdownButtonFormField<String>(
               initialValue: _funcao,
               decoration: _inputDecoration(
+                context,
                 label: 'Função *',
                 icon: Icons.work_outline,
               ),
@@ -186,12 +208,17 @@ class _LojistaFormPageState extends State<LojistaFormPage> {
               ],
               onChanged: (v) => setState(() => _funcao = v!),
               validator: (v) => v == null ? 'Selecione uma função' : null,
+              dropdownColor: isDark ? Colors.grey[800] : Colors.white,
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black87,
+              ),
             ),
             const SizedBox(height: 16),
 
             DropdownButtonFormField<int>(
               initialValue: _status,
               decoration: _inputDecoration(
+                context,
                 label: 'Status',
                 icon: Icons.circle_outlined,
               ),
@@ -200,23 +227,30 @@ class _LojistaFormPageState extends State<LojistaFormPage> {
                 DropdownMenuItem(value: 0, child: Text('Inativo')),
               ],
               onChanged: (v) => setState(() => _status = v!),
+              dropdownColor: isDark ? Colors.grey[800] : Colors.white,
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black87,
+              ),
             ),
-
             const SizedBox(height: 16),
 
             // Seleção de lojas via modal
-            _buildLojasField(state.lojas),
+            _buildLojasField(context, state.lojas),
           ],
         ),
       ),
     );
   }
 
-  InputDecoration _inputDecoration({
-    required String label,
-    IconData? icon,
-    String? hint,
-  }) {
+  InputDecoration _inputDecoration(
+      BuildContext context, {
+        required String label,
+        IconData? icon,
+        String? hint,
+      }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return InputDecoration(
       labelText: label,
       hintText: hint,
@@ -226,22 +260,32 @@ class _LojistaFormPageState extends State<LojistaFormPage> {
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide(color: Colors.grey.shade300),
+        borderSide: BorderSide(
+          color: isDark ? Colors.grey[600]! : Colors.grey.shade300,
+        ),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
         borderSide: BorderSide(
-          color: Theme.of(context).primaryColor,
+          color: theme.primaryColor,
           width: 2,
         ),
       ),
       filled: true,
-      fillColor: Colors.grey.shade50,
+      fillColor: isDark ? Colors.grey[800] : Colors.grey.shade50,
+      labelStyle: TextStyle(
+        color: isDark ? Colors.grey[400] : Colors.grey[700],
+      ),
+      hintStyle: TextStyle(
+        color: isDark ? Colors.grey[500] : Colors.grey[500],
+      ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
     );
   }
 
-  Widget _buildLojasField(List<LojaOptionModel> lojas) {
+  Widget _buildLojasField(BuildContext context, List<LojaOptionModel> lojas) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final selecionadas = lojas.where((l) => _lojasSelecionadas.contains(l.id)).toList();
 
     return InkWell(
@@ -249,6 +293,7 @@ class _LojistaFormPageState extends State<LojistaFormPage> {
       borderRadius: BorderRadius.circular(10),
       child: InputDecorator(
         decoration: _inputDecoration(
+          context,
           label: 'Lojas *',
           icon: Icons.store_outlined,
         ),
@@ -258,16 +303,25 @@ class _LojistaFormPageState extends State<LojistaFormPage> {
               child: selecionadas.isEmpty
                   ? Text(
                 'Selecione as lojas',
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                style: TextStyle(
+                  color: isDark ? Colors.grey[500] : Colors.grey.shade600,
+                  fontSize: 14,
+                ),
               )
                   : Text(
                 selecionadas.map((l) => l.nome).join(', '),
-                style: const TextStyle(fontSize: 13),
+                style: TextStyle(
+                  fontSize: 13,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            const Icon(Icons.arrow_drop_down, color: Colors.grey),
+            Icon(
+              Icons.arrow_drop_down,
+              color: isDark ? Colors.grey[400] : Colors.grey,
+            ),
           ],
         ),
       ),
@@ -300,8 +354,15 @@ class _LojistaFormPageState extends State<LojistaFormPage> {
     if (!_formKey.currentState!.validate()) return;
     if (_lojasSelecionadas.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Selecione pelo menos uma loja'),
+        SnackBar(
+          content: Text(
+            'Selecione pelo menos uma loja',
+            style: TextStyle(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white
+                  : Colors.black87,
+            ),
+          ),
           backgroundColor: Colors.orange,
         ),
       );
@@ -365,6 +426,9 @@ class _LojasSelectionModalState extends State<_LojasSelectionModal> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     final lojasFiltradas = _filtro.isEmpty
         ? widget.lojas
         : widget.lojas.where((loja) {
@@ -377,7 +441,11 @@ class _LojasSelectionModalState extends State<_LojasSelectionModal> {
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
-      child: SizedBox(
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark ? Colors.grey[900] : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
         height: MediaQuery.of(context).size.height * 0.7,
         child: Column(
           children: [
@@ -387,7 +455,7 @@ class _LojasSelectionModalState extends State<_LojasSelectionModal> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                color: isDark ? Colors.grey[600] : Colors.grey.shade300,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -399,12 +467,19 @@ class _LojasSelectionModalState extends State<_LojasSelectionModal> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Selecionar Lojas',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close),
+                    icon: Icon(
+                      Icons.close,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -416,12 +491,26 @@ class _LojasSelectionModalState extends State<_LojasSelectionModal> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: TextField(
                 controller: _filtroController,
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
                 decoration: InputDecoration(
                   hintText: 'Pesquisar lojas...',
-                  prefixIcon: const Icon(Icons.search, size: 20),
+                  hintStyle: TextStyle(
+                    color: isDark ? Colors.grey[500] : Colors.grey[500],
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    size: 20,
+                    color: isDark ? Colors.grey[400] : Colors.grey[600],
+                  ),
                   suffixIcon: _filtro.isNotEmpty
                       ? IconButton(
-                    icon: const Icon(Icons.clear, size: 18),
+                    icon: Icon(
+                      Icons.clear,
+                      size: 18,
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    ),
                     onPressed: () {
                       _filtroController.clear();
                       setState(() => _filtro = '');
@@ -430,8 +519,26 @@ class _LojasSelectionModalState extends State<_LojasSelectionModal> {
                       : null,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(
+                      color: isDark ? Colors.grey[600]! : Colors.grey.shade300,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(
+                      color: isDark ? Colors.grey[600]! : Colors.grey.shade300,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(
+                      color: theme.primaryColor,
+                      width: 2,
+                    ),
                   ),
                   isDense: true,
+                  filled: true,
+                  fillColor: isDark ? Colors.grey[800] : Colors.grey.shade50,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 ),
                 onChanged: (value) {
@@ -448,7 +555,10 @@ class _LojasSelectionModalState extends State<_LojasSelectionModal> {
                 children: [
                   Text(
                     '${_selecionadasTemp.length} de ${widget.lojas.length} selecionada(s)',
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark ? Colors.grey[400] : Colors.grey,
+                    ),
                   ),
                   TextButton(
                     onPressed: () {
@@ -462,7 +572,10 @@ class _LojasSelectionModalState extends State<_LojasSelectionModal> {
                     },
                     child: Text(
                       todasSelecionadas ? 'Desmarcar todas' : 'Selecionar todas',
-                      style: const TextStyle(fontSize: 12),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: theme.primaryColor,
+                      ),
                     ),
                   ),
                 ],
@@ -476,11 +589,17 @@ class _LojasSelectionModalState extends State<_LojasSelectionModal> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.search_off, size: 48, color: Colors.grey.shade400),
+                    Icon(
+                      Icons.search_off,
+                      size: 48,
+                      color: isDark ? Colors.grey[600] : Colors.grey.shade400,
+                    ),
                     const SizedBox(height: 8),
-                    const Text(
+                    Text(
                       'Nenhuma loja encontrada',
-                      style: TextStyle(color: Colors.grey),
+                      style: TextStyle(
+                        color: isDark ? Colors.grey[400] : Colors.grey,
+                      ),
                     ),
                   ],
                 ),
@@ -497,15 +616,17 @@ class _LojasSelectionModalState extends State<_LojasSelectionModal> {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: selecionada ? FontWeight.bold : FontWeight.normal,
+                        color: isDark ? Colors.white : Colors.black87,
                       ),
                     ),
                     secondary: Icon(
                       selecionada ? Icons.store : Icons.store_outlined,
                       size: 20,
-                      color: selecionada ? Theme.of(context).primaryColor : Colors.grey,
+                      color: selecionada ? theme.primaryColor : (isDark ? Colors.grey[500] : Colors.grey),
                     ),
                     value: selecionada,
-                    activeColor: Theme.of(context).primaryColor,
+                    activeColor: theme.primaryColor,
+                    checkColor: isDark ? Colors.white : Colors.black87,
                     onChanged: (selected) {
                       setState(() {
                         if (selected == true) {
