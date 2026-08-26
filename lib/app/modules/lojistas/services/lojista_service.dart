@@ -5,21 +5,15 @@ class LojistaService {
   LojistaService(this._apiClient);
 
   Future<Map<String, dynamic>> listar({
-    int? lojaId,
-    String? funcao,
-    int? status,
-    String? search,
     int page = 1,
     int perPage = 20,
+    Map<String, String>? filters,
   }) async {
     final query = <String, dynamic>{
       'page': page,
       'per_page': perPage,
+      if (filters != null) ...filters,
     };
-    if (lojaId != null) query['loja_id'] = lojaId;
-    if (funcao != null && funcao.isNotEmpty) query['funcao'] = funcao;
-    if (status != null) query['status'] = status;
-    if (search != null && search.isNotEmpty) query['search'] = search;
 
     final response = await _apiClient.get(
       '/gestor/store-usuarios',

@@ -9,9 +9,10 @@ import '../../../app_config.dart';
 import '../bloc/gestores_cubit.dart';
 import '../bloc/gestores_state.dart';
 import '../models/gestor.dart';
-import '../widgets/gestor_filters.dart';
 import 'gestor_form_screen.dart';
 import '../../../core/constants/icon_constants.dart';
+import '../../../models/filter_option.dart';
+import '../../../widgets/generic_filter_widget.dart';
 
 class GestoresListScreen extends StatefulWidget {
   const GestoresListScreen({super.key});
@@ -21,9 +22,7 @@ class GestoresListScreen extends StatefulWidget {
 }
 
 class _GestoresListScreenState extends State<GestoresListScreen> {
-  final _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  StreamSubscription? _gestoresSubscription;
 
   bool _isLoadingMore = false;
   bool _hasMorePages = true;
@@ -34,29 +33,12 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-
-    _gestoresSubscription = context.read<GestoresCubit>().stream.listen((_) {
-      _atualizarTextoFiltros();
-    });
   }
 
   @override
   void dispose() {
-    _gestoresSubscription?.cancel();
-    _searchController.dispose();
     _scrollController.dispose();
     super.dispose();
-  }
-
-  void _atualizarTextoFiltros() {
-    final cubit = context.read<GestoresCubit>();
-    final filtros = cubit.getFiltrosAtivosResumo();
-
-    if (mounted) {
-      setState(() {
-        _searchController.text = filtros;
-      });
-    }
   }
 
   void _resetPagination() {
@@ -96,63 +78,15 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
   }
 
   Future<void> _onRefresh() async {
-    _searchController.clear();
     _resetPagination();
     await context.read<GestoresCubit>().fetchGestores(perPage: _perPage);
   }
 
-  void _showFilters() {
-    final gestoresCubit = context.read<GestoresCubit>();
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (bottomSheetContext) => GestorFilters(
-        gestoresCubit: gestoresCubit,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final gestoresCubit = context.read<GestoresCubit>();
+
     return Scaffold(
-      appBar: AppBar(
-        title: const TextH2('Gestores'),
-        actions: [
-          IconButton(
-            icon: const Icon(AppIcons.filter),
-            onPressed: _showFilters,
-          ),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(80),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextField(
-              controller: _searchController,
-              readOnly: true,
-              decoration: InputDecoration(
-                hintText: 'Buscar gestores por nome, email...',
-                prefixIcon: const Icon(AppIcons.search),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                  icon: const Icon(AppIcons.clear),
-                  onPressed: () {
-                    _searchController.clear();
-                    context.read<GestoresCubit>().clearFilters();
-                  },
-                )
-                    : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              onTap: _showFilters,
-            ),
-          ),
-        ),
-      ),
       body: BlocConsumer<GestoresCubit, GestoresState>(
         listener: (context, state) {
           if (state is GestoresError) {
@@ -174,141 +108,31 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
           }
         },
         builder: (context, state) {
-          if (state is GestoresLoading && !_isLoadingMore) {
-            return ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: 5,
-              itemBuilder: (_, __) => const Padding(
-                padding: EdgeInsets.only(bottom: 12),
-                child: LojaCardSkeleton(),
-              ),
-            );
-          }
+          final filterOptions = gestoresCubit.filterOptions;
+          final total = state is GestoresLoaded ? state.total : 0;
 
-          if (state is GestoresLoaded) {
-            final gestores = state.gestoresFiltrados;
-
-            if (gestores.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(AppIcons.people, size: 100, color: Colors.grey[400]),
-                    const SizedBox(height: 16),
-                    const TextH2('Nenhum gestor encontrado'),
-                    const SizedBox(height: 8),
-                    TextBody2(
-                      state.gestores.isEmpty ? 'Comece criando um gestor' : 'Tente outros filtros de busca',
-                      color: Colors.grey[600],
-                    ),
-                    if (state.gestores.isEmpty) ...[
-                      const SizedBox(height: 24),
-                      ElevatedButton.icon(
-                        onPressed: () => _abrirFormGestor(context),
-                        icon: const Icon(AppIcons.add),
-                        label: const TextBody2('Criar Gestor', fontWeight: FontWeight.bold, color: Colors.white),
-                      ),
-                    ],
-                  ],
-                ),
-              );
-            }
-
-            return RefreshIndicator(
+          return SelectionArea(
+            child: RefreshIndicator(
               onRefresh: _onRefresh,
-              child: ListView.builder(
-                controller: _scrollController,
-                padding: const EdgeInsets.all(16),
-                itemCount: gestores.length + (_isLoadingMore ? 1 : 0),
-                itemBuilder: (context, index) {
-                  if (index == gestores.length) {
-                    return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(16),
-                        child: CircularProgressIndicator(),
-                      ),
-                    );
-                  }
-
-                  final gestor = gestores[index];
-
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: QuiGestorCard(
-                      onTap: () => _abrirFormGestor(context, gestor: gestor),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 56,
-                            height: 56,
-                            decoration: BoxDecoration(
-                              color: _getStatusColor(gestor.status).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Center(
-                              child: TextH1(
-                                gestor.nome[0].toUpperCase(),
-                                color: _getStatusColor(gestor.status),
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: TextBody1(
-                                        gestor.nome,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: _getStatusColor(gestor.status).withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: TextBody3(
-                                        _getStatusLabel(gestor.status),
-                                        color: _getStatusColor(gestor.status),
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    Icon(AppIcons.email, size: 14, color: Colors.grey[600]),
-                                    const SizedBox(width: 4),
-                                    TextBody3(gestor.email, color: Colors.grey[600]),
-                                  ],
-                                ),
-                                const SizedBox(height: 2),
-                                Row(
-                                  children: [
-                                    Icon(AppIcons.admin, size: 14, color: Colors.grey[600]),
-                                    const SizedBox(width: 4),
-                                    TextBody3(gestor.nivel, color: Colors.grey[600]),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                          Icon(AppIcons.chevronRight, color: Colors.grey[400]),
-                        ],
-                      ),
+              child: CustomScrollView(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                if (filterOptions != null)
+                  SliverToBoxAdapter(
+                    child: GenericFilterWidget(
+                      groups: (filterOptions).entries
+                          .map((entry) => FilterGroup.fromJson(entry.key, entry.value))
+                          .whereType<FilterGroup>()
+                          .toList(),
+                      onApply: (params) => gestoresCubit.fetchGestores(filters: params),
+                      totalItems: total,
                     ),
-                  );
-                },
-              ),
-            );
-          }
-          return const SizedBox();
+                  ),
+                _buildListContentSliver(state),
+              ],
+            ),
+          ));
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -317,6 +141,155 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
         icon: const Icon(AppIcons.add),
       ),
     );
+  }
+
+  Widget _buildListContentSliver(GestoresState state) {
+    if (state is GestoresLoading && !_isLoadingMore) {
+      return SliverPadding(
+        padding: const EdgeInsets.all(16),
+        sliver: SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (_, __) => const Padding(
+              padding: EdgeInsets.only(bottom: 12),
+              child: LojaCardSkeleton(),
+            ),
+            childCount: 5,
+          ),
+        ),
+      );
+    }
+
+    if (state is GestoresLoaded) {
+      final gestores = state.gestoresFiltrados;
+
+      if (gestores.isEmpty) {
+        return SliverFillRemaining(
+          hasScrollBody: false,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 60),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(AppIcons.people, size: 100, color: Colors.grey[400]),
+                  const SizedBox(height: 16),
+                  const TextH2('Nenhum gestor encontrado'),
+                  const SizedBox(height: 8),
+                  TextBody2(
+                    state.gestores.isEmpty ? 'Comece criando um gestor' : 'Tente outros filtros de busca',
+                    color: Colors.grey[600],
+                  ),
+                  if (state.gestores.isEmpty) ...[
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      onPressed: () => _abrirFormGestor(context),
+                      icon: const Icon(AppIcons.add),
+                      label: const TextBody2('Criar Gestor', fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        );
+      }
+
+      return SliverPadding(
+        padding: const EdgeInsets.all(16),
+        sliver: SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, index) {
+              if (index == gestores.length) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(16),
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              }
+
+              final gestor = gestores[index];
+
+              return RepaintBoundary(
+                child: QuiGestorCard(
+                  onTap: () => _abrirFormGestor(context, gestor: gestor),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: _getStatusColor(gestor.status).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Center(
+                          child: TextH1(
+                            gestor.nome[0].toUpperCase(),
+                            color: _getStatusColor(gestor.status),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextBody1(
+                                    gestor.nome,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: _getStatusColor(gestor.status).withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: TextBody3(
+                                    _getStatusLabel(gestor.status),
+                                    color: _getStatusColor(gestor.status),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Icon(AppIcons.email, size: 14, color: Colors.grey[600]),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: TextBody3(gestor.email, color: Colors.grey[600]),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            Row(
+                              children: [
+                                Icon(AppIcons.admin, size: 14, color: Colors.grey[600]),
+                                const SizedBox(width: 4),
+                                TextBody3(gestor.nivel, color: Colors.grey[600]),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(AppIcons.chevronRight, color: Colors.grey[400]),
+                    ],
+                  ),
+                ),
+              );
+            },
+            childCount: gestores.length + (_isLoadingMore ? 1 : 0),
+          ),
+        ),
+      );
+    }
+    return const SliverToBoxAdapter(child: SizedBox());
   }
 
   void _abrirFormGestor(BuildContext context, {Gestor? gestor}) {

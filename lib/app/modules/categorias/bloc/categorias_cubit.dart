@@ -12,14 +12,12 @@ class CategoriasCubit extends Cubit<CategoriasState> {
   Map<String, dynamic>? _filterOptions;
 
   // Filtros atuais
-  bool? _currentAtivo;
-  bool? _currentDestaque;
+  Map<String, String> _activeFilters = {};
   String? _currentSearch;
 
   CategoriasCubit(this._apiClient) : super(CategoriasInitial());
 
-  bool? get currentAtivo => _currentAtivo;
-  bool? get currentDestaque => _currentDestaque;
+  Map<String, String> get activeFilters => _activeFilters;
   String? get currentSearch => _currentSearch;
   Map<String, dynamic>? get filterOptions => _filterOptions;
 
@@ -36,23 +34,31 @@ class CategoriasCubit extends Cubit<CategoriasState> {
     int page = 1,
     int? perPage,
     bool isLoadMore = false,
+    Map<String, String>? filters,
   }) async {
     try {
       if (!isLoadMore) {
         emit(CategoriasLoading());
       }
 
+      if (filters != null) {
+        _activeFilters = filters;
+        if (filters.containsKey('search')) {
+          _currentSearch = filters['search'];
+        }
+      }
+
       final itemsPerPage = perPage ?? AppConfig.defaultPerPage;
+
+      final queryParams = {
+        'page': page,
+        'per_page': itemsPerPage,
+        ..._activeFilters,
+      };
 
       final response = await _apiClient.get(
         AppConfig.CATEGORIAS,
-        queryParameters: {
-          'page': page,
-          'per_page': itemsPerPage,
-          if (_currentAtivo != null) 'ativo': _currentAtivo! ? 1 : 0,
-          if (_currentDestaque != null) 'destaque': _currentDestaque! ? 1 : 0,
-          if (_currentSearch != null && _currentSearch!.isNotEmpty) 'search': _currentSearch,
-        },
+        queryParameters: queryParams,
       );
 
       if (response.data['success'] == true) {
@@ -88,26 +94,19 @@ class CategoriasCubit extends Cubit<CategoriasState> {
     }
   }
 
-  Future<void> applyFilters({
-    bool? ativo,
-    bool? destaque,
-    String? search,
-  }) async {
-    _currentAtivo = ativo;
-    _currentDestaque = destaque;
-    if (search != null) _currentSearch = search;
-
-    await fetchCategorias(page: 1);
+  Future<void> applyFilters(Map<String, String> filters) async {
+    _activeFilters = filters;
+    await fetchCategorias(page: 1, filters: filters);
   }
 
   void applySearch(String search) {
+    _activeFilters['search'] = search;
     _currentSearch = search;
     fetchCategorias(page: 1);
   }
 
   void clearFilters() {
-    _currentAtivo = null;
-    _currentDestaque = null;
+    _activeFilters = {};
     _currentSearch = null;
     fetchCategorias(page: 1);
   }

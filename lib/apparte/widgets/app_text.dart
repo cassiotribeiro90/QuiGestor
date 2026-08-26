@@ -24,7 +24,7 @@ class AppText extends StatelessWidget {
     this.color,
     this.fontSize,
     this.fontWeight,
-    this.selectable = true,
+    this.selectable = false,
   });
 
   bool get _isSelectable {

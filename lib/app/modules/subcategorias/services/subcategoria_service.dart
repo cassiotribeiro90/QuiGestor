@@ -5,19 +5,15 @@ class SubcategoriaService {
   SubcategoriaService(this._apiClient);
 
   Future<Map<String, dynamic>> listar({
-    int? categoriaId, 
-    String? search,
-    int? status,
-    int page = 1, 
+    int page = 1,
     int perPage = 50,
+    Map<String, String>? filters,
   }) async {
     final query = <String, dynamic>{
       'page': page,
       'per_page': perPage,
+      if (filters != null) ...filters,
     };
-    if (categoriaId != null) query['categoria_id'] = categoriaId;
-    if (search != null && search.isNotEmpty) query['search'] = search;
-    if (status != null) query['status'] = status;
 
     final response = await _apiClient.get('/gestor/subcategorias', queryParameters: query);
     return response.data;

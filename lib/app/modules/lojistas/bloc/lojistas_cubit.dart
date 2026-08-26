@@ -9,46 +9,26 @@ class LojistasCubit extends Cubit<LojistasState> {
   final LojistaRepository _repository;
   int _page = 1;
   final int _perPage = 20;
-  int? _filtroLojaId;
-  String? _filtroFuncao;
-  int? _filtroStatus;
-  String? _filtroSearch;
+  Map<String, String> _activeFilters = {};
+  Map<String, dynamic>? _filterOptions;
   bool _hasMore = true;
   List<LojaOptionModel> _lojas = [];
 
   LojistasCubit(this._repository) : super(const LojistasInitial());
 
-  void setFiltroLoja(int? lojaId) {
-    _filtroLojaId = lojaId;
-    _page = 1;
-    _hasMore = true;
-    carregar();
-  }
+  Map<String, dynamic>? get filterOptions => _filterOptions;
 
-  void setFiltroFuncao(String? funcao) {
-    _filtroFuncao = funcao;
-    _page = 1;
-    _hasMore = true;
-    carregar();
-  }
-
-  void setFiltroStatus(int? status) {
-    _filtroStatus = status;
-    _page = 1;
-    _hasMore = true;
-    carregar();
-  }
-
-  void setFiltroSearch(String? search) {
-    _filtroSearch = search;
-    _page = 1;
-    _hasMore = true;
-    carregar();
-  }
-
-  Future<void> carregar({bool carregarMais = false}) async {
+  Future<void> carregar({bool carregarMais = false, Map<String, String>? filters}) async {
     if (carregarMais && !_hasMore) return;
-    if (carregarMais) _page++;
+    if (carregarMais) {
+      _page++;
+    } else {
+      _page = 1;
+      _hasMore = true;
+      if (filters != null) {
+        _activeFilters = filters;
+      }
+    }
 
     if (!carregarMais) emit(const LojistasLoading());
     
@@ -57,14 +37,13 @@ class LojistasCubit extends Cubit<LojistasState> {
         _lojas = await _repository.listarLojas();
       }
 
-      final (items, total) = await _repository.listar(
-        lojaId: _filtroLojaId,
-        funcao: _filtroFuncao,
-        status: _filtroStatus,
-        search: _filtroSearch,
+      final (items, total, filterOptions) = await _repository.listar(
+        filters: _activeFilters,
         page: _page,
         perPage: _perPage,
       );
+
+      _filterOptions = filterOptions;
 
       // ignore: avoid_print
       debugPrint('📦 Lojistas recebidos: ${items.length}, Total: $total');
@@ -83,10 +62,7 @@ class LojistasCubit extends Cubit<LojistasState> {
         total: total,
         page: _page,
         perPage: _perPage,
-        filtroLojaId: _filtroLojaId,
-        filtroFuncao: _filtroFuncao,
-        filtroStatus: _filtroStatus,
-        filtroSearch: _filtroSearch,
+        filterOptions: filterOptions,
       ));
     } catch (e) {
       // ignore: avoid_print
@@ -112,10 +88,7 @@ class LojistasCubit extends Cubit<LojistasState> {
   void reset() {
     _page = 1;
     _hasMore = true;
-    _filtroLojaId = null;
-    _filtroFuncao = null;
-    _filtroStatus = null;
-    _filtroSearch = null;
+    _activeFilters = {};
     carregar();
   }
 

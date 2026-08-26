@@ -6,34 +6,29 @@ class LojistaRepository {
   final LojistaService _service;
   LojistaRepository(this._service);
 
-  Future<(List<LojistaModel>, int)> listar({
-    int? lojaId,
-    String? funcao,
-    int? status,
-    String? search,
+  Future<(List<LojistaModel>, int, Map<String, dynamic>?)> listar({
     int page = 1,
     int perPage = 20,
+    Map<String, String>? filters,
   }) async {
     final data = await _service.listar(
-      lojaId: lojaId,
-      funcao: funcao,
-      status: status,
-      search: search,
       page: page,
       perPage: perPage,
+      filters: filters,
     );
 
     // Ajuste para lidar com a estrutura da resposta da API Yii2
     final responseData = data['data'] ?? data;
     final itemsData = responseData['items'] ?? [];
     final paginationData = responseData['pagination'] ?? {'total': 0};
+    final filterOptions = responseData['filter_options'] as Map<String, dynamic>?;
 
     final items = (itemsData as List)
         .map((e) => LojistaModel.fromJson(e))
         .toList();
 
     final total = (paginationData['total'] ?? 0) as int;
-    return (items, total);
+    return (items, total, filterOptions);
   }
 
   Future<LojistaModel> visualizar(int id) async {

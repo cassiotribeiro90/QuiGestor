@@ -28,10 +28,7 @@ class LojistasLoaded extends LojistasState {
   final int total;
   final int page;
   final int perPage;
-  final int? filtroLojaId;
-  final String? filtroFuncao;
-  final int? filtroStatus;
-  final String? filtroSearch;
+  final Map<String, dynamic>? filterOptions;
 
   const LojistasLoaded({
     required this.lojistas,
@@ -39,35 +36,8 @@ class LojistasLoaded extends LojistasState {
     required this.total,
     this.page = 1,
     this.perPage = 20,
-    this.filtroLojaId,
-    this.filtroFuncao,
-    this.filtroStatus,
-    this.filtroSearch,
+    this.filterOptions,
   });
-
-  LojistasLoaded copyWith({
-    List<LojistaModel>? lojistas,
-    List<LojaOptionModel>? lojas,
-    int? total,
-    int? page,
-    int? perPage,
-    int? filtroLojaId,
-    String? filtroFuncao,
-    int? filtroStatus,
-    String? filtroSearch,
-  }) {
-    return LojistasLoaded(
-      lojistas: lojistas ?? this.lojistas,
-      lojas: lojas ?? this.lojas,
-      total: total ?? this.total,
-      page: page ?? this.page,
-      perPage: perPage ?? this.perPage,
-      filtroLojaId: filtroLojaId ?? this.filtroLojaId,
-      filtroFuncao: filtroFuncao ?? this.filtroFuncao,
-      filtroStatus: filtroStatus ?? this.filtroStatus,
-      filtroSearch: filtroSearch ?? this.filtroSearch,
-    );
-  }
 
   @override
   List<Object?> get props => [
@@ -76,10 +46,7 @@ class LojistasLoaded extends LojistasState {
         total,
         page,
         perPage,
-        filtroLojaId,
-        filtroFuncao,
-        filtroStatus,
-        filtroSearch,
+        filterOptions,
       ];
 }
 

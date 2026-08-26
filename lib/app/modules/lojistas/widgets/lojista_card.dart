@@ -26,54 +26,56 @@ class LojistaCard extends StatelessWidget {
           backgroundColor: _getFuncaoColor(lojista.funcao),
           child: Text(lojista.nome.isNotEmpty ? lojista.nome[0].toUpperCase() : '?'),
         ),
-        title: Text(lojista.nome),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(lojista.email),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: _getFuncaoColor(lojista.funcao).withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    _getFuncaoLabel(lojista.funcao),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: _getFuncaoColor(lojista.funcao),
+        title: SelectionArea(child: Text(lojista.nome)),
+        subtitle: SelectionArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(lojista.email),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: _getFuncaoColor(lojista.funcao).withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      _getFuncaoLabel(lojista.funcao),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: _getFuncaoColor(lojista.funcao),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    statusText,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: statusColor,
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: statusColor.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      statusText,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: statusColor,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-            if (lojista.lojas != null && lojista.lojas!.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 4.0),
-                child: Text(
-                  'Lojas: ${lojista.lojas!.map((l) => l.nome).join(', ')}',
-                  style: const TextStyle(fontSize: 12),
-                ),
+                ],
               ),
-          ],
+              if (lojista.lojas != null && lojista.lojas!.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: Text(
+                    'Lojas: ${lojista.lojas!.map((l) => l.nome).join(', ')}',
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ),
+            ],
+          ),
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,

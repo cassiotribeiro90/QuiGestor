@@ -31,28 +31,28 @@ class _GestorFiltersState extends State<GestorFilters> {
           label: 'Admin',
           emoji: '👤',
           count: counts['nivel']?['admin'],
-          selected: cubit.currentNiveis.contains('admin'),
+          selected: (cubit.activeFilters['nivel'] ?? '').split(',').contains('admin'),
         ),
         FilterOptionModel(
           value: 'comercial',
           label: 'Comercial',
           emoji: '💼',
           count: counts['nivel']?['comercial'],
-          selected: cubit.currentNiveis.contains('comercial'),
+          selected: (cubit.activeFilters['nivel'] ?? '').split(',').contains('comercial'),
         ),
         FilterOptionModel(
           value: 'suporte',
           label: 'Suporte',
           emoji: '🛠️',
           count: counts['nivel']?['suporte'],
-          selected: cubit.currentNiveis.contains('suporte'),
+          selected: (cubit.activeFilters['nivel'] ?? '').split(',').contains('suporte'),
         ),
         FilterOptionModel(
           value: 'financeiro',
           label: 'Financeiro',
           emoji: '💰',
           count: counts['nivel']?['financeiro'],
-          selected: cubit.currentNiveis.contains('financeiro'),
+          selected: (cubit.activeFilters['nivel'] ?? '').split(',').contains('financeiro'),
         ),
       ],
     );
@@ -67,21 +67,21 @@ class _GestorFiltersState extends State<GestorFilters> {
           label: 'Ativo',
           emoji: '✅',
           count: counts['status']?[1],
-          selected: cubit.currentStatusList.contains(1),
+          selected: (cubit.activeFilters['status'] ?? '').split(',').contains('1'),
         ),
         FilterOptionModel(
           value: '0',
           label: 'Inativo',
           emoji: '❌',
           count: counts['status']?[0],
-          selected: cubit.currentStatusList.contains(0),
+          selected: (cubit.activeFilters['status'] ?? '').split(',').contains('0'),
         ),
         FilterOptionModel(
           value: '2',
           label: 'Bloqueado',
           emoji: '🔒',
           count: counts['status']?[2],
-          selected: cubit.currentStatusList.contains(2),
+          selected: (cubit.activeFilters['status'] ?? '').split(',').contains('2'),
         ),
       ],
     );
@@ -200,10 +200,14 @@ class _GestorFiltersState extends State<GestorFilters> {
               Expanded(
                 child: ElevatedButton(
                   onPressed: () {
-                    widget.gestoresCubit.applyFilters( // ✅ Usa o Cubit do widget
-                      niveis: _nivelSection.getSelectedValues(),
-                      status: _statusSection.getSelectedValues().map(int.parse).toList(),
-                    );
+                    final filters = <String, String>{};
+                    final niveis = _nivelSection.getSelectedValues();
+                    if (niveis.isNotEmpty) filters['nivel'] = niveis.join(',');
+                    
+                    final status = _statusSection.getSelectedValues();
+                    if (status.isNotEmpty) filters['status'] = status.join(',');
+
+                    widget.gestoresCubit.applyFilters(filters);
                     Navigator.pop(context);
                   },
                   style: ElevatedButton.styleFrom(

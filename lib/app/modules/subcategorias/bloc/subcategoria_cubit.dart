@@ -5,21 +5,35 @@ import '../services/subcategoria_service.dart';
 
 class SubcategoriaCubit extends Cubit<SubcategoriaState> {
   final SubcategoriaService _service;
+  Map<String, String> _activeFilters = {};
+  Map<String, dynamic>? _filterOptions;
 
   SubcategoriaCubit(this._service) : super(const SubcategoriaInitial());
 
-  Future<void> carregar({int? categoriaId, String? search, int? status}) async {
+  Map<String, dynamic>? get filterOptions => _filterOptions;
+
+  Future<void> carregar({Map<String, String>? filters, int page = 1}) async {
     emit(const SubcategoriaLoading());
     try {
+      if (filters != null) {
+        _activeFilters = filters;
+      }
       final response = await _service.listar(
-        categoriaId: categoriaId,
-        search: search,
-        status: status,
+        filters: _activeFilters,
+        page: page,
       );
-      final items = (response['data']['items'] as List)
+      final data = response['data'];
+      final items = (data['items'] as List)
           .map((json) => Subcategoria.fromJson(json))
           .toList();
-      emit(SubcategoriaLoaded(items));
+      
+      _filterOptions = data['filter_options'];
+
+      emit(SubcategoriaLoaded(
+        items,
+        filterOptions: _filterOptions,
+        pagination: data['pagination'],
+      ));
     } catch (e) {
       emit(SubcategoriaError(e.toString()));
     }

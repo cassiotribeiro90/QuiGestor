@@ -12,10 +12,17 @@ class FiltrosLojistas extends StatefulWidget {
 }
 
 class _FiltrosLojistasState extends State<FiltrosLojistas> {
-  int? _lojaId;
-  String? _funcao;
-  int? _status;
+  final Map<String, String> _filters = {};
   final _searchController = TextEditingController();
+
+  void _applyFilter(String key, String? value) {
+    if (value == null || value.isEmpty) {
+      _filters.remove(key);
+    } else {
+      _filters[key] = value;
+    }
+    context.read<LojistasCubit>().carregar(filters: _filters);
+  }
 
   @override
   void dispose() {
@@ -53,7 +60,7 @@ class _FiltrosLojistasState extends State<FiltrosLojistas> {
                         contentPadding: EdgeInsets.symmetric(horizontal: 12),
                       ),
                       onChanged: (value) {
-                        context.read<LojistasCubit>().setFiltroSearch(value);
+                        _applyFilter('search', value);
                       },
                     ),
                   ),
@@ -62,7 +69,7 @@ class _FiltrosLojistasState extends State<FiltrosLojistas> {
                     icon: const Icon(AppIcons.clear),
                     onPressed: () {
                       _searchController.clear();
-                      context.read<LojistasCubit>().setFiltroSearch('');
+                      _applyFilter('search', '');
                     },
                   ),
                 ],
@@ -70,7 +77,7 @@ class _FiltrosLojistasState extends State<FiltrosLojistas> {
               const SizedBox(height: 8),
               // Primeira linha de filtros: Todas as lojas (100% de largura)
               DropdownButtonFormField<int>(
-                initialValue: _lojaId,
+                value: _filters['loja_id'] != null ? int.tryParse(_filters['loja_id']!) : null,
                 hint: const Text('Todas lojas'),
                 isDense: true,
                 decoration: const InputDecoration(
@@ -79,8 +86,7 @@ class _FiltrosLojistasState extends State<FiltrosLojistas> {
                 ),
                 items: lojaItems,
                 onChanged: (value) {
-                  setState(() => _lojaId = value);
-                  context.read<LojistasCubit>().setFiltroLoja(value);
+                  _applyFilter('loja_id', value?.toString());
                 },
               ),
               const SizedBox(height: 8),
@@ -89,7 +95,7 @@ class _FiltrosLojistasState extends State<FiltrosLojistas> {
                 children: [
                   Expanded(
                     child: DropdownButtonFormField<String>(
-                      initialValue: _funcao,
+                      value: _filters['funcao'],
                       hint: const Text('Função'),
                       isDense: true,
                       decoration: const InputDecoration(
@@ -103,15 +109,14 @@ class _FiltrosLojistasState extends State<FiltrosLojistas> {
                         DropdownMenuItem(value: 'vendedor', child: Text('Vendedor')),
                       ],
                       onChanged: (value) {
-                        setState(() => _funcao = value);
-                        context.read<LojistasCubit>().setFiltroFuncao(value);
+                        _applyFilter('funcao', value);
                       },
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: DropdownButtonFormField<int>(
-                      initialValue: _status,
+                      value: _filters['status'] != null ? int.tryParse(_filters['status']!) : null,
                       hint: const Text('Status'),
                       isDense: true,
                       decoration: const InputDecoration(
@@ -124,8 +129,7 @@ class _FiltrosLojistasState extends State<FiltrosLojistas> {
                         DropdownMenuItem(value: 0, child: Text('Inativo')),
                       ],
                       onChanged: (value) {
-                        setState(() => _status = value);
-                        context.read<LojistasCubit>().setFiltroStatus(value);
+                        _applyFilter('status', value?.toString());
                       },
                     ),
                   ),

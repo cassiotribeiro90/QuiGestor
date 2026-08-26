@@ -12,19 +12,13 @@ class LojasCubit extends Cubit<LojasState> {
   Map<String, dynamic>? _filterOptions;
 
   // ✅ FILTROS ATUAIS (MODO ONLINE)
-  List<String> _currentStatusList = [];
-  List<String> _currentCategorias = [];
-  bool? _currentDestaque;
-  bool? _currentVerificado;
+  Map<String, String> _activeFilters = {};
   String? _currentSearch;
 
   LojasCubit(this._apiClient) : super(LojasInitial());
 
   // ✅ GETTERS
-  List<String> get currentStatusList => _currentStatusList;
-  List<String> get currentCategorias => _currentCategorias;
-  bool? get currentDestaque => _currentDestaque;
-  bool? get currentVerificado => _currentVerificado;
+  Map<String, String> get activeFilters => _activeFilters;
   String? get currentSearch => _currentSearch;
   Map<String, dynamic>? get filterOptions => _filterOptions;
 
@@ -43,25 +37,31 @@ class LojasCubit extends Cubit<LojasState> {
     int page = 1,
     int? perPage,
     bool isLoadMore = false,
+    Map<String, String>? filters,
   }) async {
     try {
       if (!isLoadMore) {
         emit(LojasLoading());
       }
 
+      if (filters != null) {
+        _activeFilters = filters;
+        if (filters.containsKey('search')) {
+          _currentSearch = filters['search'];
+        }
+      }
+
       final itemsPerPage = perPage ?? AppConfig.defaultPerPage;
+
+      final queryParams = {
+        'page': page,
+        'per_page': itemsPerPage,
+        ..._activeFilters,
+      };
 
       final response = await _apiClient.get(
         AppConfig.LOJAS,
-        queryParameters: {
-          'page': page,
-          'per_page': itemsPerPage,
-          if (_currentCategorias.isNotEmpty) 'categoria': _currentCategorias.join(','),
-          if (_currentStatusList.isNotEmpty) 'status': _currentStatusList.join(','),
-          if (_currentDestaque != null) 'destaque': _currentDestaque! ? 1 : 0,
-          if (_currentVerificado != null) 'verificado': _currentVerificado! ? 1 : 0,
-          if (_currentSearch != null && _currentSearch!.isNotEmpty) 'search': _currentSearch,
-        },
+        queryParameters: queryParams,
       );
 
       if (response.data['success'] == true) {
@@ -98,32 +98,19 @@ class LojasCubit extends Cubit<LojasState> {
   }
 
   // ✅ APLICAR FILTROS
-  Future<void> applyFilters({
-    List<String>? status,
-    bool? destaque,
-    bool? verificado,
-    List<String>? categorias,
-    String? search,
-  }) async {
-    if (status != null) _currentStatusList = status;
-    if (destaque != null) _currentDestaque = destaque;
-    if (verificado != null) _currentVerificado = verificado;
-    if (categorias != null) _currentCategorias = categorias;
-    if (search != null) _currentSearch = search;
-
-    await fetchLojas(page: 1);
+  Future<void> applyFilters(Map<String, String> filters) async {
+    _activeFilters = filters;
+    await fetchLojas(page: 1, filters: filters);
   }
 
   void applySearch(String search) {
+    _activeFilters['search'] = search;
     _currentSearch = search;
     fetchLojas(page: 1);
   }
 
   void clearFilters() {
-    _currentStatusList = [];
-    _currentCategorias = [];
-    _currentDestaque = null;
-    _currentVerificado = null;
+    _activeFilters = {};
     _currentSearch = null;
     fetchLojas(page: 1);
   }
@@ -206,11 +193,8 @@ class LojasCubit extends Cubit<LojasState> {
   }
 
   void resetFilters() {
+    _activeFilters = {};
     _currentSearch = null;
-    _currentDestaque = null;
-    _currentVerificado = null;
-    _currentStatusList = [];
-    _currentCategorias = [];
     _todasLojas = [];
   }
 
@@ -218,33 +202,13 @@ class LojasCubit extends Cubit<LojasState> {
   String getFiltrosAtivosResumo() {
     final partes = <String>[];
 
-    // Status
-    if (_currentStatusList.isNotEmpty) {
-      final statusLabels = _currentStatusList.map((s) {
-        switch (s) {
-          case 'ativo': return 'Ativo';
-          case 'inativo': return 'Inativo';
-          case 'fechado': return 'Fechado';
-          case 'revisao': return 'Revisão';
-          default: return s;
-        }
-      }).toList();
-      partes.add(statusLabels.join(', '));
+    for (var entry in _activeFilters.entries) {
+      if (entry.key == 'search') continue;
+      partes.add('${entry.key}: ${entry.value}');
     }
 
-    // Categorias
-    if (_currentCategorias.isNotEmpty) {
-      partes.add(_currentCategorias.join(', '));
-    }
-
-    // Destaque
-    if (_currentDestaque != null) {
-      partes.add(_currentDestaque == true ? 'Destaque' : 'Sem destaque');
-    }
-
-    // Verificado
-    if (_currentVerificado != null) {
-      partes.add(_currentVerificado == true ? 'Verificado' : 'Não verificado');
+    if (_currentSearch != null && _currentSearch!.isNotEmpty) {
+      partes.add('Busca: $_currentSearch');
     }
 
     if (partes.isEmpty) return '';

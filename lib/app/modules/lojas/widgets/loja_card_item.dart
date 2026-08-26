@@ -94,7 +94,13 @@ class LojaCardItem extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Expanded(child: TextH3(loja.nome, maxLines: 1, fontWeight: FontWeight.w600)),
+                      Expanded(
+                        child: TextH3(
+                          loja.nome,
+                          maxLines: 1,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                       if (loja.destaque) ...[
                         Container(
                           margin: const EdgeInsets.only(right: 4),

@@ -1,4 +1,3 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -74,14 +73,7 @@ class QuiGestorApp extends StatelessWidget {
               darkTheme: AppTheme.darkTheme,
               themeMode: themeState.themeMode,
               routerConfig: appRouter,
-              scrollBehavior: const MaterialScrollBehavior().copyWith(
-                dragDevices: {
-                  PointerDeviceKind.mouse,
-                  PointerDeviceKind.touch,
-                  PointerDeviceKind.stylus,
-                  PointerDeviceKind.unknown,
-                },
-              ),
+
               builder: (context, child) {
                 return BlocListener<AuthCubit, AuthState>(
                   listener: (context, state) {

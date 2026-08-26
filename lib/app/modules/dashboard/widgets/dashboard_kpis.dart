@@ -53,14 +53,35 @@ class DashboardKpis extends StatelessWidget {
 
     final crossAxisCount = isMobile ? 1 : 2;
 
-    return GridView.count(
-      crossAxisCount: crossAxisCount,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
-      mainAxisExtent: isMobile ? 110 : 100,
-      children: cards,
+    if (isMobile) {
+      return Column(
+        children: cards
+            .map((card) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: card,
+                ))
+            .toList(),
+      );
+    }
+
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(child: cards[0]),
+            const SizedBox(width: 12),
+            Expanded(child: cards[1]),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(child: cards[2]),
+            const SizedBox(width: 12),
+            Expanded(child: cards[3]),
+          ],
+        ),
+      ],
     );
   }
 }

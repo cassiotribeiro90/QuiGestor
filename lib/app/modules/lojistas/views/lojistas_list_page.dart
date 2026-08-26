@@ -4,11 +4,12 @@ import '../../../di/dependencies.dart';
 import '../bloc/lojistas_cubit.dart';
 import '../bloc/lojistas_state.dart';
 import '../widgets/lojista_card.dart';
-import '../widgets/filtros_lojistas.dart';
 import '../widgets/carregar_mais_button.dart';
 import '../bloc/lojista_form_cubit.dart';
 import 'lojista_form_page.dart';
 import '../../../core/constants/icon_constants.dart';
+import '../../../models/filter_option.dart';
+import '../../../widgets/generic_filter_widget.dart';
 
 class LojistasListPage extends StatefulWidget {
   const LojistasListPage({super.key});
@@ -38,75 +39,117 @@ class _LojistasListPageState extends State<LojistasListPage> {
 
   @override
   Widget build(BuildContext context) {
+    final lojistasCubit = context.read<LojistasCubit>();
+
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: () => _navegarParaForm(context),
         backgroundColor: Theme.of(context).colorScheme.primary,
         child: const Icon(AppIcons.add, color: Colors.white),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                const Expanded(child: FiltrosLojistas()),
-                IconButton(
-                  icon: const Icon(AppIcons.refresh),
-                  onPressed: () => context.read<LojistasCubit>().reset(),
-                  tooltip: 'Atualizar',
-                ),
+      body: BlocConsumer<LojistasCubit, LojistasState>(
+        listener: (context, state) {
+          if (state is LojistasError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message)),
+            );
+          }
+        },
+        builder: (context, state) {
+          final filterOptions = lojistasCubit.filterOptions;
+          final total = state is LojistasLoaded ? state.total : 0;
+
+          return SelectionArea(
+            child: RefreshIndicator(
+              onRefresh: () async => lojistasCubit.reset(),
+              child: CustomScrollView(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                if (filterOptions != null)
+                  SliverToBoxAdapter(
+                    child: GenericFilterWidget(
+                      groups: (filterOptions).entries
+                          .map((entry) => FilterGroup.fromJson(entry.key, entry.value))
+                          .whereType<FilterGroup>()
+                          .toList(),
+                      onApply: (params) => lojistasCubit.carregar(filters: params),
+                      totalItems: total,
+                    ),
+                  ),
+                if (filterOptions == null)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: Row(
+                        children: [
+                          const Spacer(),
+                          IconButton(
+                            icon: const Icon(AppIcons.refresh),
+                            onPressed: () => lojistasCubit.reset(),
+                            tooltip: 'Atualizar',
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                _buildListContentSliver(state),
               ],
             ),
-          ),
-          Expanded(
-            child: BlocConsumer<LojistasCubit, LojistasState>(
-              listener: (context, state) {
-                if (state is LojistasError) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(state.message)),
-                  );
-                }
-              },
-              builder: (context, state) {
-                if (state is LojistasLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (state is LojistasLoaded) {
-                  if (state.lojistas.isEmpty) {
-                    return const Center(
-                      child: Text('Nenhum lojista encontrado'),
-                    );
-                  }
-                  return ListView.builder(
-                    controller: _scrollController,
-                    itemCount: state.lojistas.length + 1,
-                    itemBuilder: (context, index) {
-                      if (index == state.lojistas.length) {
-                        return CarregarMaisButton(
-                          hasMore: context.read<LojistasCubit>().hasMore,
-                          onTap: () {
-                            context.read<LojistasCubit>().carregar(
-                                  carregarMais: true,
-                                );
-                          },
-                        );
-                      }
-                      final lojista = state.lojistas[index];
-                      return LojistaCard(
-                        lojista: lojista,
-                        onEdit: () => _navegarParaForm(context, lojista.id),
-                        onDelete: () => _confirmarExclusao(context, lojista.id),
-                      );
-                    },
-                  );
-                }
-                return const SizedBox.shrink();
-              },
-            ),
-          ),
-        ],
+          ));
+        },
       ),
     );
+  }
+
+  Widget _buildListContentSliver(LojistasState state) {
+    if (state is LojistasLoading) {
+      return const SliverFillRemaining(
+        child: Center(
+            child: Padding(
+          padding: EdgeInsets.all(32.0),
+          child: CircularProgressIndicator(),
+        )),
+      );
+    } else if (state is LojistasLoaded) {
+      if (state.lojistas.isEmpty) {
+        return const SliverFillRemaining(
+          hasScrollBody: false,
+          child: Center(
+            child: Padding(
+              padding: EdgeInsets.all(60.0),
+              child: Text('Nenhum lojista encontrado'),
+            ),
+          ),
+        );
+      }
+      return SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            if (index == state.lojistas.length) {
+              return CarregarMaisButton(
+                hasMore: context.read<LojistasCubit>().hasMore,
+                onTap: () {
+                  context.read<LojistasCubit>().carregar(
+                        carregarMais: true,
+                      );
+                },
+              );
+            }
+            final lojista = state.lojistas[index];
+            return RepaintBoundary(
+              child: LojistaCard(
+                lojista: lojista,
+                onEdit: () => _navegarParaForm(context, lojista.id),
+                onDelete: () => _confirmarExclusao(context, lojista.id),
+              ),
+            );
+          },
+          childCount: state.lojistas.length + 1,
+        ),
+      );
+    }
+    return const SliverToBoxAdapter(child: SizedBox.shrink());
   }
 
   void _navegarParaForm(BuildContext context, [int? id]) {

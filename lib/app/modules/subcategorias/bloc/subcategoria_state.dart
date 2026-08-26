@@ -17,9 +17,17 @@ class SubcategoriaLoading extends SubcategoriaState {
 
 class SubcategoriaLoaded extends SubcategoriaState {
   final List<Subcategoria> subcategorias;
-  const SubcategoriaLoaded(this.subcategorias);
+  final Map<String, dynamic>? filterOptions;
+  final Map<String, dynamic>? pagination;
+
+  const SubcategoriaLoaded(
+    this.subcategorias, {
+    this.filterOptions,
+    this.pagination,
+  });
+
   @override
-  List<Object?> get props => [subcategorias];
+  List<Object?> get props => [subcategorias, filterOptions, pagination];
 }
 
 class SubcategoriaError extends SubcategoriaState {

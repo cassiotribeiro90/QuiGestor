@@ -10,41 +10,51 @@ class GestoresCubit extends Cubit<GestoresState> {
 
   List<Gestor> _todosGestores = [];
   Map<String, dynamic>? _ultimaPagination;
+  Map<String, dynamic>? _filterOptions;
 
-  List<String> _currentNiveis = [];
-  List<int> _currentStatusList = [];
+  Map<String, String> _activeFilters = {};
   String? _currentSearch;
 
   GestoresCubit(this._apiClient) : super(GestoresInitial());
 
-  List<String> get currentNiveis => _currentNiveis;
-  List<int> get currentStatusList => _currentStatusList;
+  Map<String, String> get activeFilters => _activeFilters;
   String? get currentSearch => _currentSearch;
+  Map<String, dynamic>? get filterOptions => _filterOptions;
 
   Future<void> fetchGestores({
     int page = 1,
     int perPage = AppConfig.defaultPerPage,
     bool isLoadMore = false,
+    Map<String, String>? filters,
   }) async {
     try {
       if (!isLoadMore) {
         emit(GestoresLoading());
       }
 
+      if (filters != null) {
+        _activeFilters = filters;
+        if (filters.containsKey('search')) {
+          _currentSearch = filters['search'];
+        }
+      }
+
+      final queryParams = {
+        'page': page,
+        'per_page': perPage,
+        ..._activeFilters,
+      };
+
       final response = await _apiClient.get(
         AppConfig.GESTORES,
-        queryParameters: {
-          'page': page,
-          'per_page': perPage,
-          if (_currentNiveis.isNotEmpty) 'nivel': _currentNiveis.join(','),
-          if (_currentStatusList.isNotEmpty) 'status': _currentStatusList.join(','),
-          if (_currentSearch != null && _currentSearch!.isNotEmpty) 'search': _currentSearch,
-        },
+        queryParameters: queryParams,
       );
 
       if (response.data['success'] == true) {
-        final items = List<Map<String, dynamic>>.from(response.data['data']['items']);
-        final pagination = response.data['data']['pagination'];
+        final data = response.data['data'];
+        final items = List<Map<String, dynamic>>.from(data['items']);
+        final pagination = data['pagination'];
+        _filterOptions = data['filter_options'];
 
         final novosGestores = items.map((json) => Gestor.fromJson(json)).toList();
 
@@ -61,6 +71,7 @@ class GestoresCubit extends Cubit<GestoresState> {
           gestores: _todosGestores,
           gestoresFiltrados: _todosGestores,
           pagination: pagination,
+          filterOptions: _filterOptions,
         ));
       } else {
         emit(GestoresError(response.data['message'] ?? 'Erro ao carregar gestores'));
@@ -72,26 +83,19 @@ class GestoresCubit extends Cubit<GestoresState> {
     }
   }
 
-  Future<void> applyFilters({
-    List<String>? niveis,
-    List<int>? status,
-    String? search,
-  }) async {
-    if (niveis != null) _currentNiveis = niveis;
-    if (status != null) _currentStatusList = status;
-    if (search != null) _currentSearch = search;
-
-    await fetchGestores(page: 1);
+  Future<void> applyFilters(Map<String, String> filters) async {
+    _activeFilters = filters;
+    await fetchGestores(page: 1, filters: filters);
   }
 
   Future<void> applySearch(String search) {
+    _activeFilters['search'] = search;
     _currentSearch = search;
     return fetchGestores(page: 1);
   }
 
   Future<void> clearFilters() async {
-    _currentNiveis = [];
-    _currentStatusList = [];
+    _activeFilters = {};
     _currentSearch = null;
     await fetchGestores(page: 1);
   }
@@ -206,29 +210,21 @@ class GestoresCubit extends Cubit<GestoresState> {
   }
 
   void resetFilters() {
+    _activeFilters = {};
     _currentSearch = null;
-    _currentStatusList = [];
-    _currentNiveis = [];
     _todosGestores = [];
   }
 
   String getFiltrosAtivosResumo() {
     final partes = <String>[];
 
-    if (currentNiveis.isNotEmpty) {
-      partes.add(currentNiveis.join(', '));
+    for (var entry in _activeFilters.entries) {
+      if (entry.key == 'search') continue;
+      partes.add('${entry.key}: ${entry.value}');
     }
 
-    if (currentStatusList.isNotEmpty) {
-      final statusLabels = currentStatusList.map((s) {
-        switch (s) {
-          case 1: return 'Ativo';
-          case 0: return 'Inativo';
-          case 2: return 'Bloqueado';
-          default: return '$s';
-        }
-      }).toList();
-      partes.add(statusLabels.join(', '));
+    if (_currentSearch != null && _currentSearch!.isNotEmpty) {
+      partes.add('Busca: $_currentSearch');
     }
 
     if (partes.isEmpty) return '';

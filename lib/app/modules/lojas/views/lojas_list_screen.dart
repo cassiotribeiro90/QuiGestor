@@ -8,7 +8,8 @@ import '../../../app_config.dart';
 import '../bloc/lojas_cubit.dart';
 import '../bloc/lojas_state.dart';
 import '../models/loja.dart';
-import '../widgets/loja_filters.dart';
+import '../../../models/filter_option.dart';
+import '../../../widgets/generic_filter_widget.dart';
 import '../widgets/loja_card_item.dart';
 import 'loja_form_screen.dart';
 import '../../../core/constants/icon_constants.dart';
@@ -21,9 +22,7 @@ class LojasListScreen extends StatefulWidget {
 }
 
 class _LojasListScreenState extends State<LojasListScreen> {
-  final _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  StreamSubscription? _lojasSubscription;
 
   bool _isLoadingMore = false;
   bool _hasMorePages = true;
@@ -34,29 +33,12 @@ class _LojasListScreenState extends State<LojasListScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-
-    _lojasSubscription = context.read<LojasCubit>().stream.listen((_) {
-      _atualizarTextoFiltros();
-    });
   }
 
   @override
   void dispose() {
-    _lojasSubscription?.cancel();
-    _searchController.dispose();
     _scrollController.dispose();
     super.dispose();
-  }
-
-  void _atualizarTextoFiltros() {
-    final cubit = context.read<LojasCubit>();
-    final filtros = cubit.getFiltrosAtivosResumo();
-
-    if (mounted) {
-      setState(() {
-        _searchController.text = filtros;
-      });
-    }
   }
 
   void _resetPagination() {
@@ -96,21 +78,8 @@ class _LojasListScreenState extends State<LojasListScreen> {
   }
 
   Future<void> _onRefresh() async {
-    _searchController.clear();
     _resetPagination();
     await context.read<LojasCubit>().fetchLojas(perPage: _perPage);
-  }
-
-  void _showFilters(LojasCubit cubit) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => BlocProvider.value(
-        value: cubit,
-        child: const LojaFilters(),
-      ),
-    );
   }
 
   @override
@@ -118,42 +87,6 @@ class _LojasListScreenState extends State<LojasListScreen> {
     final lojasCubit = context.read<LojasCubit>();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const TextH2('Todas as Lojas', fontWeight: FontWeight.bold),
-        actions: [
-          IconButton(
-            icon: const Icon(AppIcons.filter),
-            onPressed: () => _showFilters(lojasCubit),
-          ),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(80),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextField(
-              controller: _searchController,
-              readOnly: true, // ✅ Impede edição manual
-              decoration: InputDecoration(
-                hintText: 'Buscar lojas por nome, cidade...',
-                prefixIcon: const Icon(AppIcons.search),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                  icon: const Icon(AppIcons.clear),
-                  onPressed: () {
-                    _searchController.clear();
-                    context.read<LojasCubit>().clearFilters();
-                  },
-                )
-                    : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              onTap: () => _showFilters(lojasCubit), // ✅ Abre filtro ao tocar
-            ),
-          ),
-        ),
-      ),
       body: BlocConsumer<LojasCubit, LojasState>(
         listener: (context, state) {
           if (state is LojasError) {
@@ -175,70 +108,31 @@ class _LojasListScreenState extends State<LojasListScreen> {
           }
         },
         builder: (context, state) {
-          if (state is LojasLoading && !_isLoadingMore) {
-            return ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: 5,
-              itemBuilder: (_, __) => const Padding(
-                padding: EdgeInsets.only(bottom: 12),
-                child: LojaCardSkeleton(),
-              ),
-            );
-          }
+          final filterOptions = lojasCubit.filterOptions;
+          final pagination = state is LojasLoaded ? state.pagination : null;
 
-          if (state is LojasLoaded) {
-            final lojas = state.lojasFiltradas;
-
-            if (lojas.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      AppIcons.store,
-                      size: 100,
-                      color: Colors.grey[400],
-                    ),
-                    const SizedBox(height: 16),
-                    const TextH2('Nenhuma loja encontrada'),
-                    const SizedBox(height: 8),
-                    TextBody2(
-                      state.lojas.isEmpty
-                          ? 'Comece criando uma loja'
-                          : 'Tente outros filtros de busca',
-                      color: Colors.grey[600],
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            return RefreshIndicator(
+          return SelectionArea(
+            child: RefreshIndicator(
               onRefresh: _onRefresh,
-              child: ListView.builder(
-                controller: _scrollController,
-                padding: const EdgeInsets.all(16),
-                itemCount: lojas.length + (_isLoadingMore ? 1 : 0),
-                itemBuilder: (context, index) {
-                  if (index == lojas.length) {
-                    return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(16),
-                        child: CircularProgressIndicator(),
-                      ),
-                    );
-                  }
-
-                  final loja = lojas[index];
-                  return LojaCardItem(
-                    loja: loja,
-                    onTap: () => _abrirFormLoja(context, loja: loja),
-                  );
-                },
-              ),
-            );
-          }
-          return const SizedBox();
+              child: CustomScrollView(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                if (filterOptions != null)
+                  SliverToBoxAdapter(
+                    child: GenericFilterWidget(
+                      groups: (filterOptions).entries
+                          .map((entry) => FilterGroup.fromJson(entry.key, entry.value))
+                          .whereType<FilterGroup>()
+                          .toList(),
+                      onApply: (params) => lojasCubit.fetchLojas(filters: params),
+                      totalItems: pagination?['total'] ?? 0,
+                    ),
+                  ),
+                _buildListContentSliver(state),
+              ],
+            ),
+          ));
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -247,6 +141,85 @@ class _LojasListScreenState extends State<LojasListScreen> {
         icon: const Icon(AppIcons.add, color: Colors.white),
       ),
     );
+  }
+
+  Widget _buildListContentSliver(LojasState state) {
+    if (state is LojasLoading && !_isLoadingMore) {
+      return SliverPadding(
+        padding: const EdgeInsets.all(16),
+        sliver: SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (_, __) => const Padding(
+              padding: EdgeInsets.only(bottom: 12),
+              child: LojaCardSkeleton(),
+            ),
+            childCount: 5,
+          ),
+        ),
+      );
+    }
+
+    if (state is LojasLoaded) {
+      final lojas = state.lojasFiltradas;
+
+      if (lojas.isEmpty) {
+        return SliverFillRemaining(
+          hasScrollBody: false,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 60),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    AppIcons.store,
+                    size: 100,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 16),
+                  const TextH2('Nenhuma loja encontrada'),
+                  const SizedBox(height: 8),
+                  TextBody2(
+                    state.lojas.isEmpty
+                        ? 'Comece criando uma loja'
+                        : 'Tente outros filtros de busca',
+                    color: Colors.grey[600],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }
+
+      return SliverPadding(
+        padding: const EdgeInsets.all(16),
+        sliver: SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, index) {
+              if (index == lojas.length) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(16),
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              }
+
+              final loja = lojas[index];
+              return RepaintBoundary(
+                child: LojaCardItem(
+                  loja: loja,
+                  onTap: () => _abrirFormLoja(context, loja: loja),
+                ),
+              );
+            },
+            childCount: lojas.length + (_isLoadingMore ? 1 : 0),
+          ),
+        ),
+      );
+    }
+    return const SliverToBoxAdapter(child: SizedBox());
   }
 
   void _abrirFormLoja(BuildContext context, {Loja? loja}) {

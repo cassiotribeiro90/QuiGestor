@@ -58,9 +58,6 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: TextH2('Cardápio - ${widget.lojaNome}'),
-      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _navegarParaForm(),
         label: const TextBody1('Novo Produto', color: Colors.white),
@@ -69,34 +66,48 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
       body: BlocBuilder<ProdutosCubit, ProdutosState>(
         builder: (context, state) {
           if (state is ProdutosLoading) {
-            return ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: 5,
-              itemBuilder: (_, __) => const Padding(
-                padding: EdgeInsets.only(bottom: 12),
-                child: LojaCardSkeleton(),
-              ),
+            return CustomScrollView(
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.all(16),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (_, __) => const Padding(
+                        padding: EdgeInsets.only(bottom: 12),
+                        child: LojaCardSkeleton(),
+                      ),
+                      childCount: 5,
+                    ),
+                  ),
+                ),
+              ],
             );
           }
 
           if (state is ProdutosError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(AppIcons.error, size: 80, color: Colors.grey[400]),
-                  const SizedBox(height: 16),
-                  const TextH3('Erro ao carregar produtos'),
-                  const SizedBox(height: 8),
-                  TextBody2(state.message, textAlign: TextAlign.center),
-                  const SizedBox(height: 24),
-                  ElevatedButton.icon(
-                    onPressed: () => context.read<ProdutosCubit>().fetchProdutos(),
-                    icon: const Icon(AppIcons.refresh),
-                    label: const TextBody1('Tentar novamente'),
+            return CustomScrollView(
+              slivers: [
+                SliverFillRemaining(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(AppIcons.error, size: 80, color: Colors.grey[400]),
+                        const SizedBox(height: 16),
+                        const TextH3('Erro ao carregar produtos'),
+                        const SizedBox(height: 8),
+                        TextBody2(state.message, textAlign: TextAlign.center),
+                        const SizedBox(height: 24),
+                        ElevatedButton.icon(
+                          onPressed: () => context.read<ProdutosCubit>().fetchProdutos(),
+                          icon: const Icon(AppIcons.refresh),
+                          label: const TextBody1('Tentar novamente'),
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
+                ),
+              ],
             );
           }
 
@@ -104,70 +115,102 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
             final sections = state.sections;
 
             if (sections.isEmpty || sections.values.every((list) => list.isEmpty)) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(AppIcons.fastfood, size: 100, color: Colors.grey[400]),
-                    const SizedBox(height: 16),
-                    const TextH2('Nenhum produto cadastrado'),
-                    const SizedBox(height: 8),
-                    const TextBody2('Adicione produtos ao cardápio desta loja'),
-                    const SizedBox(height: 24),
-                    ElevatedButton.icon(
-                      onPressed: () => _navegarParaForm(),
-                      icon: const Icon(AppIcons.add),
-                      label: const TextBody1('Adicionar Produto'),
+              return CustomScrollView(
+                slivers: [
+                  SliverFillRemaining(
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(AppIcons.fastfood, size: 100, color: Colors.grey[400]),
+                          const SizedBox(height: 16),
+                          const TextH2('Nenhum produto cadastrado'),
+                          const SizedBox(height: 8),
+                          const TextBody2('Adicione produtos ao cardápio desta loja'),
+                          const SizedBox(height: 24),
+                          ElevatedButton.icon(
+                            onPressed: () => _navegarParaForm(),
+                            icon: const Icon(AppIcons.add),
+                            label: const TextBody1('Adicionar Produto'),
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               );
             }
 
-            return RefreshIndicator(
-              onRefresh: () => context.read<ProdutosCubit>().fetchProdutos(),
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: sections.entries.map((entry) {
-                  final categoria = entry.key;
-                  final produtos = entry.value;
+            return SelectionArea(
+              child: RefreshIndicator(
+                onRefresh: () => context.read<ProdutosCubit>().fetchProdutos(),
+                child: CustomScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    // Título opcional caso queira mostrar o nome da loja no corpo
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                        child: TextH2('Cardápio - ${widget.lojaNome}',
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    ...sections.entries.map((entry) {
+                      final categoria = entry.key;
+                      final produtos = entry.value;
 
-                  if (produtos.isEmpty) return const SizedBox.shrink();
+                      if (produtos.isEmpty) {
+                        return const SliverToBoxAdapter(child: SizedBox.shrink());
+                      }
 
-                  final count = produtos.length;
+                      final count = produtos.length;
 
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Row(
-                          children: [
-                            TextH3(
-                              categoria,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.primary.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
+                      return SliverPadding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        sliver: SliverMainAxisGroup(
+                          slivers: [
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                child: Row(
+                                  children: [
+                                    TextH3(
+                                      categoria,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: theme.colorScheme.primary
+                                            .withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: TextBody3(
+                                        '$count',
+                                        color: theme.colorScheme.primary,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                              child: TextBody3(
-                                '$count',
-                                color: theme.colorScheme.primary,
-                                fontWeight: FontWeight.bold,
+                            ),
+                            SliverList(
+                              delegate: SliverChildBuilderDelegate(
+                                (context, index) => RepaintBoundary(
+                                    child: _buildProdutoCard(produtos[index])),
+                                childCount: produtos.length,
                               ),
                             ),
+                            const SliverToBoxAdapter(child: SizedBox(height: 16)),
                           ],
                         ),
-                      ),
-                      ...produtos.map((produto) => _buildProdutoCard(produto)),
-                      const SizedBox(height: 16),
-                    ],
-                  );
-                }).toList(),
+                      );
+                    }).toList(),
+                  ],
+                ),
               ),
             );
           }

@@ -17,11 +17,13 @@ class GestoresLoaded extends GestoresState {
   final List<Gestor> gestores;
   final List<Gestor> gestoresFiltrados;
   final Map<String, dynamic>? pagination;
+  final Map<String, dynamic>? filterOptions;
 
   const GestoresLoaded({
     required this.gestores,
     required this.gestoresFiltrados,
     this.pagination,
+    this.filterOptions,
   });
 
   // 🔥 GETTERS DE PAGINAÇÃO
@@ -32,7 +34,7 @@ class GestoresLoaded extends GestoresState {
   bool get hasMorePages => currentPage < totalPages;
 
   @override
-  List<Object?> get props => [gestores, gestoresFiltrados, pagination];
+  List<Object?> get props => [gestores, gestoresFiltrados, pagination, filterOptions];
 }
 
 class GestoresError extends GestoresState {

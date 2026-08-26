@@ -34,7 +34,7 @@ class _LojaFiltersState extends State<LojaFilters> {
         value: s['value'].toString(),
         label: s['label'].toString(),
         count: s['count'],
-        selected: cubit.currentStatusList.contains(s['value'].toString()),
+        selected: (cubit.activeFilters['status'] ?? '').split(',').contains(s['value'].toString()),
       )).toList(),
     );
 
@@ -48,7 +48,7 @@ class _LojaFiltersState extends State<LojaFilters> {
         value: c['value'].toString(),
         label: c['label'].toString(),
         count: c['count'],
-        selected: cubit.currentCategorias.contains(c['value'].toString()),
+        selected: (cubit.activeFilters['categoria'] ?? '').split(',').contains(c['value'].toString()),
       )).toList(),
     );
 
@@ -63,14 +63,14 @@ class _LojaFiltersState extends State<LojaFilters> {
           label: 'Destaque',
           emoji: '⭐',
           count: filterOptions['destaque'],
-          selected: cubit.currentDestaque == true,
+          selected: cubit.activeFilters['destaque'] == '1',
         ),
         FilterOptionModel(
           value: 'verificado',
           label: 'Verificado',
           emoji: '✅',
           count: filterOptions['verificado'],
-          selected: cubit.currentVerificado == true,
+          selected: cubit.activeFilters['verificado'] == '1',
         ),
       ],
     );
@@ -159,12 +159,18 @@ class _LojaFiltersState extends State<LojaFilters> {
                   height: 48,
                   onPressed: () {
                     final outros = _outrosSection.getSelectedValues();
-                    context.read<LojasCubit>().applyFilters(
-                      status: _statusSection.getSelectedValues(),
-                      categorias: _categoriaSection.getSelectedValues(),
-                      destaque: outros.contains('destaque') ? true : null,
-                      verificado: outros.contains('verificado') ? true : null,
-                    );
+                    final filters = <String, String>{};
+                    
+                    final status = _statusSection.getSelectedValues();
+                    if (status.isNotEmpty) filters['status'] = status.join(',');
+                    
+                    final categorias = _categoriaSection.getSelectedValues();
+                    if (categorias.isNotEmpty) filters['categoria'] = categorias.join(',');
+                    
+                    if (outros.contains('destaque')) filters['destaque'] = '1';
+                    if (outros.contains('verificado')) filters['verificado'] = '1';
+
+                    context.read<LojasCubit>().applyFilters(filters);
                     Navigator.pop(context);
                   },
                 ),

@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../apparte/widgets/app_text.dart';
 import '../../../../apparte/widgets/loading_skeleton.dart';
+import '../../../models/filter_option.dart';
+import '../../../widgets/generic_filter_widget.dart';
 import '../bloc/categorias_cubit.dart';
 import '../bloc/categorias_state.dart';
 import '../models/categoria.dart';
 import '../widgets/categoria_card.dart';
-import '../widgets/categoria_filters.dart';
 import 'categoria_form_screen.dart';
 import '../../../core/constants/icon_constants.dart';
 
@@ -18,8 +19,6 @@ class CategoriasListScreen extends StatefulWidget {
 }
 
 class _CategoriasListScreenState extends State<CategoriasListScreen> {
-  final _searchController = TextEditingController();
-
   @override
   void initState() {
     super.initState();
@@ -31,64 +30,10 @@ class _CategoriasListScreenState extends State<CategoriasListScreen> {
   }
 
   @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  void _showFilters() {
+  Widget build(BuildContext context) {
     final categoriasCubit = context.read<CategoriasCubit>();
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (bottomSheetContext) => CategoriaFilters(
-        categoriasCubit: categoriasCubit, // ✅ Passa o Cubit
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const TextH2('Categorias', fontWeight: FontWeight.bold),
-        actions: [
-          IconButton(
-            icon: const Icon(AppIcons.filter),
-            onPressed: _showFilters,
-          ),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(80),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Buscar categorias...',
-                prefixIcon: const Icon(AppIcons.search),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(AppIcons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          context.read<CategoriasCubit>().applySearch('');
-                        },
-                      )
-                    : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              onChanged: (value) {
-                context.read<CategoriasCubit>().applySearch(value);
-              },
-            ),
-          ),
-        ),
-      ),
       body: BlocConsumer<CategoriasCubit, CategoriasState>(
         listener: (context, state) {
           if (state is CategoriasError) {
@@ -102,59 +47,30 @@ class _CategoriasListScreenState extends State<CategoriasListScreen> {
           }
         },
         builder: (context, state) {
-          if (state is CategoriasLoading) {
-            return GridView.builder(
-              padding: const EdgeInsets.all(12),
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 300,
-                childAspectRatio: 1.8,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-              ),
-              itemCount: 6,
-              itemBuilder: (_, __) => const CardSkeleton(),
-            );
-          }
+          final filterOptions = categoriasCubit.filterOptions;
+          final pagination = state is CategoriasLoaded ? state.pagination : null;
 
-          if (state is CategoriasLoaded) {
-            final categorias = state.categoriasFiltradas;
-
-            if (categorias.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(AppIcons.category, size: 60, color: Colors.grey[400]),
-                    const SizedBox(height: 12),
-                    const TextH3('Nenhuma categoria encontrada'),
-                  ],
-                ),
-              );
-            }
-
-            return RefreshIndicator(
-              onRefresh: () => context.read<CategoriasCubit>().fetchCategorias(),
-              child: GridView.builder(
-                padding: const EdgeInsets.all(12),
-                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: 300,
-                  childAspectRatio: 1.8,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                ),
-                itemCount: categorias.length,
-                itemBuilder: (context, index) {
-                  final categoria = categorias[index];
-                  return CategoriaCard(
-                    categoria: categoria,
-                    onTap: () => _abrirFormCategoria(context, categoria: categoria),
-                  );
-                },
-              ),
-            );
-          }
-
-          return const SizedBox();
+          return SelectionArea(
+            child: RefreshIndicator(
+              onRefresh: () => categoriasCubit.fetchCategorias(),
+              child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                if (filterOptions != null)
+                  SliverToBoxAdapter(
+                    child: GenericFilterWidget(
+                      groups: (filterOptions).entries
+                          .map((entry) => FilterGroup.fromJson(entry.key, entry.value))
+                          .whereType<FilterGroup>()
+                          .toList(),
+                      onApply: (params) => categoriasCubit.fetchCategorias(filters: params),
+                      totalItems: pagination?['total'] ?? 0,
+                    ),
+                  ),
+                _buildListContentSliver(state),
+              ],
+            ),
+          ));
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -163,6 +79,75 @@ class _CategoriasListScreenState extends State<CategoriasListScreen> {
         icon: const Icon(AppIcons.add),
       ),
     );
+  }
+
+  Widget _buildListContentSliver(CategoriasState state) {
+    if (state is CategoriasLoading) {
+      return SliverPadding(
+        padding: const EdgeInsets.all(12),
+        sliver: SliverGrid(
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 300,
+            childAspectRatio: 1.8,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+          ),
+          delegate: SliverChildBuilderDelegate(
+            (_, __) => const CardSkeleton(),
+            childCount: 6,
+          ),
+        ),
+      );
+    }
+
+    if (state is CategoriasLoaded) {
+      final categorias = state.categoriasFiltradas;
+
+      if (categorias.isEmpty) {
+        return SliverFillRemaining(
+          hasScrollBody: false,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 40),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(AppIcons.category, size: 60, color: Colors.grey[400]),
+                  const SizedBox(height: 12),
+                  const TextH3('Nenhuma categoria encontrada'),
+                ],
+              ),
+            ),
+          ),
+        );
+      }
+
+      return SliverPadding(
+        padding: const EdgeInsets.all(12),
+        sliver: SliverGrid(
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 300,
+            childAspectRatio: 1.8,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+          ),
+          delegate: SliverChildBuilderDelegate(
+            (context, index) {
+              final categoria = categorias[index];
+              return RepaintBoundary(
+                child: CategoriaCard(
+                  categoria: categoria,
+                  onTap: () => _abrirFormCategoria(context, categoria: categoria),
+                ),
+              );
+            },
+            childCount: categorias.length,
+          ),
+        ),
+      );
+    }
+
+    return const SliverToBoxAdapter(child: SizedBox());
   }
 
   void _abrirFormCategoria(BuildContext context, {Categoria? categoria}) {
