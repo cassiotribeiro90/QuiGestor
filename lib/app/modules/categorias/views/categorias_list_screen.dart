@@ -4,6 +4,7 @@ import '../../../../apparte/widgets/app_text.dart';
 import '../../../../apparte/widgets/loading_skeleton.dart';
 import '../../../models/filter_option.dart';
 import '../../../widgets/generic_filter_widget.dart';
+import '../../../widgets/conditional_selection_area.dart';
 import '../bloc/categorias_cubit.dart';
 import '../bloc/categorias_state.dart';
 import '../models/categoria.dart';
@@ -50,7 +51,7 @@ class _CategoriasListScreenState extends State<CategoriasListScreen> {
           final filterOptions = categoriasCubit.filterOptions;
           final pagination = state is CategoriasLoaded ? state.pagination : null;
 
-          return SelectionArea(
+          return ConditionalSelectionArea(
             child: RefreshIndicator(
               onRefresh: () => categoriasCubit.fetchCategorias(),
               child: CustomScrollView(

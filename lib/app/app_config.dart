@@ -1,5 +1,6 @@
 class AppConfig {
-  static const int defaultPerPage = 10;
+  static const int defaultPerPage = 20;
+  static bool useSelectableText = false; // Permite alternar para Text normal para testes de performance
 
   // AUTH
   static const String LOGIN = '/gestor/gestor-usuarios/login';

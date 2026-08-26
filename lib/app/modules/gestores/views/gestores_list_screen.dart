@@ -13,6 +13,7 @@ import 'gestor_form_screen.dart';
 import '../../../core/constants/icon_constants.dart';
 import '../../../models/filter_option.dart';
 import '../../../widgets/generic_filter_widget.dart';
+import '../../../widgets/conditional_selection_area.dart';
 
 class GestoresListScreen extends StatefulWidget {
   const GestoresListScreen({super.key});
@@ -111,7 +112,7 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
           final filterOptions = gestoresCubit.filterOptions;
           final total = state is GestoresLoaded ? state.total : 0;
 
-          return SelectionArea(
+          return ConditionalSelectionArea(
             child: RefreshIndicator(
               onRefresh: _onRefresh,
               child: CustomScrollView(

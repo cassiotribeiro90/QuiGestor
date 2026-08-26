@@ -10,6 +10,7 @@ import '../bloc/lojas_state.dart';
 import '../models/loja.dart';
 import '../../../models/filter_option.dart';
 import '../../../widgets/generic_filter_widget.dart';
+import '../../../widgets/conditional_selection_area.dart';
 import '../widgets/loja_card_item.dart';
 import 'loja_form_screen.dart';
 import '../../../core/constants/icon_constants.dart';
@@ -111,7 +112,7 @@ class _LojasListScreenState extends State<LojasListScreen> {
           final filterOptions = lojasCubit.filterOptions;
           final pagination = state is LojasLoaded ? state.pagination : null;
 
-          return SelectionArea(
+          return ConditionalSelectionArea(
             child: RefreshIndicator(
               onRefresh: _onRefresh,
               child: CustomScrollView(

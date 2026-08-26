@@ -10,6 +10,7 @@ import 'lojista_form_page.dart';
 import '../../../core/constants/icon_constants.dart';
 import '../../../models/filter_option.dart';
 import '../../../widgets/generic_filter_widget.dart';
+import '../../../widgets/conditional_selection_area.dart';
 
 class LojistasListPage extends StatefulWidget {
   const LojistasListPage({super.key});
@@ -59,7 +60,7 @@ class _LojistasListPageState extends State<LojistasListPage> {
           final filterOptions = lojistasCubit.filterOptions;
           final total = state is LojistasLoaded ? state.total : 0;
 
-          return SelectionArea(
+          return ConditionalSelectionArea(
             child: RefreshIndicator(
               onRefresh: () async => lojistasCubit.reset(),
               child: CustomScrollView(

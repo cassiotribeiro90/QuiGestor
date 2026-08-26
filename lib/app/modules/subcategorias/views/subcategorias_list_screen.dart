@@ -11,6 +11,7 @@ import 'package:quigestor/app/modules/subcategorias/bloc/subcategoria_state.dart
 import 'package:quigestor/app/modules/categorias/bloc/categorias_cubit.dart';
 import 'package:quigestor/app/models/filter_option.dart';
 import 'package:quigestor/app/widgets/generic_filter_widget.dart';
+import 'package:quigestor/app/widgets/conditional_selection_area.dart';
 
 import '../../../di/dependencies.dart';
 
@@ -67,7 +68,7 @@ class _SubcategoriasListScreenState extends State<SubcategoriasListScreen> {
         final pagination =
             state is SubcategoriaLoaded ? state.pagination : null;
 
-        return SelectionArea(
+        return ConditionalSelectionArea(
           child: RefreshIndicator(
             onRefresh: () async => _carregar(),
             child: CustomScrollView(

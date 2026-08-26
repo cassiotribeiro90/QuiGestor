@@ -10,6 +10,7 @@ import '../../../../apparte/widgets/loading_skeleton.dart';
 import '../../../../shared/api/api_client.dart';
 import 'produto_form_screen.dart';
 import '../../../core/constants/icon_constants.dart';
+import '../../../widgets/conditional_selection_area.dart';
 
 class ProdutosListScreen extends StatefulWidget {
   final int lojaId;
@@ -141,7 +142,7 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
               );
             }
 
-            return SelectionArea(
+            return ConditionalSelectionArea(
               child: RefreshIndicator(
                 onRefresh: () => context.read<ProdutosCubit>().fetchProdutos(),
                 child: CustomScrollView(

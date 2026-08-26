@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../app/theme/app_text_styles.dart';
+import '../../app/app_config.dart';
 
 /// Componente base para todos os textos do app.
 class AppText extends StatelessWidget {
@@ -28,6 +29,7 @@ class AppText extends StatelessWidget {
   });
 
   bool get _isSelectable {
+    if (!AppConfig.useSelectableText) return false;
     if (!selectable) return false;
     return kIsWeb;
   }
