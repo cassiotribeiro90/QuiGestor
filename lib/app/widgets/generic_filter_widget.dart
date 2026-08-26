@@ -8,12 +8,14 @@ class GenericFilterWidget extends StatefulWidget {
   final List<FilterGroup> groups;
   final Function(Map<String, String> params) onApply;
   final int totalItems;
+  final Map<String, String>? initialFilters; // 🔥 NOVO
 
   const GenericFilterWidget({
     super.key,
     required this.groups,
     required this.onApply,
     this.totalItems = 0,
+    this.initialFilters,
   });
 
   @override
@@ -29,6 +31,11 @@ class _GenericFilterWidgetState extends State<GenericFilterWidget> {
     super.initState();
     _debouncer = Debouncer(delay: const Duration(milliseconds: 500));
     _searchController = TextEditingController();
+
+    // 🔥 Se houver filtro de busca inicial, preenche o controller
+    if (widget.initialFilters?.containsKey('search') == true) {
+      _searchController.text = widget.initialFilters!['search']!;
+    }
   }
 
   @override
@@ -41,7 +48,19 @@ class _GenericFilterWidgetState extends State<GenericFilterWidget> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => FilterCubit(),
+      create: (_) {
+        final cubit = FilterCubit();
+        // 🔥 Sincroniza com os filtros iniciais (período, status, loja_id, etc)
+        if (widget.initialFilters != null) {
+          for (var entry in widget.initialFilters!.entries) {
+            // Ignora parâmetros de paginação e busca (search já está no controller)
+            if (entry.key != 'search' && entry.key != 'page' && entry.key != 'per_page') {
+              cubit.selectValue(entry.key, entry.value);
+            }
+          }
+        }
+        return cubit;
+      },
       child: _FilterContent(
         groups: widget.groups,
         onApply: widget.onApply,
@@ -79,14 +98,13 @@ class _FilterContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 🔍 Barra de busca (SEM botão, com debounce)
+        // 🔍 Barra de busca
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: TextField(
             controller: searchController,
             onChanged: (query) {
               cubit.setSearchQuery(query);
-              // 🔥 Debounce para aplicar a busca automaticamente
               debouncer.call(() {
                 cubit.applyFilters();
                 onApply(cubit.getFilterParams());
@@ -96,7 +114,7 @@ class _FilterContent extends StatelessWidget {
               hintText: 'Pesquisar...',
               prefixIcon: const Icon(Icons.search),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12), // arredondado
+                borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide.none,
               ),
               filled: true,
@@ -109,7 +127,7 @@ class _FilterContent extends StatelessWidget {
           ),
         ),
 
-        // 📊 Resumo da pesquisa (mantido)
+        // 📊 Resumo da pesquisa
         if (totalItems > 0 || cubit.hasActiveFilters)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -139,24 +157,22 @@ class _FilterContent extends StatelessWidget {
             ),
           ),
 
-        // 🏷️ Filtros (sempre expandidos, sem setinhas)
+        // 🏷️ Filtros (sempre expandidos)
         ...groups.map((group) => _FilterGroupChip(
-              group: group,
-              selectedRadio: state.selectedValues[group.key],
-              selectedMulti: state.selectedMultiValues[group.key] ?? [],
-              onSelectRadio: (value) {
-                cubit.selectValue(group.key, value);
-                // 🔥 Aplica automaticamente ao selecionar
-                cubit.applyFilters();
-                onApply(cubit.getFilterParams());
-              },
-              onToggleMulti: (value) {
-                cubit.toggleMultiValue(group.key, value);
-                // 🔥 Aplica automaticamente ao selecionar
-                cubit.applyFilters();
-                onApply(cubit.getFilterParams());
-              },
-            )),
+          group: group,
+          selectedRadio: state.selectedValues[group.key],
+          selectedMulti: state.selectedMultiValues[group.key] ?? [],
+          onSelectRadio: (value) {
+            cubit.selectValue(group.key, value);
+            cubit.applyFilters();
+            onApply(cubit.getFilterParams());
+          },
+          onToggleMulti: (value) {
+            cubit.toggleMultiValue(group.key, value);
+            cubit.applyFilters();
+            onApply(cubit.getFilterParams());
+          },
+        )),
 
         const SizedBox(height: 8),
       ],
@@ -184,12 +200,17 @@ class _FilterGroupChip extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
+    // 🔥 IGNORA GRUPOS VAZIOS (SEM OPÇÕES)
+    if (group.options.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Cabeçalho do grupo (sem setinha)
+          // Cabeçalho do grupo
           Text(
             group.label,
             style: theme.textTheme.titleSmall?.copyWith(
@@ -199,7 +220,7 @@ class _FilterGroupChip extends StatelessWidget {
           ),
           const SizedBox(height: 6),
 
-          // 🔥 Opções em estilo minimalista (sem chips)
+          // Opções
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -225,7 +246,7 @@ class _FilterGroupChip extends StatelessWidget {
                     color: isOptionSelected
                         ? theme.primaryColor
                         : (isDark ? theme.colorScheme.surfaceContainerHigh : Colors.grey[100]),
-                    borderRadius: BorderRadius.circular(20), // contorno arredondado
+                    borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: isOptionSelected
                           ? theme.primaryColor

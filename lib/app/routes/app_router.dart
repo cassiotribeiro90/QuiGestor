@@ -12,8 +12,9 @@ import '../modules/lojistas/bloc/lojistas_cubit.dart';
 import '../modules/lojistas/views/lojistas_list_page.dart';
 import '../modules/gestores/bloc/gestores_cubit.dart';
 import '../modules/gestores/views/gestores_list_screen.dart';
-import '../modules/produtos/bloc/produtos_cubit.dart';
-import '../modules/produtos/views/produtos_list_screen.dart';
+import '../modules/pedidos/bloc/pedidos_cubit.dart';
+import '../modules/pedidos/views/pedido_detail_screen.dart';
+import '../modules/pedidos/views/pedidos_list_screen.dart';
 import '../modules/categorias/bloc/categorias_cubit.dart';
 import '../modules/categorias/views/categorias_list_screen.dart';
 import '../modules/settings/views/settings_screen.dart';
@@ -162,10 +163,26 @@ final GoRouter appRouter = GoRouter(
           builder: (context, state) {
             debugPrint('📦 [ROUTER] Abrindo Pedidos');
             return BlocProvider(
-              create: (context) => ProdutosCubit(context.read<ApiClient>(), 0),
-              child: const ProdutosListScreen(lojaId: 0, lojaNome: 'Pedidos'),
+              create: (context) => PedidosCubit(context.read<ApiClient>()),
+              child: const PedidosListScreen(),
             );
           },
+          routes: [
+            // 🔥 FILHA: detalhe do pedido (compartilha o mesmo shell)
+            GoRoute(
+              path: ':id',
+              name: 'pedido-detalhe',
+              // parentNavigatorKey: NÃO USAR (herda do pai)
+              builder: (context, state) {
+                final id = int.parse(state.pathParameters['id']!);
+                debugPrint('📄 [ROUTER] Abrindo Detalhe do Pedido ID: $id');
+                return BlocProvider(
+                  create: (context) => PedidosCubit(context.read<ApiClient>()),
+                  child: PedidoDetailScreen(pedidoId: id),
+                );
+              },
+            ),
+          ],
         ),
 
         // ---------- CONFIGURAÇÕES ----------
@@ -177,6 +194,8 @@ final GoRouter appRouter = GoRouter(
             return const SettingsScreen();
           },
         ),
+
+
       ],
     ),
   ],

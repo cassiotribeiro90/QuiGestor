@@ -2,7 +2,7 @@ class FilterOption {
   final String value;
   final String label;
   final int? count;
-  final String? icon; // opcional (para emojis)
+  final String? icon;
 
   FilterOption({
     required this.value,
@@ -25,7 +25,7 @@ class FilterGroup {
   final String key;
   final String label;
   final List<FilterOption> options;
-  final FilterType type; // radio ou checkbox
+  final FilterType type;
 
   FilterGroup({
     required this.key,
@@ -34,29 +34,40 @@ class FilterGroup {
     this.type = FilterType.radio,
   });
 
-  static FilterGroup? fromJson(String key, dynamic json) {
-    if (json is! List) return null;
-
-    final options = json
-        .map((item) => FilterOption.fromJson(item as Map<String, dynamic>))
-        .toList();
-
-    // Define o tipo com base na chave ou no número de opções
-    FilterType type = FilterType.radio;
-    if (key == 'categoria_id' || key == 'loja_id' || key == 'status') {
-      type = FilterType.radio; // seleção única
-    } else if (key == 'ativo' || key == 'destaque' || key == 'verificado') {
-      type = FilterType.radio; // booleano
+  /// Cria um FilterGroup a partir do JSON do filter_options.
+  /// Se o valor for uma lista, cria opções normalmente.
+  /// Se o valor for um número (int/double), cria uma única opção com a contagem.
+  factory FilterGroup.fromJson(String key, dynamic json) {
+    if (json is List) {
+      final options = json.map((item) => FilterOption.fromJson(item)).toList();
+      return FilterGroup(
+        key: key,
+        label: _getLabelForKey(key),
+        options: options,
+        type: FilterType.radio,
+      );
+    } else if (json is num) {
+      // 🔥 Número: transforma em uma única opção com a contagem
+      final option = FilterOption(
+        value: key,
+        label: _getLabelForKey(key),
+        count: json.toInt(),
+      );
+      return FilterGroup(
+        key: key,
+        label: _getLabelForKey(key),
+        options: [option],
+        type: FilterType.radio,
+      );
     } else {
-      type = FilterType.radio; // fallback
+      // Fallback: grupo vazio
+      return FilterGroup(
+        key: key,
+        label: key,
+        options: [],
+        type: FilterType.radio,
+      );
     }
-
-    return FilterGroup(
-      key: key,
-      label: _getLabelForKey(key),
-      options: options,
-      type: type,
-    );
   }
 
   static String _getLabelForKey(String key) {
@@ -70,6 +81,8 @@ class FilterGroup {
       'nivel': 'Nível',
       'loja_id': 'Loja',
       'categoria': 'Categoria',
+      'categorias': 'Categorias',
+      'periodo': 'Período',
     };
     return labels[key] ?? key;
   }

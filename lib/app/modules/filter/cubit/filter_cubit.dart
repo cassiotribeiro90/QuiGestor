@@ -8,12 +8,14 @@ class FilterState extends Equatable {
   final Map<String, List<String>> selectedMultiValues; // para checkbox
   final String searchQuery;
   final bool isApplied;
+  final bool hasLoaded; // 🔥 NOVO: indica se o filtro já foi aplicado pelo menos uma vez
 
   const FilterState({
     this.selectedValues = const {},
     this.selectedMultiValues = const {},
     this.searchQuery = '',
     this.isApplied = false,
+    this.hasLoaded = false,
   });
 
   FilterState copyWith({
@@ -21,17 +23,25 @@ class FilterState extends Equatable {
     Map<String, List<String>>? selectedMultiValues,
     String? searchQuery,
     bool? isApplied,
+    bool? hasLoaded,
   }) {
     return FilterState(
       selectedValues: selectedValues ?? this.selectedValues,
       selectedMultiValues: selectedMultiValues ?? this.selectedMultiValues,
       searchQuery: searchQuery ?? this.searchQuery,
       isApplied: isApplied ?? this.isApplied,
+      hasLoaded: hasLoaded ?? this.hasLoaded,
     );
   }
 
   @override
-  List<Object?> get props => [selectedValues, selectedMultiValues, searchQuery, isApplied];
+  List<Object?> get props => [
+    selectedValues,
+    selectedMultiValues,
+    searchQuery,
+    isApplied,
+    hasLoaded,
+  ];
 }
 
 // Cubit
@@ -46,7 +56,12 @@ class FilterCubit extends Cubit<FilterState> {
     } else {
       newSelected[groupKey] = value;
     }
-    emit(state.copyWith(selectedValues: newSelected, isApplied: false));
+    // 🔥 Marca como carregado (já houve interação)
+    emit(state.copyWith(
+      selectedValues: newSelected,
+      isApplied: false,
+      hasLoaded: true,
+    ));
   }
 
   // Seleção múltipla (checkbox)
@@ -66,22 +81,37 @@ class FilterCubit extends Cubit<FilterState> {
     } else {
       newSelected[groupKey] = list;
     }
-    emit(state.copyWith(selectedMultiValues: newSelected, isApplied: false));
+    // 🔥 Marca como carregado (já houve interação)
+    emit(state.copyWith(
+      selectedMultiValues: newSelected,
+      isApplied: false,
+      hasLoaded: true,
+    ));
   }
 
   // Busca textual
   void setSearchQuery(String query) {
-    emit(state.copyWith(searchQuery: query, isApplied: false));
+    // 🔥 Marca como carregado (já houve interação)
+    emit(state.copyWith(
+      searchQuery: query,
+      isApplied: false,
+      hasLoaded: true,
+    ));
   }
 
   // Aplica os filtros (notifica a tela para recarregar)
   void applyFilters() {
-    emit(state.copyWith(isApplied: true));
+    // 🔥 Marca como carregado (já houve aplicação de filtro)
+    emit(state.copyWith(
+      isApplied: true,
+      hasLoaded: true,
+    ));
   }
 
   // Limpa todos os filtros
   void clearFilters() {
-    emit(const FilterState());
+    // 🔥 Mantém hasLoaded = true (não perde o estado de carregamento)
+    emit(const FilterState(hasLoaded: true));
   }
 
   // Gera os parâmetros de query para a API
@@ -122,7 +152,7 @@ class FilterCubit extends Cubit<FilterState> {
         final selected = state.selectedValues[group.key];
         if (selected != null) {
           final label = group.options.firstWhere(
-            (o) => o.value == selected,
+                (o) => o.value == selected,
             orElse: () => FilterOption(value: selected, label: selected),
           ).label;
           parts.add('${group.label}: $label');
@@ -132,7 +162,7 @@ class FilterCubit extends Cubit<FilterState> {
         if (selected != null && selected.isNotEmpty) {
           final labels = selected.map((v) {
             return group.options.firstWhere(
-              (o) => o.value == v,
+                  (o) => o.value == v,
               orElse: () => FilterOption(value: v, label: v),
             ).label;
           }).join(', ');
