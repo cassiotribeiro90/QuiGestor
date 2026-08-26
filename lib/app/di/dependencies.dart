@@ -9,6 +9,7 @@ import '../modules/lojistas/bloc/lojistas_cubit.dart';
 import '../modules/lojistas/bloc/lojista_form_cubit.dart';
 import '../modules/subcategorias/services/subcategoria_service.dart';
 import '../modules/subcategorias/bloc/subcategoria_cubit.dart';
+import '../modules/clientes/bloc/clientes_cubit.dart';
 import '../core/services/device_service.dart';
 import '../core/services/fcm_service.dart';
 
@@ -58,4 +59,5 @@ Future<void> setupDependencies() async {
   getIt.registerFactory(() => LojistasCubit(getIt<LojistaRepository>()));
   getIt.registerFactory(() => LojistaFormCubit(getIt<LojistaRepository>()));
   getIt.registerFactory(() => SubcategoriaCubit(getIt<SubcategoriaService>()));
+  getIt.registerFactory(() => ClientesCubit(getIt<ApiClient>()));
 }

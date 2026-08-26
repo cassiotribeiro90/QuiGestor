@@ -30,6 +30,9 @@ import '../modules/produtos/bloc/produtos_cubit.dart';
 import '../modules/produtos/views/produtos_list_screen.dart';
 import '../modules/produtos/views/produto_form_screen.dart';
 import '../modules/produtos/bloc/produto_cubit.dart';
+import '../modules/clientes/bloc/clientes_cubit.dart';
+import '../modules/clientes/views/clientes_list_screen.dart';
+import '../modules/clientes/views/cliente_form_screen.dart';
 import '../di/dependencies.dart';
 import '../widgets/main_shell.dart';
 
@@ -165,15 +168,29 @@ final GoRouter appRouter = GoRouter(
           },
         ),
 
-        // ---------- CLIENTES (placeholder) ----------
+        // ---------- CLIENTES ----------
         GoRoute(
           path: '/clientes',
           name: 'clientes',
           parentNavigatorKey: _shellNavigatorKey,
           builder: (context, state) {
             debugPrint('👤 [ROUTER] Abrindo Clientes');
-            return const Scaffold(
-              body: Center(child: Text('Clientes - Em breve')),
+            return BlocProvider(
+              create: (context) => ClientesCubit(context.read<ApiClient>()),
+              child: const ClientesListScreen(),
+            );
+          },
+        ),
+        GoRoute(
+          path: '/clientes/:id',
+          name: 'cliente-editar',
+          parentNavigatorKey: _shellNavigatorKey,
+          builder: (context, state) {
+            final id = int.parse(state.pathParameters['id']!);
+            debugPrint('✏️ [ROUTER] Editando Cliente ID: $id');
+            return BlocProvider(
+              create: (context) => ClientesCubit(context.read<ApiClient>()),
+              child: ClienteFormScreen(clienteId: id),
             );
           },
         ),
@@ -427,6 +444,9 @@ class Routes {
   // Rotas de formulário - Gestores
   static const String gestorNovo = '/gestores/novo';
   static String gestorEditar(int id) => '/gestores/$id';
+
+  // Rotas de formulário - Clientes
+  static String clienteEditar(int id) => '/clientes/$id';
 
   // Rotas de formulário - Lojistas
   static const String lojistaNovo = '/lojistas/novo';

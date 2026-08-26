@@ -163,7 +163,27 @@ class _SubcategoriaFormScreenState extends State<SubcategoriaFormScreen> with Ba
     success = await cubit.salvar(dados, id: id);
 
     if (success && mounted) {
-      context.pop(true);
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: TextBody2(
+            _isEditing ? 'Subcategoria atualizada com sucesso' : 'Subcategoria criada com sucesso',
+            color: Colors.white,
+          ),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          if (context.canPop()) {
+            context.pop(true);
+          } else {
+            context.go('/subcategorias');
+          }
+        }
+      });
     }
 
     if (mounted) setState(() => _isSaving = false);
@@ -186,7 +206,24 @@ class _SubcategoriaFormScreenState extends State<SubcategoriaFormScreen> with Ba
               // Usando o metodo deletar do Cubit
               final success = await context.read<SubcategoriaCubit>().deletar(id);
               if (success && mounted) {
-                context.pop(true);
+                ScaffoldMessenger.of(context).clearSnackBars();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: TextBody2('Subcategoria removida com sucesso', color: Colors.white),
+                    backgroundColor: Colors.green,
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) {
+                    if (context.canPop()) {
+                      context.pop(true);
+                    } else {
+                      context.go('/subcategorias');
+                    }
+                  }
+                });
               }
             },
             child: const TextBody2('Excluir', color: Colors.red),

@@ -169,11 +169,30 @@ class _CategoriaFormScreenState extends State<CategoriaFormScreen> with BackButt
     }
 
     if (success && mounted) {
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: TextBody2(
+            isEditing ? 'Categoria atualizada com sucesso' : 'Categoria criada com sucesso',
+            color: Colors.white,
+          ),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+
       // Recarregar a lista
       await cubit.fetchCategorias();
-      if (mounted) {
-        context.pop(true);
-      }
+      
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          if (context.canPop()) {
+            context.pop(true);
+          } else {
+            context.go('/categorias');
+          }
+        }
+      });
     }
 
     if (mounted) setState(() => _isSaving = false);
@@ -205,11 +224,27 @@ class _CategoriaFormScreenState extends State<CategoriaFormScreen> with BackButt
     if (confirmed == true && mounted) {
       final success = await context.read<CategoriasCubit>().deleteCategoria(id);
       if (success && mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: TextBody2('Categoria removida com sucesso', color: Colors.white),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+
         // Recarregar a lista
         await context.read<CategoriasCubit>().fetchCategorias();
-        if (mounted) {
-          context.pop(true);
-        }
+        
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            if (context.canPop()) {
+              context.pop(true);
+            } else {
+              context.go('/categorias');
+            }
+          }
+        });
       }
     }
   }

@@ -140,11 +140,31 @@ class _GestorFormScreenState extends State<GestorFormScreen> with BackButtonMixi
     }
 
     if (success && mounted) {
-      if (widget.onSaved != null) {
-        widget.onSaved!();
-      } else {
-        context.pop(true);
-      }
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: TextBody2(
+            _isEditing ? 'Gestor atualizado com sucesso' : 'Gestor criado com sucesso',
+            color: Colors.white,
+          ),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          if (widget.onSaved != null) {
+            widget.onSaved!();
+          } else {
+            if (context.canPop()) {
+              context.pop(true);
+            } else {
+              context.go('/gestores');
+            }
+          }
+        }
+      });
     }
 
     if (mounted) setState(() => _isSaving = false);
@@ -183,11 +203,28 @@ class _GestorFormScreenState extends State<GestorFormScreen> with BackButtonMixi
     final success = await context.read<GestoresCubit>().deleteGestor(id);
 
     if (success && mounted) {
-      if (widget.onSaved != null) {
-        widget.onSaved!();
-      } else {
-        context.pop(true);
-      }
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: TextBody2('Gestor removido com sucesso', color: Colors.white),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          if (widget.onSaved != null) {
+            widget.onSaved!();
+          } else {
+            if (context.canPop()) {
+              context.pop(true);
+            } else {
+              context.go('/gestores');
+            }
+          }
+        }
+      });
     }
 
     if (mounted) setState(() => _isDeleting = false);

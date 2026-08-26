@@ -63,6 +63,7 @@ class _LojistaFormPageState extends State<LojistaFormPage> with BackButtonMixin 
       body: BlocConsumer<LojistaFormCubit, LojistaFormState>(
         listener: (context, state) {
           if (state is LojistaFormSuccess) {
+            ScaffoldMessenger.of(context).clearSnackBars();
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
@@ -70,10 +71,21 @@ class _LojistaFormPageState extends State<LojistaFormPage> with BackButtonMixin 
                   style: TextStyle(color: isDark ? Colors.white : Colors.black87),
                 ),
                 backgroundColor: Colors.green,
+                duration: const Duration(seconds: 2),
               ),
             );
-            Navigator.pop(context, true);
+            
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                if (context.canPop()) {
+                  Navigator.pop(context, true);
+                } else {
+                  context.go('/lojistas');
+                }
+              }
+            });
           } else if (state is LojistaFormError) {
+            ScaffoldMessenger.of(context).clearSnackBars();
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(

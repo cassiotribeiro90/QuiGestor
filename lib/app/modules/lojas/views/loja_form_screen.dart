@@ -225,13 +225,34 @@ class _LojaFormScreenState extends State<LojaFormScreen> with BackButtonMixin {
     }
 
     if (success && mounted) {
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: TextBody2(
+            _isEditing ? 'Loja atualizada com sucesso' : 'Loja criada com sucesso',
+            color: Colors.white,
+          ),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+
       // Recarregar a lista
       await context.read<LojasCubit>().fetchLojas(perPage: 10);
-      if (widget.onSaved != null) {
-        widget.onSaved!();
-      } else {
-        context.pop(true);
-      }
+      
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          if (widget.onSaved != null) {
+            widget.onSaved!();
+          } else {
+            if (context.canPop()) {
+              context.pop(true);
+            } else {
+              context.go('/lojas');
+            }
+          }
+        }
+      });
     }
 
     if (mounted) setState(() => _isSaving = false);
@@ -264,13 +285,31 @@ class _LojaFormScreenState extends State<LojaFormScreen> with BackButtonMixin {
     final success = await context.read<LojasCubit>().deleteLoja(id);
 
     if (success && mounted) {
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: TextBody2('Loja removida com sucesso', color: Colors.white),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+
       // Recarregar a lista
       await context.read<LojasCubit>().fetchLojas(perPage: 10);
-      if (widget.onSaved != null) {
-        widget.onSaved!();
-      } else {
-        context.pop(true);
-      }
+      
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          if (widget.onSaved != null) {
+            widget.onSaved!();
+          } else {
+            if (context.canPop()) {
+              context.pop(true);
+            } else {
+              context.go('/lojas');
+            }
+          }
+        }
+      });
     }
 
     if (mounted) setState(() => _isDeleting = false);
@@ -326,12 +365,7 @@ class _LojaFormScreenState extends State<LojaFormScreen> with BackButtonMixin {
               ),
             );
           } else if (state is LojaOperationSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: TextBody2(state.message, color: Colors.white),
-                backgroundColor: Colors.green,
-              ),
-            );
+            // SnackBar removido daqui e movido para _salvar/_deletar com delay antes do pop
           }
         },
         builder: (context, state) {

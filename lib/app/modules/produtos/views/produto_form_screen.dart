@@ -215,9 +215,7 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> with BackButtonMi
             }
           });
         } else if (state is ProdutoOperationSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: TextInverse(state.message), backgroundColor: Colors.green),
-          );
+          // SnackBar removido daqui e movido para _salvar/_deletar com delay antes do pop
         } else if (state is ProdutoError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: TextInverse(state.message), backgroundColor: Colors.red),
@@ -609,7 +607,28 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> with BackButtonMi
     final success = await context.read<ProdutoCubit>().saveProduto(data, id: widget.produtoId);
     
     if (success && mounted) {
-      Navigator.pop(context, true);
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: TextInverse(
+            widget.produtoId != null ? 'Produto atualizado com sucesso' : 'Produto criado com sucesso',
+          ),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          if (context.canPop()) {
+            context.pop(true);
+          } else if (_lojaId != null) {
+            context.go('/lojas/$_lojaId/produtos');
+          } else {
+            context.go('/lojas');
+          }
+        }
+      });
     }
   }
 
@@ -633,7 +652,26 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> with BackButtonMi
     if (confirm == true && widget.produtoId != null) {
       final success = await context.read<ProdutoCubit>().deleteProduto(widget.produtoId!);
       if (success && mounted) {
-        Navigator.pop(context, true);
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: TextInverse('Produto removido com sucesso'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            if (context.canPop()) {
+              context.pop(true);
+            } else if (_lojaId != null) {
+              context.go('/lojas/$_lojaId/produtos');
+            } else {
+              context.go('/lojas');
+            }
+          }
+        });
       }
     }
   }
