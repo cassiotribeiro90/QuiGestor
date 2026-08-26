@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../apparte/widgets/app_text.dart';
 import '../../../../apparte/widgets/loading_skeleton.dart';
 import '../../../app_config.dart';
@@ -12,8 +13,8 @@ import '../../../models/filter_option.dart';
 import '../../../widgets/generic_filter_widget.dart';
 import '../../../widgets/conditional_selection_area.dart';
 import '../widgets/loja_card_item.dart';
-import 'loja_form_screen.dart';
 import '../../../core/constants/icon_constants.dart';
+import '../../../routes/app_router.dart';
 
 class LojasListScreen extends StatefulWidget {
   const LojasListScreen({super.key});
@@ -83,9 +84,19 @@ class _LojasListScreenState extends State<LojasListScreen> {
     await context.read<LojasCubit>().fetchLojas(perPage: _perPage);
   }
 
+  // 🔥 CORRIGIDO: Usando GoRouter
+  void _abrirFormLoja(BuildContext context, {Loja? loja}) {
+    if (loja != null) {
+      context.push(Routes.lojaEditar(loja.id));
+    } else {
+      context.push(Routes.lojaNovo);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final lojasCubit = context.read<LojasCubit>();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       body: BlocConsumer<LojasCubit, LojasState>(
@@ -116,41 +127,48 @@ class _LojasListScreenState extends State<LojasListScreen> {
             child: RefreshIndicator(
               onRefresh: _onRefresh,
               child: CustomScrollView(
-              controller: _scrollController,
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                if (filterOptions != null)
-                  SliverToBoxAdapter(
-                    child: GenericFilterWidget(
-                      groups: (filterOptions).entries
-                          .map((entry) => FilterGroup.fromJson(entry.key, entry.value))
-                          .whereType<FilterGroup>()
-                          .toList(),
-                      onApply: (params) => lojasCubit.fetchLojas(filters: params),
-                      totalItems: pagination?['total'] ?? 0,
+                controller: _scrollController,
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  if (filterOptions != null)
+                    SliverToBoxAdapter(
+                      child: GenericFilterWidget(
+                        groups: (filterOptions).entries
+                            .map((entry) => FilterGroup.fromJson(entry.key, entry.value))
+                            .whereType<FilterGroup>()
+                            .toList(),
+                        onApply: (params) => lojasCubit.fetchLojas(filters: params),
+                        totalItems: pagination?['total'] ?? 0,
+                      ),
                     ),
-                  ),
-                _buildListContentSliver(state),
-              ],
+                  _buildListContentSliver(state),
+                ],
+              ),
             ),
-          ));
+          );
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _abrirFormLoja(context),
-        label: const TextBody2('Nova Loja', fontWeight: FontWeight.bold, color: Colors.white),
+        label: TextBody2(
+          'Nova Loja',
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
         icon: const Icon(AppIcons.add, color: Colors.white),
       ),
     );
   }
 
   Widget _buildListContentSliver(LojasState state) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (state is LojasLoading && !_isLoadingMore) {
       return SliverPadding(
         padding: const EdgeInsets.all(16),
         sliver: SliverList(
           delegate: SliverChildBuilderDelegate(
-            (_, __) => const Padding(
+                (_, __) => const Padding(
               padding: EdgeInsets.only(bottom: 12),
               child: LojaCardSkeleton(),
             ),
@@ -175,17 +193,28 @@ class _LojasListScreenState extends State<LojasListScreen> {
                   Icon(
                     AppIcons.store,
                     size: 100,
-                    color: Colors.grey[400],
+                    color: isDark ? Colors.grey[600] : Colors.grey[400],
                   ),
                   const SizedBox(height: 16),
-                  const TextH2('Nenhuma loja encontrada'),
+                  TextH2(
+                    'Nenhuma loja encontrada',
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
                   const SizedBox(height: 8),
                   TextBody2(
                     state.lojas.isEmpty
                         ? 'Comece criando uma loja'
                         : 'Tente outros filtros de busca',
-                    color: Colors.grey[600],
+                    color: isDark ? Colors.grey[400] : Colors.grey[600],
                   ),
+                  if (state.lojas.isEmpty) ...[
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      onPressed: () => _abrirFormLoja(context),
+                      icon: const Icon(AppIcons.add),
+                      label: const TextBody1('Criar Loja'),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -197,14 +226,17 @@ class _LojasListScreenState extends State<LojasListScreen> {
         padding: const EdgeInsets.all(16),
         sliver: SliverList(
           delegate: SliverChildBuilderDelegate(
-            (context, index) {
+                (context, index) {
               if (index == lojas.length) {
-                return const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(16),
-                    child: CircularProgressIndicator(),
-                  ),
-                );
+                if (_isLoadingMore) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
               }
 
               final loja = lojas[index];
@@ -215,22 +247,11 @@ class _LojasListScreenState extends State<LojasListScreen> {
                 ),
               );
             },
-            childCount: lojas.length + (_isLoadingMore ? 1 : 0),
+            childCount: lojas.length,
           ),
         ),
       );
     }
     return const SliverToBoxAdapter(child: SizedBox());
-  }
-
-  void _abrirFormLoja(BuildContext context, {Loja? loja}) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => BlocProvider.value(
-          value: context.read<LojasCubit>(),
-          child: LojaFormScreen(loja: loja),
-        ),
-      ),
-    );
   }
 }

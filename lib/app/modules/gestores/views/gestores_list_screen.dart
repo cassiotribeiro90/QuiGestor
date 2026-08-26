@@ -2,14 +2,15 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../apparte/widgets/app_text.dart';
 import '../../../../apparte/widgets/loading_skeleton.dart';
 import '../../../../apparte/widgets/quigestor_card.dart';
 import '../../../app_config.dart';
+import '../../../routes/app_router.dart';
 import '../bloc/gestores_cubit.dart';
 import '../bloc/gestores_state.dart';
 import '../models/gestor.dart';
-import 'gestor_form_screen.dart';
 import '../../../core/constants/icon_constants.dart';
 import '../../../models/filter_option.dart';
 import '../../../widgets/generic_filter_widget.dart';
@@ -293,15 +294,13 @@ class _GestoresListScreenState extends State<GestoresListScreen> {
     return const SliverToBoxAdapter(child: SizedBox());
   }
 
+  // Substitua a função inteira por:
   void _abrirFormGestor(BuildContext context, {Gestor? gestor}) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => BlocProvider.value(
-          value: context.read<GestoresCubit>(),
-          child: GestorFormScreen(gestor: gestor),
-        ),
-      ),
-    );
+    if (gestor != null) {
+      context.push(Routes.gestorEditar(gestor.id));
+    } else {
+      context.push(Routes.gestorNovo);
+    }
   }
 
   Color _getStatusColor(int status) {

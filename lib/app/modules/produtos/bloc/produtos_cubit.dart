@@ -33,7 +33,6 @@ class ProdutosCubit extends Cubit<ProdutosState> {
           });
         } else if (items is List) {
           // É uma lista (provavelmente vazia ou formato antigo)
-          // Se houver itens, podemos agrupar manualmente, mas normalmente estará vazio
           if (items.isNotEmpty) {
             // Fallback: coloca todos em "Outros"
             final produtos = items
@@ -41,7 +40,6 @@ class ProdutosCubit extends Cubit<ProdutosState> {
                 .toList();
             sections['Outros'] = produtos;
           }
-          // Se vazio, sections permanece vazio (o que é correto)
         }
 
         final categories = (data['categories'] as List?)
@@ -62,5 +60,26 @@ class ProdutosCubit extends Cubit<ProdutosState> {
     } catch (e) {
       emit(ProdutosError('Erro de conexão: $e'));
     }
+  }
+
+  // 🔥 METODO PARA DELETAR PRODUTO
+  Future<void> deleteProduto(int id) async {
+    try {
+      final response = await _apiClient.delete('/gestor/produto/delete?id=$id');
+      if (response.data['success'] == true) {
+        // Emite um estado de sucesso (você pode criar um estado específico)
+        // Ou apenas recarrega a lista
+        await fetchProdutos();
+      } else {
+        emit(ProdutosError(response.data['message'] ?? 'Erro ao remover produto'));
+      }
+    } catch (e) {
+      emit(ProdutosError('Erro de conexão: $e'));
+    }
+  }
+
+  // 🔥 METODO PARA RESETAR O ESTADO
+  void reset() {
+    emit(ProdutosInitial());
   }
 }

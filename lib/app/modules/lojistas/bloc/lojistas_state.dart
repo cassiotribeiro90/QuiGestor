@@ -1,6 +1,5 @@
 import 'package:equatable/equatable.dart';
 import '../models/lojista_model.dart';
-
 import '../models/loja_option_model.dart';
 
 abstract class LojistasState extends Equatable {
@@ -41,18 +40,26 @@ class LojistasLoaded extends LojistasState {
 
   @override
   List<Object?> get props => [
-        lojistas,
-        lojas,
-        total,
-        page,
-        perPage,
-        filterOptions,
-      ];
+    lojistas,
+    lojas,
+    total,
+    page,
+    perPage,
+    filterOptions,
+  ];
 }
 
 class LojistasError extends LojistasState {
   final String message;
   const LojistasError(this.message);
+  @override
+  List<Object?> get props => [message];
+}
+
+// 🔥 ADICIONADO: Estado para operações de sucesso (criar, atualizar, deletar)
+class LojistasOperationSuccess extends LojistasState {
+  final String message;
+  const LojistasOperationSuccess(this.message);
   @override
   List<Object?> get props => [message];
 }

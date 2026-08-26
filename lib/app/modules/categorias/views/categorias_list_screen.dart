@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../apparte/widgets/app_text.dart';
 import '../../../../apparte/widgets/loading_skeleton.dart';
 import '../../../models/filter_option.dart';
@@ -9,7 +10,6 @@ import '../bloc/categorias_cubit.dart';
 import '../bloc/categorias_state.dart';
 import '../models/categoria.dart';
 import '../widgets/categoria_card.dart';
-import 'categoria_form_screen.dart';
 import '../../../core/constants/icon_constants.dart';
 
 class CategoriasListScreen extends StatefulWidget {
@@ -151,14 +151,12 @@ class _CategoriasListScreenState extends State<CategoriasListScreen> {
     return const SliverToBoxAdapter(child: SizedBox());
   }
 
+  // ✅ SUBSTITUA a função inteira por:
   void _abrirFormCategoria(BuildContext context, {Categoria? categoria}) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => BlocProvider.value(
-          value: context.read<CategoriasCubit>(),
-          child: CategoriaFormScreen(categoria: categoria),
-        ),
-      ),
-    );
+    if (categoria != null) {
+      context.push('/categorias/${categoria.id}');
+    } else {
+      context.push('/categorias/novo');
+    }
   }
 }

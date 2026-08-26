@@ -12,8 +12,8 @@ class ProdutosInitial extends ProdutosState {}
 class ProdutosLoading extends ProdutosState {}
 
 class ProdutosLoaded extends ProdutosState {
-  final Map<String, List<Produto>> sections; // ← Agora é um Map
-  final List<Map<String, dynamic>> categories; // ← Metadados
+  final Map<String, List<Produto>> sections;
+  final List<Map<String, dynamic>> categories;
   final Map<String, dynamic>? pagination;
 
   const ProdutosLoaded({
@@ -22,7 +22,6 @@ class ProdutosLoaded extends ProdutosState {
     this.pagination,
   });
 
-  // Getter para lista plana (se necessário)
   List<Produto> get allItems =>
       sections.values.expand((list) => list).toList();
 
@@ -33,6 +32,14 @@ class ProdutosLoaded extends ProdutosState {
 class ProdutosError extends ProdutosState {
   final String message;
   const ProdutosError(this.message);
+  @override
+  List<Object?> get props => [message];
+}
+
+// 🔥 ADICIONADO: Estado para operações de sucesso
+class ProdutosOperationSuccess extends ProdutosState {
+  final String message;
+  const ProdutosOperationSuccess(this.message);
   @override
   List<Object?> get props => [message];
 }

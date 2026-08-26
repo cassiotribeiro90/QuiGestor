@@ -26,7 +26,7 @@ class SubcategoriaCubit extends Cubit<SubcategoriaState> {
       final items = (data['items'] as List)
           .map((json) => Subcategoria.fromJson(json))
           .toList();
-      
+
       _filterOptions = data['filter_options'];
 
       emit(SubcategoriaLoaded(
@@ -47,8 +47,10 @@ class SubcategoriaCubit extends Cubit<SubcategoriaState> {
       } else {
         await _service.atualizar(id, dados);
       }
-      emit(SubcategoriaOperationSuccess(id == null ? 'Subcategoria criada com sucesso' : 'Subcategoria atualizada com sucesso'));
-      await carregar(); 
+      emit(SubcategoriaOperationSuccess(
+          id == null ? 'Subcategoria criada com sucesso' : 'Subcategoria atualizada com sucesso'
+      ));
+      await carregar();
       return true;
     } catch (e) {
       emit(SubcategoriaError(e.toString()));

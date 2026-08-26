@@ -30,7 +30,7 @@ class ProdutoCubit extends Cubit<ProdutoState> {
 
       List<Categoria> categorias = [];
       if (categoriasRes.data['success'] == true) {
-        final items = categoriasRes.data['data'] is Map 
+        final items = categoriasRes.data['data'] is Map
             ? categoriasRes.data['data']['items'] ?? []
             : categoriasRes.data['data'] as List;
         categorias = (items as List)
@@ -40,7 +40,7 @@ class ProdutoCubit extends Cubit<ProdutoState> {
 
       List<Loja> lojas = [];
       if (lojasRes.data['success'] == true) {
-        final items = lojasRes.data['data'] is Map 
+        final items = lojasRes.data['data'] is Map
             ? lojasRes.data['data']['items'] ?? []
             : lojasRes.data['data'] as List;
         lojas = (items as List)
@@ -50,14 +50,14 @@ class ProdutoCubit extends Cubit<ProdutoState> {
 
       Produto? produto;
       List<Subcategoria> subcategorias = [];
-      
+
       if (produtoId != null && responses.length > 2) {
         final produtoRes = responses[2];
         if (produtoRes.data['success'] == true) {
           final produtoData = produtoRes.data['data']['produto'];
           if (produtoData != null) {
             produto = Produto.fromJson(produtoData);
-            
+
             // Se o produto tem categoria, carregar subcategorias dela
             final catId = produto.categoriaId;
             if (catId != null) {
@@ -121,5 +121,36 @@ class ProdutoCubit extends Cubit<ProdutoState> {
       emit(ProdutoError('Erro de conexão: $e'));
       return false;
     }
+  }
+
+  // 🔥 METODO PARA CARREGAR SUBCATEGORIAS POR CATEGORIA
+  Future<void> loadSubcategoriasPorCategoria(int categoriaId) async {
+    try {
+      final response = await _apiClient.get(
+        '/gestor/subcategoria/por-categoria?id=$categoriaId',
+      );
+      if (response.data['success'] == true) {
+        final List<dynamic> subData = response.data['data'];
+        final subcategorias = subData.map((j) => Subcategoria.fromJson(j)).toList();
+
+        // Atualiza o estado com as novas subcategorias
+        final currentState = state;
+        if (currentState is ProdutoLoaded) {
+          emit(ProdutoLoaded(
+            produto: currentState.produto,
+            categorias: currentState.categorias,
+            lojas: currentState.lojas,
+            subcategorias: subcategorias,
+          ));
+        }
+      }
+    } catch (e) {
+      emit(ProdutoError('Erro ao carregar subcategorias: $e'));
+    }
+  }
+
+  // 🔥 METODO PARA LIMPAR O ESTADO
+  void reset() {
+    emit(ProdutoInitial());
   }
 }

@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../apparte/widgets/app_text.dart';
-import '../bloc/produto_cubit.dart';
+import '../../../routes/app_router.dart';
 import '../bloc/produtos_cubit.dart';
 import '../bloc/produtos_state.dart';
 import '../models/produto.dart';
 import '../../../../apparte/widgets/quigestor_card.dart';
 import '../../../../apparte/widgets/loading_skeleton.dart';
-import '../../../../shared/api/api_client.dart';
-import 'produto_form_screen.dart';
 import '../../../core/constants/icon_constants.dart';
 import '../../../widgets/conditional_selection_area.dart';
 
@@ -27,36 +26,27 @@ class ProdutosListScreen extends StatefulWidget {
 }
 
 class _ProdutosListScreenState extends State<ProdutosListScreen> {
+  late final ProdutosCubit _cubit;
+
   @override
   void initState() {
     super.initState();
-    context.read<ProdutosCubit>().fetchProdutos();
+    _cubit = context.read<ProdutosCubit>();
+    _cubit.fetchProdutos();
   }
 
-  void _navegarParaForm({int? produtoId}) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => BlocProvider(
-          create: (context) => ProdutoCubit(
-            context.read<ApiClient>(),
-          )..loadInitialData(produtoId: produtoId),
-          child: ProdutoFormScreen(
-            produtoId: produtoId,
-            initialLojaId: widget.lojaId,
-          ),
-        ),
-      ),
-    );
-
-    // Simplificado: Sempre que voltar da tela de formulário, recarrega a lista
-    if (mounted) {
-      context.read<ProdutosCubit>().fetchProdutos();
+  void _navegarParaForm({int? produtoId}) {
+    if (produtoId != null) {
+      context.push(Routes.produtoEditar(widget.lojaId, produtoId));
+    } else {
+      context.push(Routes.produtoNovo(widget.lojaId));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
@@ -64,7 +54,25 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
         label: const TextBody1('Novo Produto', color: Colors.white),
         icon: const Icon(AppIcons.add, color: Colors.white),
       ),
-      body: BlocBuilder<ProdutosCubit, ProdutosState>(
+      body: BlocConsumer<ProdutosCubit, ProdutosState>(
+        listener: (context, state) {
+          if (state is ProdutosError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: TextBody2(state.message, color: Colors.white),
+                backgroundColor: Colors.red,
+              ),
+            );
+          } else if (state is ProdutosOperationSuccess) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: TextBody2(state.message, color: Colors.white),
+                backgroundColor: Colors.green,
+              ),
+            );
+            _cubit.fetchProdutos();
+          }
+        },
         builder: (context, state) {
           if (state is ProdutosLoading) {
             return CustomScrollView(
@@ -73,7 +81,7 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
                   padding: const EdgeInsets.all(16),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
-                      (_, __) => const Padding(
+                          (_, __) => const Padding(
                         padding: EdgeInsets.only(bottom: 12),
                         child: LojaCardSkeleton(),
                       ),
@@ -95,12 +103,19 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
                       children: [
                         Icon(AppIcons.error, size: 80, color: Colors.grey[400]),
                         const SizedBox(height: 16),
-                        const TextH3('Erro ao carregar produtos'),
+                        TextH3(
+                          'Erro ao carregar produtos',
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
                         const SizedBox(height: 8),
-                        TextBody2(state.message, textAlign: TextAlign.center),
+                        TextBody2(
+                          state.message,
+                          textAlign: TextAlign.center,
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                        ),
                         const SizedBox(height: 24),
                         ElevatedButton.icon(
-                          onPressed: () => context.read<ProdutosCubit>().fetchProdutos(),
+                          onPressed: () => _cubit.fetchProdutos(),
                           icon: const Icon(AppIcons.refresh),
                           label: const TextBody1('Tentar novamente'),
                         ),
@@ -115,7 +130,7 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
           if (state is ProdutosLoaded) {
             final sections = state.sections;
 
-            if (sections.isEmpty || sections.values.every((list) => list.isEmpty)) {
+            if (sections.isEmpty) {
               return CustomScrollView(
                 slivers: [
                   SliverFillRemaining(
@@ -123,11 +138,21 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(AppIcons.fastfood, size: 100, color: Colors.grey[400]),
+                          Icon(
+                            AppIcons.fastfood,
+                            size: 100,
+                            color: isDark ? Colors.grey[600] : Colors.grey[400],
+                          ),
                           const SizedBox(height: 16),
-                          const TextH2('Nenhum produto cadastrado'),
+                          TextH2(
+                            'Nenhum produto cadastrado',
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
                           const SizedBox(height: 8),
-                          const TextBody2('Adicione produtos ao cardápio desta loja'),
+                          TextBody2(
+                            'Adicione produtos ao cardápio desta loja',
+                            color: isDark ? Colors.grey[400] : Colors.grey[600],
+                          ),
                           const SizedBox(height: 24),
                           ElevatedButton.icon(
                             onPressed: () => _navegarParaForm(),
@@ -144,16 +169,18 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
 
             return ConditionalSelectionArea(
               child: RefreshIndicator(
-                onRefresh: () => context.read<ProdutosCubit>().fetchProdutos(),
+                onRefresh: () => _cubit.fetchProdutos(),
                 child: CustomScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   slivers: [
-                    // Título opcional caso queira mostrar o nome da loja no corpo
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                        child: TextH2('Cardápio - ${widget.lojaNome}',
-                            fontWeight: FontWeight.bold),
+                        child: TextH2(
+                          'Cardápio - ${widget.lojaNome}',
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
                       ),
                     ),
                     ...sections.entries.map((entry) {
@@ -178,14 +205,16 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
                                     TextH3(
                                       categoria,
                                       fontWeight: FontWeight.bold,
+                                      color: isDark ? Colors.white : Colors.black87,
                                     ),
                                     const SizedBox(width: 8),
                                     Container(
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: 8, vertical: 2),
+                                        horizontal: 8,
+                                        vertical: 2,
+                                      ),
                                       decoration: BoxDecoration(
-                                        color: theme.colorScheme.primary
-                                            .withOpacity(0.1),
+                                        color: theme.colorScheme.primary.withOpacity(0.1),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: TextBody3(
@@ -200,8 +229,9 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
                             ),
                             SliverList(
                               delegate: SliverChildBuilderDelegate(
-                                (context, index) => RepaintBoundary(
-                                    child: _buildProdutoCard(produtos[index])),
+                                    (context, index) => RepaintBoundary(
+                                  child: _buildProdutoCard(produtos[index]),
+                                ),
                                 childCount: produtos.length,
                               ),
                             ),
@@ -224,6 +254,10 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
 
   Widget _buildProdutoCard(Produto produto) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtitleColor = isDark ? Colors.grey[400] : Colors.grey[600];
+    final isDisponivel = produto.disponivel ?? true;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -231,7 +265,6 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
         onTap: () => _navegarParaForm(produtoId: produto.id),
         child: Row(
           children: [
-            // Imagem do produto
             Container(
               width: 60,
               height: 60,
@@ -240,18 +273,20 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
                 borderRadius: BorderRadius.circular(8),
                 image: produto.imagem != null && produto.imagem!.isNotEmpty
                     ? DecorationImage(
-                        image: NetworkImage(produto.imagem!),
-                        fit: BoxFit.cover,
-                      )
+                  image: NetworkImage(produto.imagem!),
+                  fit: BoxFit.cover,
+                )
                     : null,
               ),
               child: produto.imagem == null || produto.imagem!.isEmpty
-                  ? Icon(AppIcons.fastfood, color: theme.colorScheme.primary.withOpacity(0.3))
+                  ? Icon(
+                AppIcons.fastfood,
+                color: theme.colorScheme.primary.withOpacity(0.3),
+              )
                   : null,
             ),
             const SizedBox(width: 12),
 
-            // Informações
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -263,37 +298,38 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
                           produto.nome,
                           fontWeight: FontWeight.bold,
                           maxLines: 1,
+                          color: textColor,
                         ),
                       ),
-                      if (!produto.disponivel)
+                      if (!isDisponivel)
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: Colors.grey[200],
+                            color: isDark ? Colors.grey[700] : Colors.grey[200],
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          child: const TextBody3(
+                          child: TextBody3(
                             'INDISPONÍVEL',
-                            color: Colors.grey,
+                            color: isDark ? Colors.grey[400] : Colors.grey,
                           ),
                         ),
                     ],
                   ),
-                  if (produto.descricao != null) ...[
+                  if (produto.descricao != null && produto.descricao!.isNotEmpty) ...[
                     const SizedBox(height: 4),
                     TextBody3(
                       produto.descricao!,
-                      color: Colors.grey,
+                      color: subtitleColor,
                       maxLines: 1,
                     ),
                   ],
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      if (produto.emPromocao) ...[
+                      if (produto.emPromocao == true) ...[
                         TextBody3(
                           'R\$ ${produto.preco.toStringAsFixed(2)}',
-                          color: Colors.grey,
+                          color: isDark ? Colors.grey[400] : Colors.grey,
                         ),
                         const SizedBox(width: 8),
                         TextBody2(
@@ -313,8 +349,10 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
               ),
             ),
 
-            // Seta
-            Icon(AppIcons.chevronRight, color: Colors.grey[400]),
+            Icon(
+              AppIcons.chevronRight,
+              color: isDark ? Colors.grey[500] : Colors.grey[400],
+            ),
           ],
         ),
       ),

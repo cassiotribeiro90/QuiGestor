@@ -1,13 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../apparte/widgets/quigestor_card.dart';
 import '../../../../apparte/widgets/app_text.dart';
-import '../../../../shared/api/api_client.dart';
 import '../models/loja.dart';
 import 'loja_status_chip.dart';
-import '../../produtos/views/produtos_list_screen.dart';
-import '../../produtos/bloc/produtos_cubit.dart';
 
 class LojaCardItem extends StatelessWidget {
   final Loja loja;
@@ -201,18 +198,8 @@ class LojaCardItem extends StatelessWidget {
                         color: theme.colorScheme.primary,
                       ),
                       onPressed: () {
-                        final apiClient = context.read<ApiClient>();
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => BlocProvider(
-                              create: (_) => ProdutosCubit(apiClient, loja.id),
-                              child: ProdutosListScreen(
-                                lojaId: loja.id,
-                                lojaNome: loja.nome,
-                              ),
-                            ),
-                          ),
-                        );
+                        // Navegar para a tela de produtos da loja
+                        context.push('/lojas/${loja.id}/produtos');
                       },
                       iconSize: 22,
                     ),

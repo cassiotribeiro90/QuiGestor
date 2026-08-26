@@ -1,19 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../apparte/widgets/app_text.dart';
 import '../../../../apparte/widgets/qui_button.dart';
-import '../../../../shared/api/api_client.dart';
-import '../../produtos/bloc/produtos_cubit.dart';
-import '../../produtos/views/produtos_list_screen.dart';
 import '../bloc/lojas_cubit.dart';
+import '../bloc/lojas_state.dart';
 import '../models/loja.dart';
 import '../../../core/constants/icon_constants.dart';
+import '../../../routes/app_router.dart';
 
 class LojaFormScreen extends StatefulWidget {
+  final int? lojaId;
   final Loja? loja;
   final VoidCallback? onSaved;
 
-  const LojaFormScreen({super.key, this.loja, this.onSaved});
+  const LojaFormScreen({
+    super.key,
+    this.lojaId,
+    this.loja,
+    this.onSaved,
+  });
 
   @override
   State<LojaFormScreen> createState() => _LojaFormScreenState();
@@ -21,7 +27,7 @@ class LojaFormScreen extends StatefulWidget {
 
 class _LojaFormScreenState extends State<LojaFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  
+
   // Controllers
   late TextEditingController _nomeController;
   late TextEditingController _descricaoController;
@@ -46,11 +52,11 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
   String _status = 'ativo';
   bool _verificado = false;
   bool _destaque = false;
-  
+
   bool _isEditing = false;
-  bool _isLoadingData = false;
   bool _isSaving = false;
   bool _isDeleting = false;
+  bool _isLoading = false;
 
   final List<Map<String, String>> _statusOptions = const [
     {'value': 'ativo', 'label': 'Ativo'},
@@ -62,18 +68,22 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
   @override
   void initState() {
     super.initState();
-    _isEditing = widget.loja != null;
+    _isEditing = widget.lojaId != null || widget.loja != null;
 
-    _inicializarControllersVazios();
+    _inicializarControllers();
 
-    if (_isEditing) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _carregarDadosCompletos();
-      });
+    // Se tiver loja via widget, preenche os campos
+    if (widget.loja != null) {
+      _preencherControllers(widget.loja!);
+    }
+
+    // Se tiver ID, carrega os dados
+    if (widget.lojaId != null && widget.loja == null) {
+      _carregarDados(widget.lojaId!);
     }
   }
 
-  void _inicializarControllersVazios() {
+  void _inicializarControllers() {
     _nomeController = TextEditingController();
     _descricaoController = TextEditingController();
     _categoriaController = TextEditingController();
@@ -93,33 +103,39 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
     _taxaEntregaController = TextEditingController();
     _pedidoMinimoController = TextEditingController();
 
-    // Listener para atualizar o título dinamicamente
     _nomeController.addListener(() {
       if (mounted) setState(() {});
     });
   }
 
-  Future<void> _carregarDadosCompletos() async {
-    setState(() => _isLoadingData = true);
-    
-    final lojaCompleta = await context.read<LojasCubit>()
-        .fetchLojaDetalhada(widget.loja!.id);
-    
-    if (lojaCompleta != null && mounted) {
-      setState(() {
-        _preencherControllers(lojaCompleta);
-      });
-    } else if (mounted) {
-      _preencherControllers(widget.loja!);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: TextBody2('Alguns campos podem estar incompletos'),
-          backgroundColor: Colors.orange,
-        ),
-      );
+  Future<void> _carregarDados(int id) async {
+    setState(() => _isLoading = true);
+
+    try {
+      final loja = await context.read<LojasCubit>().fetchLojaDetalhada(id);
+
+      if (loja != null && mounted) {
+        _preencherControllers(loja);
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: TextBody2('Erro ao carregar dados da loja'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: TextBody2('Erro ao carregar dados: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
-    
-    if (mounted) setState(() => _isLoadingData = false);
+
+    if (mounted) setState(() => _isLoading = false);
   }
 
   void _preencherControllers(Loja loja) {
@@ -199,29 +215,36 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
     };
 
     bool success;
-    if (_isEditing) {
-      success = await context.read<LojasCubit>().updateLoja(widget.loja!.id, data);
+    final id = widget.lojaId ?? widget.loja?.id;
+
+    if (_isEditing && id != null) {
+      success = await context.read<LojasCubit>().updateLoja(id, data);
     } else {
       success = await context.read<LojasCubit>().createLoja(data);
     }
 
     if (success && mounted) {
+      // Recarregar a lista
+      await context.read<LojasCubit>().fetchLojas(perPage: 10);
       if (widget.onSaved != null) {
         widget.onSaved!();
       } else {
-        Navigator.pop(context, true);
+        context.pop(true);
       }
     }
-    
+
     if (mounted) setState(() => _isSaving = false);
   }
 
   Future<void> _deletar() async {
+    final id = widget.lojaId ?? widget.loja?.id;
+    if (id == null) return;
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const TextH3('Confirmar exclusão'),
-        content: TextBody2('Tem certeza que deseja excluir a loja "${widget.loja!.nome}"?'),
+        content: TextBody2('Tem certeza que deseja excluir esta loja? Esta ação não pode ser desfeita.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const TextBody2('Cancelar')),
           ElevatedButton(
@@ -237,42 +260,34 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
 
     setState(() => _isDeleting = true);
 
-    final success = await context.read<LojasCubit>().deleteLoja(widget.loja!.id);
-    
+    final success = await context.read<LojasCubit>().deleteLoja(id);
+
     if (success && mounted) {
+      // Recarregar a lista
+      await context.read<LojasCubit>().fetchLojas(perPage: 10);
       if (widget.onSaved != null) {
         widget.onSaved!();
       } else {
-        Navigator.pop(context, true);
+        context.pop(true);
       }
     }
-    
+
     if (mounted) setState(() => _isDeleting = false);
   }
 
+  // 🔥 CORRIGIDO: Usando GoRouter para navegar para o cardápio
   void _abrirCardapio(BuildContext context) {
-    if (widget.loja == null) return;
-    
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => BlocProvider(
-          create: (context) => ProdutosCubit(
-            context.read<ApiClient>(),
-            widget.loja!.id,
-          ),
-          child: ProdutosListScreen(
-            lojaId: widget.loja!.id,
-            lojaNome: widget.loja!.nome,
-          ),
-        ),
-      ),
-    );
+    final id = widget.lojaId ?? widget.loja?.id;
+    if (id == null) return;
+
+    context.push(Routes.lojaProdutos(id));
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+    final isDark = theme.brightness == Brightness.dark;
+
     String title = _isEditing ? 'Editar Loja' : 'Nova Loja';
     if (_nomeController.text.isNotEmpty) {
       title = '${_nomeController.text} - Gerenciar Loja';
@@ -283,26 +298,47 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
         title: TextH2(title, fontWeight: FontWeight.bold),
         centerTitle: false,
         actions: [
+          if (_isEditing)
+            IconButton(
+              icon: const Icon(AppIcons.fastfood),
+              tooltip: 'Gerenciar Cardápio',
+              onPressed: _isLoading ? null : () => _abrirCardapio(context),
+            ),
           IconButton(
-            icon: const Icon(AppIcons.fastfood),
-            tooltip: 'Gerenciar Cardápio',
-            onPressed: () => _abrirCardapio(context),
-          ),
-          IconButton(
-            icon: _isSaving || _isLoadingData
+            icon: _isSaving || _isLoading
                 ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                : const Icon(AppIcons.add),
-            onPressed: _isSaving || _isLoadingData ? null : _salvar,
+                : const Icon(AppIcons.check),
+            onPressed: _isSaving || _isLoading ? null : _salvar,
           ),
         ],
       ),
-      body: _isLoadingData 
-        ? const Center(child: CircularProgressIndicator())
-        : Form(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : BlocConsumer<LojasCubit, LojasState>(
+        listener: (context, state) {
+          if (state is LojasError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: TextBody2(state.message, color: Colors.white),
+                backgroundColor: Colors.red,
+              ),
+            );
+          } else if (state is LojaOperationSuccess) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: TextBody2(state.message, color: Colors.white),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        },
+        builder: (context, state) {
+          return Form(
             key: _formKey,
             child: ListView(
               padding: const EdgeInsets.all(20),
               children: [
+                // Card Principal
                 Card(
                   elevation: 2,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -313,18 +349,22 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
                       children: [
                         _buildSectionHeader(context, AppIcons.store, 'Informações Básicas'),
                         const SizedBox(height: 24),
+
+                        // Nome
                         TextFormField(
                           controller: _nomeController,
-                          decoration: _inputDecoration(theme, 'Nome da Loja *', AppIcons.store),
+                          decoration: _inputDecoration(theme, 'Nome da Loja *', AppIcons.store, isDark),
                           validator: (value) => value == null || value.isEmpty ? 'Campo obrigatório' : null,
                         ),
                         const SizedBox(height: 16),
+
+                        // Categoria e Telefone
                         Row(
                           children: [
                             Expanded(
                               child: TextFormField(
                                 controller: _categoriaController,
-                                decoration: _inputDecoration(theme, 'Categoria *', AppIcons.category),
+                                decoration: _inputDecoration(theme, 'Categoria *', AppIcons.category, isDark),
                                 validator: (value) => value == null || value.isEmpty ? 'Campo obrigatório' : null,
                               ),
                             ),
@@ -332,91 +372,195 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
                             Expanded(
                               child: TextFormField(
                                 controller: _telefoneController,
-                                decoration: _inputDecoration(theme, 'Telefone *', AppIcons.phone),
+                                decoration: _inputDecoration(theme, 'Telefone *', AppIcons.phone, isDark),
                                 validator: (value) => value == null || value.isEmpty ? 'Campo obrigatório' : null,
                               ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 16),
+
+                        // Descrição
                         TextFormField(
                           controller: _descricaoController,
-                          decoration: _inputDecoration(theme, 'Descrição', AppIcons.inventory),
+                          decoration: _inputDecoration(theme, 'Descrição', AppIcons.inventory, isDark),
                           maxLines: 3,
                         ),
                         const SizedBox(height: 20),
-                        Divider(color: Colors.grey[300]),
+
+                        Divider(color: isDark ? Colors.grey[700] : Colors.grey[300]),
                         const SizedBox(height: 16),
+
+                        // Endereço
                         _buildSectionHeader(context, AppIcons.location, 'Endereço'),
                         const SizedBox(height: 24),
+
+                        // CEP
                         TextFormField(
                           controller: _cepController,
-                          decoration: _inputDecoration(theme, 'CEP *', AppIcons.location),
+                          decoration: _inputDecoration(theme, 'CEP *', AppIcons.location, isDark),
                         ),
                         const SizedBox(height: 16),
+
+                        // Logradouro e Número
                         Row(
                           children: [
-                            Expanded(flex: 3, child: TextFormField(controller: _logradouroController, decoration: _inputDecoration(theme, 'Logradouro *', null))),
+                            Expanded(flex: 3, child: TextFormField(
+                              controller: _logradouroController,
+                              decoration: _inputDecoration(theme, 'Logradouro *', null, isDark),
+                            )),
                             const SizedBox(width: 12),
-                            Expanded(flex: 1, child: TextFormField(controller: _numeroController, decoration: _inputDecoration(theme, 'Nº *', null))),
+                            Expanded(flex: 1, child: TextFormField(
+                              controller: _numeroController,
+                              decoration: _inputDecoration(theme, 'Nº *', null, isDark),
+                            )),
                           ],
                         ),
                         const SizedBox(height: 16),
+
+                        // Complemento e Bairro
                         Row(
                           children: [
-                            Expanded(child: TextFormField(controller: _complementoController, decoration: _inputDecoration(theme, 'Complemento', null))),
+                            Expanded(child: TextFormField(
+                              controller: _complementoController,
+                              decoration: _inputDecoration(theme, 'Complemento', null, isDark),
+                            )),
                             const SizedBox(width: 12),
-                            Expanded(child: TextFormField(controller: _bairroController, decoration: _inputDecoration(theme, 'Bairro *', null))),
+                            Expanded(child: TextFormField(
+                              controller: _bairroController,
+                              decoration: _inputDecoration(theme, 'Bairro *', null, isDark),
+                            )),
                           ],
                         ),
                         const SizedBox(height: 16),
+
+                        // Cidade e UF
                         Row(
                           children: [
-                            Expanded(flex: 3, child: TextFormField(controller: _cidadeController, decoration: _inputDecoration(theme, 'Cidade *', null))),
+                            Expanded(flex: 3, child: TextFormField(
+                              controller: _cidadeController,
+                              decoration: _inputDecoration(theme, 'Cidade *', null, isDark),
+                            )),
                             const SizedBox(width: 12),
-                            Expanded(child: TextFormField(controller: _ufController, decoration: _inputDecoration(theme, 'UF *', null))),
+                            Expanded(child: TextFormField(
+                              controller: _ufController,
+                              decoration: _inputDecoration(theme, 'UF *', null, isDark),
+                              maxLength: 2,
+                            )),
                           ],
                         ),
                         const SizedBox(height: 20),
-                        Divider(color: Colors.grey[300]),
+
+                        Divider(color: isDark ? Colors.grey[700] : Colors.grey[300]),
                         const SizedBox(height: 16),
+
+                        // Entrega e Valores
                         _buildSectionHeader(context, AppIcons.delivery, 'Entrega e Valores'),
                         const SizedBox(height: 24),
+
+                        // Tempo de Entrega
                         Row(
                           children: [
-                            Expanded(child: TextFormField(controller: _tempoEntregaMinController, decoration: _inputDecoration(theme, 'Min (min) *', null), keyboardType: TextInputType.number)),
+                            Expanded(child: TextFormField(
+                              controller: _tempoEntregaMinController,
+                              decoration: _inputDecoration(theme, 'Min (min) *', null, isDark),
+                              keyboardType: TextInputType.number,
+                            )),
                             const SizedBox(width: 12),
-                            Expanded(child: TextFormField(controller: _tempoEntregaMaxController, decoration: _inputDecoration(theme, 'Max (min) *', null), keyboardType: TextInputType.number)),
+                            Expanded(child: TextFormField(
+                              controller: _tempoEntregaMaxController,
+                              decoration: _inputDecoration(theme, 'Max (min) *', null, isDark),
+                              keyboardType: TextInputType.number,
+                            )),
                           ],
                         ),
                         const SizedBox(height: 16),
+
+                        // Taxa e Pedido Mínimo
                         Row(
                           children: [
-                            Expanded(child: TextFormField(controller: _taxaEntregaController, decoration: _inputDecoration(theme, r'Taxa (R$) *', AppIcons.money), keyboardType: TextInputType.number)),
+                            Expanded(child: TextFormField(
+                              controller: _taxaEntregaController,
+                              decoration: _inputDecoration(theme, r'Taxa (R$) *', AppIcons.money, isDark),
+                              keyboardType: TextInputType.number,
+                            )),
                             const SizedBox(width: 12),
-                            Expanded(child: TextFormField(controller: _pedidoMinimoController, decoration: _inputDecoration(theme, r'Pedido Mín (R$) *', AppIcons.money), keyboardType: TextInputType.number)),
+                            Expanded(child: TextFormField(
+                              controller: _pedidoMinimoController,
+                              decoration: _inputDecoration(theme, r'Pedido Mín (R$) *', AppIcons.money, isDark),
+                              keyboardType: TextInputType.number,
+                            )),
                           ],
                         ),
                         const SizedBox(height: 20),
-                        Divider(color: Colors.grey[300]),
+
+                        Divider(color: isDark ? Colors.grey[700] : Colors.grey[300]),
                         const SizedBox(height: 16),
+
+                        // Status e Destaque
                         _buildSectionHeader(context, AppIcons.info, 'Status e Destaque'),
                         const SizedBox(height: 24),
+
+                        // Status Dropdown
                         DropdownButtonFormField<String>(
-                          initialValue: _status,
-                          decoration: _inputDecoration(theme, 'Status *', AppIcons.info),
-                          items: _statusOptions.map((opt) => DropdownMenuItem(value: opt['value'], child: TextBody2(opt['label']!))).toList(),
+                          value: _status,
+                          decoration: _inputDecoration(theme, 'Status *', AppIcons.info, isDark),
+                          items: _statusOptions.map((opt) => DropdownMenuItem(
+                            value: opt['value'],
+                            child: TextBody2(opt['label']!),
+                          )).toList(),
                           onChanged: (val) => setState(() => _status = val!),
+                          dropdownColor: isDark ? Colors.grey[800] : Colors.white,
+                          style: TextStyle(color: isDark ? Colors.white : Colors.black87),
                         ),
                         const SizedBox(height: 16),
-                        _buildSwitchTile('Verificada', 'Loja validada', _verificado, (val) => setState(() => _verificado = val)),
+
+                        // Verificado Switch
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: isDark ? Colors.grey[600]! : Colors.grey[300]!),
+                          ),
+                          child: SwitchListTile(
+                            title: const TextBody1('Verificada', fontWeight: FontWeight.w500),
+                            subtitle: TextBody3(
+                              'Loja validada',
+                              color: isDark ? Colors.grey[400] : Colors.grey[600],
+                            ),
+                            value: _verificado,
+                            onChanged: (val) => setState(() => _verificado = val),
+                            activeColor: theme.primaryColor,
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                        ),
                         const SizedBox(height: 12),
-                        _buildSwitchTile('Destaque', 'Página inicial', _destaque, (val) => setState(() => _destaque = val)),
+
+                        // Destaque Switch
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: isDark ? Colors.grey[600]! : Colors.grey[300]!),
+                          ),
+                          child: SwitchListTile(
+                            title: const TextBody1('Destaque', fontWeight: FontWeight.w500),
+                            subtitle: TextBody3(
+                              'Página inicial',
+                              color: isDark ? Colors.grey[400] : Colors.grey[600],
+                            ),
+                            value: _destaque,
+                            onChanged: (val) => setState(() => _destaque = val),
+                            activeColor: theme.primaryColor,
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                        ),
                       ],
                     ),
                   ),
                 ),
-                
+
+                // Card de Cardápio (apenas edição)
                 if (_isEditing) ...[
                   const SizedBox(height: 24),
                   Card(
@@ -454,28 +598,24 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
                                     ),
                                     TextBody3(
                                       'Gerencie os produtos e itens do cardápio desta loja',
-                                      color: Colors.grey[600],
+                                      color: isDark ? Colors.grey[400] : Colors.grey[600],
                                     ),
                                   ],
                                 ),
                               ),
                             ],
                           ),
-                          
                           const SizedBox(height: 20),
-                          
                           QuiButton(
                             label: 'Gerenciar Cardápio',
-                            onPressed: () => _abrirCardapio(context),
+                            onPressed: _isLoading ? null : () => _abrirCardapio(context),
                             icon: AppIcons.fastfood,
                           ),
-                          
                           const SizedBox(height: 8),
-                          
                           Center(
                             child: TextBody3(
                               'Você será redirecionado para a gestão completa do cardápio',
-                              color: Colors.grey[500],
+                              color: isDark ? Colors.grey[500] : Colors.grey[500],
                             ),
                           ),
                         ],
@@ -484,11 +624,15 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
                   ),
                 ],
 
+                // Botão Excluir
                 if (_isEditing) ...[
                   const SizedBox(height: 24),
-                  _buildDeleteButton(),
+                  _buildDeleteButton(isDark),
                 ],
+
                 const SizedBox(height: 32),
+
+                // Botão Salvar
                 QuiButton(
                   label: _isEditing ? 'ATUALIZAR LOJA' : 'CRIAR LOJA',
                   onPressed: _salvar,
@@ -496,17 +640,28 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
                 ),
               ],
             ),
-          ),
+          );
+        },
+      ),
     );
   }
 
-  InputDecoration _inputDecoration(ThemeData theme, String label, IconData? icon) {
+  InputDecoration _inputDecoration(ThemeData theme, String label, IconData? icon, bool isDark) {
     return InputDecoration(
       labelText: label,
       prefixIcon: icon != null ? Icon(icon, size: 20) : null,
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: isDark ? Colors.grey[600]! : Colors.grey.shade300),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: theme.primaryColor, width: 2),
+      ),
       filled: true,
-      fillColor: theme.colorScheme.surface,
+      fillColor: isDark ? Colors.grey[800] : theme.colorScheme.surface,
+      labelStyle: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[700]),
     );
   }
 
@@ -516,7 +671,10 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
       children: [
         Container(
           padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(color: theme.colorScheme.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primary.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
           child: Icon(icon, color: theme.colorScheme.primary, size: 20),
         ),
         const SizedBox(width: 12),
@@ -525,27 +683,18 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
     );
   }
 
-  Widget _buildSwitchTile(String title, String subtitle, bool value, ValueChanged<bool> onChanged) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey[300]!)),
-      child: SwitchListTile(
-        title: TextBody1(title, fontWeight: FontWeight.w500),
-        subtitle: TextBody3(subtitle),
-        value: value,
-        onChanged: onChanged,
-        contentPadding: EdgeInsets.zero,
-      ),
-    );
-  }
-
-  Widget _buildDeleteButton() {
+  Widget _buildDeleteButton(bool isDark) {
     return Center(
       child: TextButton.icon(
         onPressed: _isDeleting ? null : _deletar,
-        icon: _isDeleting ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(AppIcons.delete, size: 18, color: Colors.red),
+        icon: _isDeleting
+            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+            : const Icon(AppIcons.delete, size: 18, color: Colors.red),
         label: TextBody2(_isDeleting ? 'Excluindo...' : 'Excluir loja', color: Colors.red),
-        style: TextButton.styleFrom(backgroundColor: Colors.red.withOpacity(0.05), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))),
+        style: TextButton.styleFrom(
+          backgroundColor: Colors.red.withOpacity(isDark ? 0.15 : 0.05),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        ),
       ),
     );
   }
