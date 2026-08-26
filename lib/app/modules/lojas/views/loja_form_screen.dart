@@ -7,6 +7,7 @@ import '../bloc/lojas_cubit.dart';
 import '../bloc/lojas_state.dart';
 import '../models/loja.dart';
 import '../../../core/constants/icon_constants.dart';
+import '../../../core/widgets/back_button_mixin.dart';
 import '../../../routes/app_router.dart';
 
 class LojaFormScreen extends StatefulWidget {
@@ -25,7 +26,7 @@ class LojaFormScreen extends StatefulWidget {
   State<LojaFormScreen> createState() => _LojaFormScreenState();
 }
 
-class _LojaFormScreenState extends State<LojaFormScreen> {
+class _LojaFormScreenState extends State<LojaFormScreen> with BackButtonMixin {
   final _formKey = GlobalKey<FormState>();
 
   // Controllers
@@ -295,6 +296,7 @@ class _LojaFormScreenState extends State<LojaFormScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: buildBackButton(context),
         title: TextH2(title, fontWeight: FontWeight.bold),
         centerTitle: false,
         actions: [

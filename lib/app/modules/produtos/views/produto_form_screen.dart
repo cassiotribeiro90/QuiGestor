@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../apparte/widgets/app_text.dart';
 import '../../../../apparte/widgets/qui_button.dart';
 import '../bloc/produto_cubit.dart';
@@ -10,6 +11,8 @@ import '../../categorias/models/categoria.dart';
 import '../../lojas/models/loja.dart';
 import '../../../../apparte/widgets/quigestor_card.dart';
 import '../../../../shared/api/api_client.dart';
+import '../../../core/constants/icon_constants.dart';
+import '../../../core/widgets/back_button_mixin.dart';
 
 class ProdutoFormScreen extends StatefulWidget {
   final int? produtoId;
@@ -21,7 +24,7 @@ class ProdutoFormScreen extends StatefulWidget {
   State<ProdutoFormScreen> createState() => _ProdutoFormScreenState();
 }
 
-class _ProdutoFormScreenState extends State<ProdutoFormScreen> {
+class _ProdutoFormScreenState extends State<ProdutoFormScreen> with BackButtonMixin {
   final _formKey = GlobalKey<FormState>();
   
   // Controllers
@@ -226,7 +229,10 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> {
         
         if (state is ProdutoLoading && !_initialDataLoaded) {
            return Scaffold(
-             appBar: AppBar(title: TextH2(_isEditing ? 'Editar Produto' : 'Novo Produto')),
+             appBar: AppBar(
+               leading: buildBackButton(context),
+               title: TextH2(_isEditing ? 'Editar Produto' : 'Novo Produto'),
+             ),
              body: const Center(child: CircularProgressIndicator())
            );
         }
@@ -247,6 +253,7 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> {
 
         return Scaffold(
           appBar: AppBar(
+            leading: buildBackButton(context),
             title: TextH2(title, fontWeight: FontWeight.bold),
             centerTitle: false,
             actions: [

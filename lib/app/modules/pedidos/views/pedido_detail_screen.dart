@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/constants/icon_constants.dart';
+import '../../../core/widgets/back_button_mixin.dart';
 import '../bloc/pedidos_cubit.dart';
 import '../models/pedido_model.dart';
 
@@ -15,7 +17,7 @@ class PedidoDetailScreen extends StatefulWidget {
   State<PedidoDetailScreen> createState() => _PedidoDetailScreenState();
 }
 
-class _PedidoDetailScreenState extends State<PedidoDetailScreen> {
+class _PedidoDetailScreenState extends State<PedidoDetailScreen> with BackButtonMixin {
   late final PedidosCubit _cubit;
   Pedido? _pedido;
   bool _loading = true;
@@ -98,7 +100,10 @@ class _PedidoDetailScreenState extends State<PedidoDetailScreen> {
 
     if (_error != null || _pedido == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Detalhes do Pedido')),
+        appBar: AppBar(
+          leading: buildBackButton(context),
+          title: const Text('Detalhes do Pedido'),
+        ),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -120,6 +125,7 @@ class _PedidoDetailScreenState extends State<PedidoDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: buildBackButton(context),
         title: Text('Pedido ${pedido.codigo}'),
         actions: [
           IconButton(

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../apparte/widgets/app_text.dart';
 import '../../../../apparte/widgets/qui_button.dart';
 import '../../../core/constants/icon_constants.dart';
+import '../../../core/widgets/back_button_mixin.dart';
 import '../../categorias/bloc/categorias_cubit.dart';
 import '../../categorias/bloc/categorias_state.dart';
 import '../../categorias/models/categoria.dart';
@@ -27,7 +28,7 @@ class SubcategoriaFormScreen extends StatefulWidget {
   State<SubcategoriaFormScreen> createState() => _SubcategoriaFormScreenState();
 }
 
-class _SubcategoriaFormScreenState extends State<SubcategoriaFormScreen> {
+class _SubcategoriaFormScreenState extends State<SubcategoriaFormScreen> with BackButtonMixin {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nomeController;
   late TextEditingController _descricaoController;
@@ -204,6 +205,7 @@ class _SubcategoriaFormScreenState extends State<SubcategoriaFormScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: buildBackButton(context),
         title: TextH2(title, fontWeight: FontWeight.bold),
         actions: [
           if (_isEditing)

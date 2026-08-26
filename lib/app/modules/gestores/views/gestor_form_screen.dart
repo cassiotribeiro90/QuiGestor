@@ -6,6 +6,7 @@ import '../../../../apparte/widgets/qui_button.dart';
 import '../bloc/gestores_cubit.dart';
 import '../models/gestor.dart';
 import '../../../core/constants/icon_constants.dart';
+import '../../../core/widgets/back_button_mixin.dart';
 
 class GestorFormScreen extends StatefulWidget {
   final int? gestorId;
@@ -23,7 +24,7 @@ class GestorFormScreen extends StatefulWidget {
   State<GestorFormScreen> createState() => _GestorFormScreenState();
 }
 
-class _GestorFormScreenState extends State<GestorFormScreen> {
+class _GestorFormScreenState extends State<GestorFormScreen> with BackButtonMixin {
   final _formKey = GlobalKey<FormState>();
 
   // Controllers
@@ -204,6 +205,7 @@ class _GestorFormScreenState extends State<GestorFormScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: buildBackButton(context),
         title: TextH2(title, fontWeight: FontWeight.bold),
         centerTitle: false,
         actions: [

@@ -8,6 +8,7 @@ import '../bloc/categorias_cubit.dart';
 import '../bloc/categorias_state.dart';
 import '../models/categoria.dart';
 import '../../../core/constants/icon_constants.dart';
+import '../../../core/widgets/back_button_mixin.dart';
 
 class CategoriaFormScreen extends StatefulWidget {
   final int? categoriaId;
@@ -23,7 +24,7 @@ class CategoriaFormScreen extends StatefulWidget {
   State<CategoriaFormScreen> createState() => _CategoriaFormScreenState();
 }
 
-class _CategoriaFormScreenState extends State<CategoriaFormScreen> {
+class _CategoriaFormScreenState extends State<CategoriaFormScreen> with BackButtonMixin {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nomeController;
   late TextEditingController _descricaoController;
@@ -225,6 +226,7 @@ class _CategoriaFormScreenState extends State<CategoriaFormScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: buildBackButton(context),
         title: TextH2(title, fontWeight: FontWeight.bold),
         actions: [
           if (isEditing)

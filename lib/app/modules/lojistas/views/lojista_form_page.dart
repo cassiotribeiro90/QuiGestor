@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import '../../../core/constants/icon_constants.dart';
+import '../../../core/widgets/back_button_mixin.dart';
 import '../bloc/lojista_form_cubit.dart';
 import '../bloc/lojista_form_state.dart';
 import '../models/lojista_model.dart';
@@ -13,7 +16,7 @@ class LojistaFormPage extends StatefulWidget {
   State<LojistaFormPage> createState() => _LojistaFormPageState();
 }
 
-class _LojistaFormPageState extends State<LojistaFormPage> {
+class _LojistaFormPageState extends State<LojistaFormPage> with BackButtonMixin {
   final _formKey = GlobalKey<FormState>();
   final _nomeController = TextEditingController();
   final _emailController = TextEditingController();
@@ -54,6 +57,7 @@ class _LojistaFormPageState extends State<LojistaFormPage> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: buildBackButton(context),
         title: Text(widget.id != null ? 'Editar Lojista' : 'Novo Lojista'),
       ),
       body: BlocConsumer<LojistaFormCubit, LojistaFormState>(

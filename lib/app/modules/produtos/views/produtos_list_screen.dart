@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../apparte/widgets/app_text.dart';
+import '../../../core/widgets/back_button_mixin.dart';
 import '../../../routes/app_router.dart';
 import '../bloc/produtos_cubit.dart';
 import '../bloc/produtos_state.dart';
@@ -25,7 +26,7 @@ class ProdutosListScreen extends StatefulWidget {
   State<ProdutosListScreen> createState() => _ProdutosListScreenState();
 }
 
-class _ProdutosListScreenState extends State<ProdutosListScreen> {
+class _ProdutosListScreenState extends State<ProdutosListScreen> with BackButtonMixin { // 🔥 ADICIONAR{
   late final ProdutosCubit _cubit;
 
   @override
@@ -49,6 +50,10 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
+      appBar: AppBar(
+        leading: buildBackButton(context),
+        title: Text('Produtos'),
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _navegarParaForm(),
         label: const TextBody1('Novo Produto', color: Colors.white),
@@ -173,16 +178,7 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> {
                 child: CustomScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   slivers: [
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                        child: TextH2(
-                          'Cardápio - ${widget.lojaNome}',
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : Colors.black87,
-                        ),
-                      ),
-                    ),
+
                     ...sections.entries.map((entry) {
                       final categoria = entry.key;
                       final produtos = entry.value;

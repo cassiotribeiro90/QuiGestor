@@ -7,6 +7,7 @@ class AppIcons {
   static const IconData menu = Icons.menu;
   static const IconData logout = Icons.logout;
   static const IconData settings = Icons.settings;
+  static const IconData arrowBack = Icons.arrow_back;
   
   // Pessoas
   static const IconData person = Icons.person;
