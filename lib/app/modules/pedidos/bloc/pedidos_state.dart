@@ -10,6 +10,7 @@ class PedidosState extends Equatable {
   final int perPage;
   final bool hasMore;
   final bool hasLoaded; // 🔥 NOVO: indica se a lista já foi carregada pelo menos uma vez
+  final bool isFirstLoad; // ⭐ NOVO: controla se é o primeiro carregamento
   final List<FilterGroup> filterGroups;
 
   const PedidosState({
@@ -22,6 +23,7 @@ class PedidosState extends Equatable {
     this.perPage = 20,
     this.hasMore = false,
     this.hasLoaded = false, // 🔥 NOVO
+    this.isFirstLoad = true, // ⭐ Inicia como true
     this.filterGroups = const [],
   });
 
@@ -35,6 +37,7 @@ class PedidosState extends Equatable {
     int? perPage,
     bool? hasMore,
     bool? hasLoaded,
+    bool? isFirstLoad,
     List<FilterGroup>? filterGroups,
   }) {
     return PedidosState(
@@ -47,6 +50,7 @@ class PedidosState extends Equatable {
       perPage: perPage ?? this.perPage,
       hasMore: hasMore ?? this.hasMore,
       hasLoaded: hasLoaded ?? this.hasLoaded,
+      isFirstLoad: isFirstLoad ?? this.isFirstLoad,
       filterGroups: filterGroups ?? this.filterGroups,
     );
   }
@@ -62,6 +66,7 @@ class PedidosState extends Equatable {
     perPage,
     hasMore,
     hasLoaded, // 🔥 NOVO
+    isFirstLoad,
     filterGroups,
   ];
 }

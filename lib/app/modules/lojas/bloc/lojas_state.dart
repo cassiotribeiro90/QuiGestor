@@ -1,31 +1,30 @@
-// lojas/bloc/lojas_state.dart
-
 import 'package:equatable/equatable.dart';
 import '../../../app_config.dart';
 import '../models/loja.dart';
 
-abstract class LojasState extends Equatable {
-  const LojasState();
-
-  @override
-  List<Object?> get props => [];
-}
-
-class LojasInitial extends LojasState {}
-
-class LojasLoading extends LojasState {}
-
-class LojasLoaded extends LojasState {
+class LojasState extends Equatable {
   final List<Loja> lojas;
   final List<Loja> lojasFiltradas;
   final Map<String, dynamic>? pagination;
   final Map<String, dynamic>? filterOptions;
+  final bool isLoading;
+  final bool isLoadingMore;
+  final bool isFirstLoad;
+  final String? error;
+  final String? operationMessage;
+  final bool isOperationLoading;
 
-  const LojasLoaded({
-    required this.lojas,
-    required this.lojasFiltradas,
+  const LojasState({
+    this.lojas = const [],
+    this.lojasFiltradas = const [],
     this.pagination,
     this.filterOptions,
+    this.isLoading = false,
+    this.isLoadingMore = false,
+    this.isFirstLoad = true,
+    this.error,
+    this.operationMessage,
+    this.isOperationLoading = false,
   });
 
   // 🔥 GETTERS AUXILIARES PARA PAGINAÇÃO
@@ -35,29 +34,43 @@ class LojasLoaded extends LojasState {
   int get perPage => pagination?['per_page'] ?? AppConfig.defaultPerPage;
   bool get hasMorePages => currentPage < totalPages;
 
+  LojasState copyWith({
+    List<Loja>? lojas,
+    List<Loja>? lojasFiltradas,
+    Map<String, dynamic>? pagination,
+    Map<String, dynamic>? filterOptions,
+    bool? isLoading,
+    bool? isLoadingMore,
+    bool? isFirstLoad,
+    String? error,
+    String? operationMessage,
+    bool? isOperationLoading,
+  }) {
+    return LojasState(
+      lojas: lojas ?? this.lojas,
+      lojasFiltradas: lojasFiltradas ?? this.lojasFiltradas,
+      pagination: pagination ?? this.pagination,
+      filterOptions: filterOptions ?? this.filterOptions,
+      isLoading: isLoading ?? this.isLoading,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      isFirstLoad: isFirstLoad ?? this.isFirstLoad,
+      error: error,
+      operationMessage: operationMessage,
+      isOperationLoading: isOperationLoading ?? this.isOperationLoading,
+    );
+  }
+
   @override
-  List<Object?> get props => [lojas, lojasFiltradas, pagination, filterOptions];
-}
-
-class LojasError extends LojasState {
-  final String message;
-
-  const LojasError(this.message);
-
-  @override
-  List<Object?> get props => [message];
-}
-
-class LojaOperationSuccess extends LojasState {
-  final String message;
-  final Loja? loja;
-
-  const LojaOperationSuccess({required this.message, this.loja});
-
-  @override
-  List<Object?> get props => [message, loja];
-}
-
-class LojaOperationLoading extends LojasState {
-  const LojaOperationLoading();
+  List<Object?> get props => [
+    lojas,
+    lojasFiltradas,
+    pagination,
+    filterOptions,
+    isLoading,
+    isLoadingMore,
+    isFirstLoad,
+    error,
+    operationMessage,
+    isOperationLoading,
+  ];
 }

@@ -7,30 +7,15 @@ import '../../../app_config.dart';
 class LojasCubit extends Cubit<LojasState> {
   final ApiClient _apiClient;
 
-  List<Loja> _todasLojas = [];
-  Map<String, dynamic>? _ultimaPagination;
-  Map<String, dynamic>? _filterOptions;
-
-  // ✅ FILTROS ATUAIS (MODO ONLINE)
   Map<String, String> _activeFilters = {};
   String? _currentSearch;
 
-  LojasCubit(this._apiClient) : super(LojasInitial());
+  LojasCubit(this._apiClient) : super(const LojasState());
 
   // ✅ GETTERS
   Map<String, String> get activeFilters => _activeFilters;
   String? get currentSearch => _currentSearch;
-  Map<String, dynamic>? get filterOptions => _filterOptions;
-
-  bool get hasMorePages {
-    if (_ultimaPagination == null) return false;
-    final currentPage = _ultimaPagination!['page'] as int;
-    final totalPages = _ultimaPagination!['total_pages'] as int;
-    return currentPage < totalPages;
-  }
-
-  int get currentPage => _ultimaPagination?['page'] ?? 1;
-  int get totalPages => _ultimaPagination?['total_pages'] ?? 1;
+  Map<String, dynamic>? get filterOptions => state.filterOptions;
 
   // 🔍 LISTAR LOJAS COM PAGINAÇÃO E FILTROS
   Future<void> fetchLojas({
@@ -38,10 +23,15 @@ class LojasCubit extends Cubit<LojasState> {
     int? perPage,
     bool isLoadMore = false,
     Map<String, String>? filters,
+    bool showLoading = false,
   }) async {
     try {
       if (!isLoadMore) {
-        emit(LojasLoading());
+        if (showLoading || state.isFirstLoad) {
+          emit(state.copyWith(isLoading: true, error: null, isLoadingMore: false));
+        }
+      } else {
+        emit(state.copyWith(isLoadingMore: true, error: null));
       }
 
       if (filters != null) {
@@ -68,55 +58,65 @@ class LojasCubit extends Cubit<LojasState> {
         final data = response.data['data'];
         final items = List<Map<String, dynamic>>.from(data['items']);
         final pagination = data['pagination'];
-        _filterOptions = data['filter_options'];
+        final filterOptions = data['filter_options'];
 
         final novasLojas = items.map((json) => Loja.fromJson(json)).toList();
 
-        if (isLoadMore && state is LojasLoaded) {
-          final currentState = state as LojasLoaded;
-          _todasLojas = [...currentState.lojas, ...novasLojas];
+        List<Loja> currentLojas;
+        if (isLoadMore) {
+          currentLojas = [...state.lojas, ...novasLojas];
         } else {
-          _todasLojas = novasLojas;
+          currentLojas = novasLojas;
         }
 
-        _ultimaPagination = pagination;
-
-        emit(LojasLoaded(
-          lojas: _todasLojas,
-          lojasFiltradas: _todasLojas,
+        emit(state.copyWith(
+          lojas: currentLojas,
+          lojasFiltradas: currentLojas,
           pagination: pagination,
-          filterOptions: _filterOptions,
+          filterOptions: filterOptions,
+          isLoading: false,
+          isLoadingMore: false,
+          isFirstLoad: false,
+          error: null,
         ));
       } else {
-        emit(LojasError(response.data['message'] ?? 'Erro ao carregar lojas'));
+        emit(state.copyWith(
+          isLoading: false, 
+          isLoadingMore: false, 
+          isFirstLoad: false,
+          error: response.data['message'] ?? 'Erro ao carregar lojas'
+        ));
       }
     } catch (e) {
-      if (!isLoadMore) {
-        emit(LojasError('Erro de conexão: $e'));
-      }
+      emit(state.copyWith(
+        isLoading: false, 
+        isLoadingMore: false, 
+        isFirstLoad: false,
+        error: 'Erro de conexão: $e'
+      ));
     }
   }
 
   // ✅ APLICAR FILTROS
   Future<void> applyFilters(Map<String, String> filters) async {
     _activeFilters = filters;
-    await fetchLojas(page: 1, filters: filters);
+    await fetchLojas(page: 1, filters: filters, showLoading: false);
   }
 
   void applySearch(String search) {
     _activeFilters['search'] = search;
     _currentSearch = search;
-    fetchLojas(page: 1);
+    fetchLojas(page: 1, showLoading: false);
   }
 
   void clearFilters() {
     _activeFilters = {};
     _currentSearch = null;
-    fetchLojas(page: 1);
+    fetchLojas(page: 1, showLoading: false);
   }
 
   Future<void> refreshList() async {
-    await fetchLojas(page: 1);
+    await fetchLojas(page: 1, showLoading: true);
   }
 
   // ✅ BUSCAR LOJA DETALHADA
@@ -128,77 +128,74 @@ class LojasCubit extends Cubit<LojasState> {
       }
       return null;
     } catch (e) {
-      emit(LojasError('Erro ao buscar detalhes da loja: $e'));
+      emit(state.copyWith(error: 'Erro ao buscar detalhes da loja: $e'));
       return null;
     }
   }
 
   // OPERAÇÕES CRUD
   Future<bool> createLoja(Map<String, dynamic> data) async {
-    emit(const LojaOperationLoading());
+    emit(state.copyWith(isOperationLoading: true));
     try {
       final response = await _apiClient.post(AppConfig.LOJA_CREATE, data: data);
       if (response.statusCode == 201 && response.data['success'] == true) {
-        await refreshList();
-        emit(const LojaOperationSuccess(message: 'Loja criada com sucesso'));
+        await fetchLojas(page: 1, showLoading: false);
+        emit(state.copyWith(operationMessage: 'Loja criada com sucesso', isOperationLoading: false));
         return true;
       }
-      emit(LojasError(response.data['message'] ?? 'Erro ao criar loja'));
+      emit(state.copyWith(error: response.data['message'] ?? 'Erro ao criar loja', isOperationLoading: false));
       return false;
     } catch (e) {
-      emit(LojasError('Erro de conexão: $e'));
+      emit(state.copyWith(error: 'Erro de conexão: $e', isOperationLoading: false));
       return false;
     }
   }
 
   Future<bool> updateLoja(int id, Map<String, dynamic> data) async {
-    emit(const LojaOperationLoading());
+    emit(state.copyWith(isOperationLoading: true));
     try {
       final response = await _apiClient.post('${AppConfig.LOJA_UPDATE}/$id', data: data);
       if (response.statusCode == 200 && response.data['success'] == true) {
-        await refreshList();
-        emit(const LojaOperationSuccess(message: 'Loja atualizada com sucesso'));
+        await fetchLojas(page: 1, showLoading: false);
+        emit(state.copyWith(operationMessage: 'Loja atualizada com sucesso', isOperationLoading: false));
         return true;
       }
-      emit(LojasError(response.data['message'] ?? 'Erro ao atualizar loja'));
+      emit(state.copyWith(error: response.data['message'] ?? 'Erro ao atualizar loja', isOperationLoading: false));
       return false;
     } catch (e) {
-      emit(LojasError('Erro de conexão: $e'));
+      emit(state.copyWith(error: 'Erro de conexão: $e', isOperationLoading: false));
       return false;
     }
   }
 
   Future<bool> deleteLoja(int id) async {
-    emit(const LojaOperationLoading());
+    emit(state.copyWith(isOperationLoading: true));
     try {
       final response = await _apiClient.post('${AppConfig.LOJA_DELETE}/$id');
       if (response.statusCode == 200 && response.data['success'] == true) {
-        _todasLojas = _todasLojas.where((l) => l.id != id).toList();
-        emit(LojasLoaded(lojas: _todasLojas, lojasFiltradas: _todasLojas, pagination: _ultimaPagination, filterOptions: _filterOptions));
-        emit(const LojaOperationSuccess(message: 'Loja removida com sucesso'));
+        final newLojas = List<Loja>.from(state.lojas)..removeWhere((l) => l.id == id);
+        emit(state.copyWith(
+          lojas: newLojas, 
+          lojasFiltradas: newLojas, 
+          operationMessage: 'Loja removida com sucesso',
+          isOperationLoading: false,
+        ));
         return true;
       }
-      emit(LojasError(response.data['message'] ?? 'Erro ao remover loja'));
+      emit(state.copyWith(error: response.data['message'] ?? 'Erro ao remover loja', isOperationLoading: false));
       return false;
     } catch (e) {
-      emit(LojasError('Erro de conexão: $e'));
+      emit(state.copyWith(error: 'Erro de conexão: $e', isOperationLoading: false));
       return false;
     }
   }
 
-  /// 🔥 Versão que já carrega os dados (opcional)
   Future<void> resetAndLoad() async {
-    resetFilters();
-    await fetchLojas(perPage: 10);
-  }
-
-  void resetFilters() {
     _activeFilters = {};
     _currentSearch = null;
-    _todasLojas = [];
+    await fetchLojas(perPage: 10, showLoading: true);
   }
 
-  // ✅ RESUMO DOS FILTROS ATIVOS
   String getFiltrosAtivosResumo() {
     final partes = <String>[];
 

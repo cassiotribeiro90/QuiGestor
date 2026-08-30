@@ -22,11 +22,12 @@ class PedidosCubit extends Cubit<PedidosState> {
     int perPage = 20,
     Map<String, String>? filters,
     bool isRefresh = false,
+    bool showLoading = false, // ⭐ DEFAULT: false (silencioso)
   }) async {
-    // 🔥 Só mostra loading central se for refresh (novo filtro) ou primeira página
-    if (isRefresh || page == 1) {
+    // ⭐ Só mostra loading central se for solicitado OU se for a primeiríssima carga
+    if (showLoading || (state.isFirstLoad && page == 1)) {
       emit(state.copyWith(isLoading: true, error: null, isLoadingMore: false));
-    } else {
+    } else if (page > 1) {
       emit(state.copyWith(isLoadingMore: true, error: null));
     }
 
@@ -51,13 +52,20 @@ class PedidosCubit extends Cubit<PedidosState> {
           .map((item) => Pedido.fromJson(item))
           .toList();
 
-      // Carrega filter_options (apenas na primeira página)
+      // Carrega filter_options (sempre que disponível na resposta)
       List<FilterGroup> filterGroups = state.filterGroups;
-      if (data['filter_options'] != null && state.filterGroups.isEmpty) {
+      if (data['filter_options'] != null) {
         final options = data['filter_options'] as Map<String, dynamic>;
         filterGroups = options.entries
             .map((entry) => FilterGroup.fromJson(entry.key, entry.value))
             .toList();
+        
+        // 🔥 LOG PARA DEBUG (Passo 4 do roteiro)
+        print('📊 [FILTER] Novos grupos recebidos: ${filterGroups.length}');
+        for (var g in filterGroups) {
+          final optionsStr = g.options.map((o) => "${o.label}(${o.count})").join(", ");
+          print('   - ${g.label}: [$optionsStr]');
+        }
       }
 
       final totalItems = data['pagination']['total'] ?? 0;
@@ -69,7 +77,7 @@ class PedidosCubit extends Cubit<PedidosState> {
           ? newItems
           : [...state.items, ...newItems];
 
-      // 🔥 Marca hasLoaded = true (lista carregada com sucesso)
+      // 🔥 Marca hasLoaded = true (lista carregada com sucesso) e isFirstLoad = false
       emit(state.copyWith(
         items: items,
         isLoading: false,
@@ -78,7 +86,8 @@ class PedidosCubit extends Cubit<PedidosState> {
         page: page,
         perPage: perPage,
         hasMore: hasMore,
-        hasLoaded: true, // 🔥 NOVO
+        hasLoaded: true,
+        isFirstLoad: false, // ⭐ Seta como false após a carga
         filterGroups: filterGroups,
       ));
     } catch (e) {
@@ -87,7 +96,8 @@ class PedidosCubit extends Cubit<PedidosState> {
         isLoading: false,
         isLoadingMore: false,
         error: e.toString(),
-        hasLoaded: true, // 🔥 NOVO
+        hasLoaded: true,
+        isFirstLoad: false, // ⭐ Seta como false mesmo em erro
       ));
     }
   }
@@ -109,7 +119,7 @@ class PedidosCubit extends Cubit<PedidosState> {
   // ============================================================
   Future<void> refreshWithFilters(Map<String, String> filters) async {
     _currentFilters = filters;
-    await fetchPedidos(page: 1, perPage: state.perPage, filters: filters, isRefresh: true);
+    await fetchPedidos(page: 1, perPage: state.perPage, filters: filters, isRefresh: true, showLoading: false);
   }
 
   // ============================================================

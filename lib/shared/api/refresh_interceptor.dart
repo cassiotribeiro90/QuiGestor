@@ -13,6 +13,7 @@ class RefreshInterceptor extends QueuedInterceptor {
   final GlobalKey<NavigatorState> _navigatorKey;
 
   final Set<String> _refreshAttempts = {};
+  bool _isRefreshing = false;
 
   RefreshInterceptor({
     required Dio dio,
@@ -29,7 +30,6 @@ class RefreshInterceptor extends QueuedInterceptor {
     debugPrint('📤 [Interceptor] ${options.method} ${options.path} - requiresAuth: $requiresAuth');
 
     if (requiresAuth) {
-      // 🔥 AGORA USAMOS `then` PARA LIDAR COM O FUTURE
       _tokenService.getAuthHeader().then((headers) {
         if (headers.isNotEmpty) {
           options.headers.addAll(headers);
@@ -49,15 +49,14 @@ class RefreshInterceptor extends QueuedInterceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
+    final path = err.requestOptions.path;
+    final statusCode = err.response?.statusCode;
+
     debugPrint('❌ [Interceptor] ========== ERRO DETECTADO ==========');
-    debugPrint('❌ [Interceptor] Path: ${err.requestOptions.path}');
-    debugPrint('❌ [Interceptor] Method: ${err.requestOptions.method}');
-    debugPrint('❌ [Interceptor] Status: ${err.response?.statusCode}');
-    debugPrint('❌ [Interceptor] requiresAuth: ${err.requestOptions.extra['requiresAuth']}');
-    debugPrint('❌ [Interceptor] Resposta: ${err.response?.data}');
+    debugPrint('❌ [Interceptor] Path: $path');
+    debugPrint('❌ [Interceptor] Status: $statusCode');
 
     // 🔥 NUNCA tenta refresh em endpoints de autenticação
-    final path = err.requestOptions.path;
     if (path.contains('/login') ||
         path.contains('/refresh') ||
         path.contains('/verify-otp') ||
@@ -68,7 +67,7 @@ class RefreshInterceptor extends QueuedInterceptor {
     }
 
     // Se não for 401, passa adiante
-    if (err.response?.statusCode != 401) {
+    if (statusCode != 401) {
       debugPrint('ℹ️ [Interceptor] Erro não é 401, repassando...');
       handler.next(err);
       return;
@@ -82,77 +81,96 @@ class RefreshInterceptor extends QueuedInterceptor {
       return;
     }
 
-    // Evita loop infinito
-    final requestKey = '${err.requestOptions.path}:${err.requestOptions.method}';
-    if (_refreshAttempts.contains(requestKey)) {
-      debugPrint('🔄 [Interceptor] JÁ TENTOU REFRESH PARA ESTA REQUISIÇÃO: $requestKey');
-      debugPrint('🚫 [Interceptor] Abortando e redirecionando para login');
-      _refreshAttempts.remove(requestKey);
-      _redirectToLogin(showMessage: true);
-      handler.next(err);
-      return;
-    }
-
-    _refreshAttempts.add(requestKey);
-    debugPrint('🔄 [Interceptor] Token 401 detectado, INICIANDO PROCESSO DE REFRESH...');
-    debugPrint('🔄 [Interceptor] RequestKey: $requestKey');
-
-    // 🔥 VERIFICA SE TEM REFRESH TOKEN SALVO
-    final refreshToken = await _tokenService.getRefreshToken();
-    debugPrint('🔄 [Interceptor] Refresh token disponível? ${refreshToken != null}');
-
-    if (refreshToken == null) {
-      debugPrint('❌ [Interceptor] SEM REFRESH TOKEN DISPONÍVEL!');
-      _refreshAttempts.remove(requestKey);
-      _redirectToLogin(showMessage: true);
-      handler.next(err);
-      return;
-    }
-
+    // O QueuedInterceptor garante que apenas uma execução de onError (ou onRequest/onResponse)
+    // aconteça por vez. Isso é crucial para o refresh token.
+    
     try {
-      debugPrint('🔄 [Interceptor] Chamando AuthCubit.refreshToken()...');
-      final success = await getIt<AuthCubit>().refreshToken();
+      // 1. Verifica se o token já foi renovado por outra requisição que estava na fila
+      final requestToken = err.requestOptions.headers['Authorization']?.toString().replaceFirst('Bearer ', '');
+      final currentToken = await _tokenService.getAccessToken();
 
-      if (success) {
-        debugPrint('✅ [Interceptor] REFRESH BEM-SUCEDIDO! Novo token obtido.');
-
-        // 🔥 OBTÉM O NOVO HEADER DE AUTENTICAÇÃO (ASSÍNCRONO)
+      if (currentToken != null && requestToken != null && currentToken != requestToken) {
+        debugPrint('🔄 [Interceptor] Token já foi renovado por outra requisição previa. Reexecutando com novo token...');
         final newHeaders = await _tokenService.getAuthHeader();
-        if (newHeaders.isNotEmpty) {
-          debugPrint('✅ [Interceptor] Novo token adicionado: ${newHeaders['Authorization']?.substring(0, 30)}...');
-        } else {
-          debugPrint('⚠️ [Interceptor] Novo token não encontrado após refresh');
-          _refreshAttempts.remove(requestKey);
-          _redirectToLogin(showMessage: true);
-          handler.next(err);
-          return;
-        }
-
-        // Reconfigura a requisição original com o novo token
         final newRequest = err.requestOptions;
         newRequest.headers.addAll(newHeaders);
-
-        debugPrint('🔄 [Interceptor] Refazendo requisição original: ${newRequest.path}');
-
-        // Refaz a requisição
+        
         final response = await _dio.fetch(newRequest);
-
-        // Limpa o cache
-        _refreshAttempts.remove(requestKey);
-        debugPrint('✅ [Interceptor] REQUISIÇÃO ORIGINAL BEM-SUCEDIDA APÓS REFRESH');
-
         handler.resolve(response);
+        return;
+      }
+
+      // 2. Se chegou aqui, esta é a primeira requisição a falhar com este token
+      // Evita loop infinito para a mesma requisição (mesmo endpoint + mesmo token)
+      final requestKey = '${err.requestOptions.path}:${err.requestOptions.method}:$requestToken';
+      if (_refreshAttempts.contains(requestKey)) {
+        debugPrint('🔄 [Interceptor] LOOP DETECTADO: Já tentou refresh para esta request e token: $requestKey');
+        _refreshAttempts.remove(requestKey);
+        _redirectToLogin(showMessage: true);
+        handler.next(err);
+        return;
+      }
+
+      _refreshAttempts.add(requestKey);
+      debugPrint('🔄 [Interceptor] INICIANDO PROCESSO DE REFRESH para: $path');
+      
+      _isRefreshing = true;
+
+      final refreshToken = await _tokenService.getRefreshToken();
+      debugPrint('🔑 [Interceptor] Refresh token disponível? ${refreshToken != null ? 'SIM' : 'NÃO'}');
+
+      if (refreshToken == null) {
+        debugPrint('❌ [Interceptor] Refresh token NÃO ENCONTRADO no storage');
+        _isRefreshing = false;
+        _refreshAttempts.remove(requestKey);
+        _redirectToLogin(showMessage: true);
+        handler.next(err);
+        return;
+      }
+
+      debugPrint('🔄 [Interceptor] Chamando AuthCubit.refreshToken()...');
+      
+      // Timeout de segurança para evitar travamentos no Web/Edge
+      final refreshFuture = getIt<AuthCubit>().refreshToken();
+      final success = await refreshFuture.timeout(
+        const Duration(seconds: 15),
+        onTimeout: () {
+          debugPrint('⏰ [Interceptor] TIMEOUT (15s) no refreshToken()');
+          return false;
+        },
+      );
+
+      if (success) {
+        debugPrint('✅ [Interceptor] REFRESH BEM-SUCEDIDO!');
+
+        final newHeaders = await _tokenService.getAuthHeader();
+        if (newHeaders.isNotEmpty) {
+          final newRequest = err.requestOptions;
+          newRequest.headers.addAll(newHeaders);
+          
+          debugPrint('🔄 [Interceptor] Reexecutando requisição original...');
+          final response = await _dio.fetch(newRequest);
+          
+          _refreshAttempts.remove(requestKey);
+          debugPrint('✅ [Interceptor] REQUISIÇÃO ORIGINAL CONCLUÍDA COM SUCESSO APÓS REFRESH');
+          handler.resolve(response);
+        } else {
+          debugPrint('⚠️ [Interceptor] Novos headers vazios após refresh');
+          throw Exception('Token headers empty after refresh');
+        }
       } else {
-        debugPrint('❌ [Interceptor] REFRESH FALHOU! Token não renovado.');
+        debugPrint('❌ [Interceptor] REFRESH FALHOU (Backend retornou erro ou AuthCubit falhou)');
         _refreshAttempts.remove(requestKey);
         _redirectToLogin(showMessage: true);
         handler.next(err);
       }
     } catch (e) {
       debugPrint('❌ [Interceptor] EXCEÇÃO NO PROCESSO DE REFRESH: $e');
-      _refreshAttempts.remove(requestKey);
+      _refreshAttempts.remove(err.requestOptions.path); // Limpeza preventiva
       _redirectToLogin(showMessage: true);
       handler.next(err);
+    } finally {
+      _isRefreshing = false;
     }
   }
 

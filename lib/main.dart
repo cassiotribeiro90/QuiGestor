@@ -1,8 +1,10 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart'; // Adicionado
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Adicionado
 import 'package:quigestor/app/modules/auth/bloc/auth_cubit.dart';
 import 'package:quigestor/app/modules/auth/bloc/auth_state.dart';
 import 'package:quigestor/app/modules/theme/bloc/theme_cubit.dart';
@@ -21,6 +23,12 @@ import 'package:url_strategy/url_strategy.dart';
 void main() async {
   setPathUrlStrategy(); // ← remove o # da URL
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 🔥 Para Web, inicializa SharedPreferences antes de tudo
+  if (kIsWeb) {
+    debugPrint('🌐 [WEB] Inicializando SharedPreferences...');
+    await SharedPreferences.getInstance();
+  }
 
   // 🔥 INICIALIZA FIREBASE
   await Firebase.initializeApp(

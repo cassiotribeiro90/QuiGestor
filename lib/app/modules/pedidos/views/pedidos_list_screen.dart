@@ -69,7 +69,7 @@ class _PedidosListScreenState extends State<PedidosListScreen> {
         },
         builder: (context, state) {
           // 🔥 PRIMEIRO CARREGAMENTO: mostra progress central
-          if (!state.hasLoaded) {
+          if (state.isLoading && state.isFirstLoad) {
             return const Center(child: CircularProgressIndicator());
           }
 
@@ -115,6 +115,7 @@ class _PedidosListScreenState extends State<PedidosListScreen> {
                 // Filtro
                 SliverToBoxAdapter(
                   child: GenericFilterWidget(
+                    key: ValueKey(state.filterGroups), // 🔥 Força reconstrução para atualizar contadores
                     groups: state.filterGroups,
                     onApply: (params) {
                       _cubit.refreshWithFilters(params);
@@ -139,8 +140,8 @@ class _PedidosListScreenState extends State<PedidosListScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    // Loading inicial
-    if (state.isLoading && state.items.isEmpty) {
+    // Loading inicial (Skeleton) - Só mostra no isFirstLoad
+    if (state.isLoading && state.isFirstLoad && state.items.isEmpty) {
       return SliverPadding(
         padding: const EdgeInsets.all(16),
         sliver: SliverList(

@@ -38,12 +38,10 @@ class _FiltrosLojistasState extends State<FiltrosLojistas> {
           const DropdownMenuItem(value: null, child: Text('Todas lojas')),
         ];
 
-        if (state is LojistasLoaded) {
-          lojaItems.addAll(state.lojas.map((loja) => DropdownMenuItem(
-            value: loja.id,
-            child: Text(loja.nome),
-          )));
-        }
+        lojaItems.addAll(state.lojas.map((loja) => DropdownMenuItem(
+          value: loja.id,
+          child: Text(loja.nome),
+        )));
 
         return Padding(
           padding: const EdgeInsets.all(8.0),

@@ -11,7 +11,6 @@ import '../../categorias/models/categoria.dart';
 import '../../lojas/models/loja.dart';
 import '../../../../apparte/widgets/quigestor_card.dart';
 import '../../../../shared/api/api_client.dart';
-import '../../../core/constants/icon_constants.dart';
 import '../../../core/widgets/back_button_mixin.dart';
 
 class ProdutoFormScreen extends StatefulWidget {

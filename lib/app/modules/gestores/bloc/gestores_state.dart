@@ -2,28 +2,29 @@ import 'package:equatable/equatable.dart';
 import 'package:quigestor/app/app_config.dart';
 import 'package:quigestor/app/modules/gestores/models/gestor.dart';
 
-abstract class GestoresState extends Equatable {
-  const GestoresState();
-
-  @override
-  List<Object?> get props => [];
-}
-
-class GestoresInitial extends GestoresState {}
-
-class GestoresLoading extends GestoresState {}
-
-class GestoresLoaded extends GestoresState {
+class GestoresState extends Equatable {
   final List<Gestor> gestores;
   final List<Gestor> gestoresFiltrados;
   final Map<String, dynamic>? pagination;
   final Map<String, dynamic>? filterOptions;
+  final bool isLoading;
+  final bool isLoadingMore;
+  final bool isFirstLoad;
+  final String? error;
+  final String? operationMessage;
+  final bool isOperationLoading;
 
-  const GestoresLoaded({
-    required this.gestores,
-    required this.gestoresFiltrados,
+  const GestoresState({
+    this.gestores = const [],
+    this.gestoresFiltrados = const [],
     this.pagination,
     this.filterOptions,
+    this.isLoading = false,
+    this.isLoadingMore = false,
+    this.isFirstLoad = true,
+    this.error,
+    this.operationMessage,
+    this.isOperationLoading = false,
   });
 
   // 🔥 GETTERS DE PAGINAÇÃO
@@ -33,29 +34,43 @@ class GestoresLoaded extends GestoresState {
   int get perPage => pagination?['per_page'] ?? AppConfig.defaultPerPage;
   bool get hasMorePages => currentPage < totalPages;
 
+  GestoresState copyWith({
+    List<Gestor>? gestores,
+    List<Gestor>? gestoresFiltrados,
+    Map<String, dynamic>? pagination,
+    Map<String, dynamic>? filterOptions,
+    bool? isLoading,
+    bool? isLoadingMore,
+    bool? isFirstLoad,
+    String? error,
+    String? operationMessage,
+    bool? isOperationLoading,
+  }) {
+    return GestoresState(
+      gestores: gestores ?? this.gestores,
+      gestoresFiltrados: gestoresFiltrados ?? this.gestoresFiltrados,
+      pagination: pagination ?? this.pagination,
+      filterOptions: filterOptions ?? this.filterOptions,
+      isLoading: isLoading ?? this.isLoading,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      isFirstLoad: isFirstLoad ?? this.isFirstLoad,
+      error: error,
+      operationMessage: operationMessage,
+      isOperationLoading: isOperationLoading ?? this.isOperationLoading,
+    );
+  }
+
   @override
-  List<Object?> get props => [gestores, gestoresFiltrados, pagination, filterOptions];
-}
-
-class GestoresError extends GestoresState {
-  final String message;
-
-  const GestoresError(this.message);
-
-  @override
-  List<Object?> get props => [message];
-}
-
-class GestorOperationSuccess extends GestoresState {
-  final String message;
-  final Gestor? gestor;
-
-  const GestorOperationSuccess({required this.message, this.gestor});
-
-  @override
-  List<Object?> get props => [message, gestor];
-}
-
-class GestorOperationLoading extends GestoresState {
-  const GestorOperationLoading();
+  List<Object?> get props => [
+    gestores,
+    gestoresFiltrados,
+    pagination,
+    filterOptions,
+    isLoading,
+    isLoadingMore,
+    isFirstLoad,
+    error,
+    operationMessage,
+    isOperationLoading,
+  ];
 }

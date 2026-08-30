@@ -8,28 +8,28 @@ import 'package:quigestor/app/modules/gestores/bloc/gestores_state.dart';
 class GestoresCubit extends Cubit<GestoresState> {
   final ApiClient _apiClient;
 
-  List<Gestor> _todosGestores = [];
-  Map<String, dynamic>? _ultimaPagination;
-  Map<String, dynamic>? _filterOptions;
-
   Map<String, String> _activeFilters = {};
   String? _currentSearch;
 
-  GestoresCubit(this._apiClient) : super(GestoresInitial());
+  GestoresCubit(this._apiClient) : super(const GestoresState());
 
   Map<String, String> get activeFilters => _activeFilters;
   String? get currentSearch => _currentSearch;
-  Map<String, dynamic>? get filterOptions => _filterOptions;
 
   Future<void> fetchGestores({
     int page = 1,
     int perPage = AppConfig.defaultPerPage,
     bool isLoadMore = false,
     Map<String, String>? filters,
+    bool showLoading = false,
   }) async {
     try {
       if (!isLoadMore) {
-        emit(GestoresLoading());
+        if (showLoading || state.isFirstLoad) {
+          emit(state.copyWith(isLoading: true, error: null, isLoadingMore: false));
+        }
+      } else {
+        emit(state.copyWith(isLoadingMore: true, error: null));
       }
 
       if (filters != null) {
@@ -54,108 +54,118 @@ class GestoresCubit extends Cubit<GestoresState> {
         final data = response.data['data'];
         final items = List<Map<String, dynamic>>.from(data['items']);
         final pagination = data['pagination'];
-        _filterOptions = data['filter_options'];
+        final filterOptions = data['filter_options'];
 
         final novosGestores = items.map((json) => Gestor.fromJson(json)).toList();
 
-        if (isLoadMore && state is GestoresLoaded) {
-          final currentState = state as GestoresLoaded;
-          _todosGestores = [...currentState.gestores, ...novosGestores];
+        List<Gestor> currentGestores;
+        if (isLoadMore) {
+          currentGestores = [...state.gestores, ...novosGestores];
         } else {
-          _todosGestores = novosGestores;
+          currentGestores = novosGestores;
         }
 
-        _ultimaPagination = pagination;
-
-        emit(GestoresLoaded(
-          gestores: _todosGestores,
-          gestoresFiltrados: _todosGestores,
+        emit(state.copyWith(
+          gestores: currentGestores,
+          gestoresFiltrados: currentGestores,
           pagination: pagination,
-          filterOptions: _filterOptions,
+          filterOptions: filterOptions,
+          isLoading: false,
+          isLoadingMore: false,
+          isFirstLoad: false,
+          error: null,
         ));
       } else {
-        emit(GestoresError(response.data['message'] ?? 'Erro ao carregar gestores'));
+        emit(state.copyWith(
+          isLoading: false, 
+          isLoadingMore: false, 
+          isFirstLoad: false,
+          error: response.data['message'] ?? 'Erro ao carregar gestores'
+        ));
       }
     } catch (e) {
-      if (!isLoadMore) {
-        emit(GestoresError('Erro de conexão: $e'));
-      }
+      emit(state.copyWith(
+        isLoading: false, 
+        isLoadingMore: false, 
+        isFirstLoad: false,
+        error: 'Erro de conexão: $e'
+      ));
     }
   }
 
   Future<void> applyFilters(Map<String, String> filters) async {
     _activeFilters = filters;
-    await fetchGestores(page: 1, filters: filters);
+    await fetchGestores(page: 1, filters: filters, showLoading: false);
   }
 
   Future<void> applySearch(String search) {
     _activeFilters['search'] = search;
     _currentSearch = search;
-    return fetchGestores(page: 1);
+    return fetchGestores(page: 1, showLoading: false);
   }
 
   Future<void> clearFilters() async {
     _activeFilters = {};
     _currentSearch = null;
-    await fetchGestores(page: 1);
+    await fetchGestores(page: 1, showLoading: false);
   }
 
   Future<void> refreshList() async {
-    await fetchGestores(page: 1);
+    await fetchGestores(page: 1, showLoading: true);
   }
 
   Future<bool> createGestor(Map<String, dynamic> data) async {
-    emit(const GestorOperationLoading());
+    emit(state.copyWith(isOperationLoading: true));
     try {
       final response = await _apiClient.post(AppConfig.GESTOR_CREATE, data: data);
       if (response.statusCode == 201 && response.data['success'] == true) {
-        await refreshList();
-        emit(const GestorOperationSuccess(message: 'Gestor criado com sucesso'));
+        await fetchGestores(page: 1, showLoading: false);
+        emit(state.copyWith(operationMessage: 'Gestor criado com sucesso', isOperationLoading: false));
         return true;
       }
-      emit(GestoresError(response.data['message'] ?? 'Erro ao criar gestor'));
+      emit(state.copyWith(error: response.data['message'] ?? 'Erro ao criar gestor', isOperationLoading: false));
       return false;
     } catch (e) {
-      emit(GestoresError('Erro de conexão: $e'));
+      emit(state.copyWith(error: 'Erro de conexão: $e', isOperationLoading: false));
       return false;
     }
   }
 
   Future<bool> updateGestor(int id, Map<String, dynamic> data) async {
-    emit(const GestorOperationLoading());
+    emit(state.copyWith(isOperationLoading: true));
     try {
       final response = await _apiClient.post('${AppConfig.GESTOR_UPDATE}/$id', data: data);
       if (response.statusCode == 200 && response.data['success'] == true) {
-        await refreshList();
-        emit(const GestorOperationSuccess(message: 'Gestor atualizado com sucesso'));
+        await fetchGestores(page: 1, showLoading: false);
+        emit(state.copyWith(operationMessage: 'Gestor atualizado com sucesso', isOperationLoading: false));
         return true;
       }
-      emit(GestoresError(response.data['message'] ?? 'Erro ao atualizar gestor'));
+      emit(state.copyWith(error: response.data['message'] ?? 'Erro ao atualizar gestor', isOperationLoading: false));
       return false;
     } catch (e) {
-      emit(GestoresError('Erro de conexão: $e'));
+      emit(state.copyWith(error: 'Erro de conexão: $e', isOperationLoading: false));
       return false;
     }
   }
 
   Future<bool> deleteGestor(int id) async {
-    emit(const GestorOperationLoading());
+    emit(state.copyWith(isOperationLoading: true));
     try {
       final response = await _apiClient.post('${AppConfig.GESTOR_DELETE}/$id');
       if (response.statusCode == 200 && response.data['success'] == true) {
-        _todosGestores.removeWhere((g) => g.id == id);
-        emit(GestoresLoaded(
-          gestores: _todosGestores,
-          gestoresFiltrados: _todosGestores,
-          pagination: _ultimaPagination,
+        final newGestores = List<Gestor>.from(state.gestores)..removeWhere((g) => g.id == id);
+        emit(state.copyWith(
+          gestores: newGestores,
+          gestoresFiltrados: newGestores,
+          operationMessage: 'Gestor removido com sucesso',
+          isOperationLoading: false,
         ));
-        emit(const GestorOperationSuccess(message: 'Gestor removido com sucesso'));
         return true;
       }
-      emit(GestoresError(response.data['message'] ?? 'Erro ao remover gestor'));
+      emit(state.copyWith(error: response.data['message'] ?? 'Erro ao remover gestor', isOperationLoading: false));
       return false;
     } catch (e) {
-      emit(GestoresError('Erro de conexão: $e'));
+      emit(state.copyWith(error: 'Erro de conexão: $e', isOperationLoading: false));
       return false;
     }
   }
@@ -164,13 +174,13 @@ class GestoresCubit extends Cubit<GestoresState> {
     final counts = <String, dynamic>{};
     
     final nivelCounts = <String, int>{};
-    for (var gestor in _todosGestores) {
+    for (var gestor in state.gestores) {
       nivelCounts[gestor.nivel] = (nivelCounts[gestor.nivel] ?? 0) + 1;
     }
     counts['nivel'] = nivelCounts;
     
     final statusCounts = <int, int>{};
-    for (var gestor in _todosGestores) {
+    for (var gestor in state.gestores) {
       statusCounts[gestor.status] = (statusCounts[gestor.status] ?? 0) + 1;
     }
     counts['status'] = statusCounts;
@@ -185,34 +195,19 @@ class GestoresCubit extends Cubit<GestoresState> {
       if (response.data['success'] == true) {
         return Gestor.fromJson(response.data['data']);
       } else {
-        emit(GestoresError(response.data['message'] ?? 'Erro ao carregar gestor'));
+        emit(state.copyWith(error: response.data['message'] ?? 'Erro ao carregar gestor'));
         return null;
       }
     } catch (e) {
-      emit(GestoresError('Erro de conexão: $e'));
+      emit(state.copyWith(error: 'Erro de conexão: $e'));
       return null;
     }
   }
 
-  bool get hasMorePages {
-    if (_ultimaPagination == null) return false;
-    final currentPage = _ultimaPagination!['page'] as int;
-    final totalPages = _ultimaPagination!['total_pages'] as int;
-    return currentPage < totalPages;
-  }
-
-  int get currentPage => _ultimaPagination?['page'] ?? 1;
-
-  /// 🔥 Versão que já carrega os dados (opcional)
   Future<void> resetAndLoad() async {
-    resetFilters();
-    await fetchGestores(perPage: 10);
-  }
-
-  void resetFilters() {
     _activeFilters = {};
     _currentSearch = null;
-    _todosGestores = [];
+    await fetchGestores(perPage: 10, showLoading: true);
   }
 
   String getFiltrosAtivosResumo() {

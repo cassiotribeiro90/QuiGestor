@@ -357,15 +357,13 @@ class _LojaFormScreenState extends State<LojaFormScreen> with BackButtonMixin {
           ? const Center(child: CircularProgressIndicator())
           : BlocConsumer<LojasCubit, LojasState>(
         listener: (context, state) {
-          if (state is LojasError) {
+          if (state.error != null) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: TextBody2(state.message, color: Colors.white),
+                content: TextBody2(state.error!, color: Colors.white),
                 backgroundColor: Colors.red,
               ),
             );
-          } else if (state is LojaOperationSuccess) {
-            // SnackBar removido daqui e movido para _salvar/_deletar com delay antes do pop
           }
         },
         builder: (context, state) {

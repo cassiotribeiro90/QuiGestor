@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TokenService {
   static const String _accessTokenKey = 'access_token';
@@ -8,9 +9,13 @@ class TokenService {
   static const String _expiresInKey = 'expires_in';
 
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  SharedPreferences? _prefs;
 
-  static Future<void> initialize() async {
-    // Static initializer if needed for compatibility
+  Future<void> _ensureInitialized() async {
+    if (_prefs == null) {
+      debugPrint('🔐 [TOKEN] Inicializando SharedPreferences...');
+      _prefs = await SharedPreferences.getInstance();
+    }
   }
 
   // ============================================================
@@ -23,20 +28,47 @@ class TokenService {
     int? expiresIn,
   }) async {
     debugPrint('🔐 [TOKEN] Salvando tokens...');
-    await _storage.write(key: _accessTokenKey, value: accessToken);
-    await _storage.write(key: _refreshTokenKey, value: refreshToken);
-    if (tokenType != null) await _storage.write(key: _tokenTypeKey, value: tokenType);
-    if (expiresIn != null) await _storage.write(key: _expiresInKey, value: expiresIn.toString());
-    debugPrint('✅ [TOKEN] Tokens salvos');
+    debugPrint('   Access Token: ${accessToken.substring(0, 10)}...');
+    debugPrint('   Refresh Token: ${refreshToken.substring(0, 10)}...');
+
+    if (kIsWeb) {
+      await _ensureInitialized();
+      await _prefs?.setString(_accessTokenKey, accessToken);
+      await _prefs?.setString(_refreshTokenKey, refreshToken);
+      if (tokenType != null) await _prefs?.setString(_tokenTypeKey, tokenType);
+      if (expiresIn != null) await _prefs?.setInt(_expiresInKey, expiresIn);
+    } else {
+      await _storage.write(key: _accessTokenKey, value: accessToken);
+      await _storage.write(key: _refreshTokenKey, value: refreshToken);
+      if (tokenType != null) await _storage.write(key: _tokenTypeKey, value: tokenType);
+      if (expiresIn != null) await _storage.write(key: _expiresInKey, value: expiresIn.toString());
+    }
+
+    // Verificação
+    final savedRefresh = await getRefreshToken();
+    debugPrint('✅ [TOKEN] Tokens salvos. Refresh token verificado: ${savedRefresh != null ? 'OK' : 'FALHOU'}');
   }
 
   // ============================================================
   // 🔥 2. OBTER TOKENS
   // ============================================================
-  Future<String?> getAccessToken() => _storage.read(key: _accessTokenKey);
-  Future<String?> getRefreshToken() => _storage.read(key: _refreshTokenKey);
+  Future<String?> getAccessToken() async {
+    if (kIsWeb) {
+      await _ensureInitialized();
+      return _prefs?.getString(_accessTokenKey);
+    }
+    return _storage.read(key: _accessTokenKey);
+  }
 
-  // 🔥 CORREÇÃO: Metodo assíncrono que retorna o header com token
+  Future<String?> getRefreshToken() async {
+    if (kIsWeb) {
+      await _ensureInitialized();
+      return _prefs?.getString(_refreshTokenKey);
+    }
+    return _storage.read(key: _refreshTokenKey);
+  }
+
+  // 🔥 Metodo assíncrono que retorna o header com token
   Future<Map<String, String>> getAuthHeader() async {
     final token = await getAccessToken();
     if (token != null && token.isNotEmpty) {
@@ -62,7 +94,12 @@ class TokenService {
   // ============================================================
   Future<void> saveAccessToken(String accessToken) async {
     debugPrint('🔐 [TOKEN] Atualizando access token');
-    await _storage.write(key: _accessTokenKey, value: accessToken);
+    if (kIsWeb) {
+      await _ensureInitialized();
+      await _prefs?.setString(_accessTokenKey, accessToken);
+    } else {
+      await _storage.write(key: _accessTokenKey, value: accessToken);
+    }
     debugPrint('✅ [TOKEN] Access token atualizado');
   }
 
@@ -71,10 +108,18 @@ class TokenService {
   // ============================================================
   Future<void> clearTokens() async {
     debugPrint('🔐 [TOKEN] Limpando tokens');
-    await _storage.delete(key: _accessTokenKey);
-    await _storage.delete(key: _refreshTokenKey);
-    await _storage.delete(key: _tokenTypeKey);
-    await _storage.delete(key: _expiresInKey);
+    if (kIsWeb) {
+      await _ensureInitialized();
+      await _prefs?.remove(_accessTokenKey);
+      await _prefs?.remove(_refreshTokenKey);
+      await _prefs?.remove(_tokenTypeKey);
+      await _prefs?.remove(_expiresInKey);
+    } else {
+      await _storage.delete(key: _accessTokenKey);
+      await _storage.delete(key: _refreshTokenKey);
+      await _storage.delete(key: _tokenTypeKey);
+      await _storage.delete(key: _expiresInKey);
+    }
     debugPrint('✅ [TOKEN] Tokens removidos');
   }
 }
