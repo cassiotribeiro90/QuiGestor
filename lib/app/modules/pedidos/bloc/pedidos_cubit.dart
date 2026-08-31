@@ -6,6 +6,7 @@ import '../../../../shared/api/api_client.dart';
 import '../models/pedido_model.dart';
 import '../../../models/filter_option.dart';
 
+
 part 'pedidos_state.dart';
 
 class PedidosCubit extends Cubit<PedidosState> {
@@ -22,9 +23,8 @@ class PedidosCubit extends Cubit<PedidosState> {
     int perPage = 20,
     Map<String, String>? filters,
     bool isRefresh = false,
-    bool showLoading = false, // ⭐ DEFAULT: false (silencioso)
+    bool showLoading = false,
   }) async {
-    // ⭐ Só mostra loading central se for solicitado OU se for a primeiríssima carga
     if (showLoading || (state.isFirstLoad && page == 1)) {
       emit(state.copyWith(isLoading: true, error: null, isLoadingMore: false));
     } else if (page > 1) {
@@ -52,32 +52,50 @@ class PedidosCubit extends Cubit<PedidosState> {
           .map((item) => Pedido.fromJson(item))
           .toList();
 
-      // Carrega filter_options (sempre que disponível na resposta)
-      List<FilterGroup> filterGroups = state.filterGroups;
+      // 🔥 Processa filter_options com sincronização de selectedValue
+      List<FilterGroup> newFilterGroups = [];
+
       if (data['filter_options'] != null) {
         final options = data['filter_options'] as Map<String, dynamic>;
-        filterGroups = options.entries
-            .map((entry) => FilterGroup.fromJson(entry.key, entry.value))
-            .toList();
-        
-        // 🔥 LOG PARA DEBUG (Passo 4 do roteiro)
-        print('📊 [FILTER] Novos grupos recebidos: ${filterGroups.length}');
-        for (var g in filterGroups) {
-          final optionsStr = g.options.map((o) => "${o.label}(${o.count})").join(", ");
-          print('   - ${g.label}: [$optionsStr]');
-        }
+
+        options.forEach((key, value) {
+          if (value is List) {
+            FilterGroup group = FilterGroup.fromJson(key, value);
+
+            // Sincroniza o selectedValue com o filtro atualmente aplicado
+            if (key == 'status') {
+              group = group.copyWith(
+                selectedValue: _currentFilters['status'] ?? 'todos',
+              );
+            } else if (key == 'periodo') {
+              group = group.copyWith(
+                selectedValue: _currentFilters['periodo'] ?? 'hoje',
+              );
+            } else if (key == 'loja_id') {
+              group = group.copyWith(
+                selectedValue: _currentFilters['loja_id'] ?? 'todos',
+              );
+            }
+            // Adicione outras chaves se necessário
+
+            newFilterGroups.add(group);
+          }
+        });
+      }
+
+      // Se não houver filter_options, mantém os antigos (porém nova referência)
+      if (newFilterGroups.isEmpty) {
+        newFilterGroups = List<FilterGroup>.from(state.filterGroups);
       }
 
       final totalItems = data['pagination']['total'] ?? 0;
       final totalPages = data['pagination']['total_pages'] ?? 0;
       final hasMore = page < totalPages;
 
-      // 🔥 Se for refresh, substitui a lista; senão, acumula
       final items = (isRefresh || page == 1)
           ? newItems
           : [...state.items, ...newItems];
 
-      // 🔥 Marca hasLoaded = true (lista carregada com sucesso) e isFirstLoad = false
       emit(state.copyWith(
         items: items,
         isLoading: false,
@@ -87,17 +105,16 @@ class PedidosCubit extends Cubit<PedidosState> {
         perPage: perPage,
         hasMore: hasMore,
         hasLoaded: true,
-        isFirstLoad: false, // ⭐ Seta como false após a carga
-        filterGroups: filterGroups,
+        isFirstLoad: false,
+        filterGroups: newFilterGroups, // substituição total
       ));
     } catch (e) {
-      // 🔥 Mesmo em erro, marca como carregado (já tentou)
       emit(state.copyWith(
         isLoading: false,
         isLoadingMore: false,
         error: e.toString(),
         hasLoaded: true,
-        isFirstLoad: false, // ⭐ Seta como false mesmo em erro
+        isFirstLoad: false,
       ));
     }
   }
@@ -119,7 +136,13 @@ class PedidosCubit extends Cubit<PedidosState> {
   // ============================================================
   Future<void> refreshWithFilters(Map<String, String> filters) async {
     _currentFilters = filters;
-    await fetchPedidos(page: 1, perPage: state.perPage, filters: filters, isRefresh: true, showLoading: false);
+    await fetchPedidos(
+      page: 1,
+      perPage: state.perPage,
+      filters: filters,
+      isRefresh: true,
+      showLoading: false,
+    );
   }
 
   // ============================================================

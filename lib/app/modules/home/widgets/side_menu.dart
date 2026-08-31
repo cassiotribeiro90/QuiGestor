@@ -23,27 +23,31 @@ class SideMenu extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Header
+          // Header (imagem centralizada)
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(16, 32, 16, 16),
+            padding: const EdgeInsets.fromLTRB(8, 32, 8, 16),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [theme.colorScheme.primary, theme.colorScheme.secondary],
               ),
             ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              // 🔥 Centraliza verticalmente e horizontalmente
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset(
-                  'assets/images/quigestor.png',
-                  width: isCompact ? 40 : 120,
-                  height: isCompact ? 40 : 60,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) => const Icon(
+                // 🔥 Imagem centralizada
+                Center(
+                  child: Image.asset(
+                    'assets/images/quigestor.png',
+                    width: isCompact ? 40 : 100,
+                    height: isCompact ? 40 : 50,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) => Icon(
                       AppIcons.admin,
-                      size: 40,
-                      color: Colors.white
+                      size: isCompact ? 32 : 48,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
                 if (!isCompact) ...[
@@ -170,7 +174,6 @@ class SideMenu extends StatelessWidget {
                   title: isCompact ? null : const TextBody2('Sair', color: Colors.red, selectable: false),
                   onTap: () {
                     context.read<AuthCubit>().logout();
-                    // 🔥 Navega para login usando GoRouter
                     context.go('/login');
                   },
                 ),
@@ -209,14 +212,12 @@ class SideMenu extends StatelessWidget {
       title: isCompact ? null : TextBody2(label, selectable: false),
       dense: true,
       onTap: () {
-        // Fecha drawer se estiver aberto
         try {
           if (Scaffold.of(context).isDrawerOpen) {
             Navigator.pop(context);
           }
         } catch (_) {}
 
-        // 🔥 Navega usando GoRouter
         context.go(route);
       },
     );
