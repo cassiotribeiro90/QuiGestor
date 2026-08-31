@@ -33,6 +33,9 @@ import '../modules/produtos/bloc/produto_cubit.dart';
 import '../modules/clientes/bloc/clientes_cubit.dart';
 import '../modules/clientes/views/clientes_list_screen.dart';
 import '../modules/clientes/views/cliente_form_screen.dart';
+import '../modules/avaliacoes/bloc/avaliacoes_cubit.dart';
+import '../modules/avaliacoes/views/avaliacoes_list_screen.dart';
+import '../modules/avaliacoes/views/avaliacao_detalhe_screen.dart';
 import '../di/dependencies.dart';
 import '../widgets/main_shell.dart';
 
@@ -407,6 +410,33 @@ final GoRouter appRouter = GoRouter(
           },
         ),
 
+        // ---------- AVALIAÇÕES ----------
+        GoRoute(
+          path: '/avaliacoes',
+          name: 'avaliacoes',
+          parentNavigatorKey: _shellNavigatorKey,
+          builder: (context, state) {
+            debugPrint('⭐ [ROUTER] Abrindo Avaliações');
+            return BlocProvider(
+              create: (context) => getIt<AvaliacoesCubit>(),
+              child: const AvaliacoesListScreen(),
+            );
+          },
+        ),
+        GoRoute(
+          path: '/avaliacoes/:id',
+          name: 'avaliacao-detalhe',
+          parentNavigatorKey: _shellNavigatorKey,
+          builder: (context, state) {
+            final id = int.parse(state.pathParameters['id']!);
+            debugPrint('📄 [ROUTER] Abrindo Detalhe da Avaliação ID: $id');
+            return BlocProvider(
+              create: (context) => getIt<AvaliacoesCubit>(),
+              child: AvaliacaoDetalheScreen(avaliacaoId: id),
+            );
+          },
+        ),
+
         // ---------- CONFIGURAÇÕES ----------
         GoRoute(
           path: '/configuracoes',
@@ -439,6 +469,7 @@ class Routes {
   static const String categorias = '/categorias';
   static const String subcategorias = '/subcategorias';
   static const String pedidos = '/pedidos';
+  static const String avaliacoes = '/avaliacoes';
   static const String configuracoes = '/configuracoes';
 
   // Rotas de formulário - Gestores
@@ -466,6 +497,9 @@ class Routes {
 
   // Rotas de formulário - Pedidos
   static String pedidoDetalhe(int id) => '/pedidos/$id';
+
+  // Rotas de formulário - Avaliações
+  static String avaliacaoDetalhe(int id) => '/avaliacoes/$id';
 
   // Rotas de formulário - Produtos
   static String lojaProdutos(int lojaId) => '/lojas/$lojaId/produtos';

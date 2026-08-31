@@ -24,6 +24,7 @@ class MainShell extends StatelessWidget {
       '/lojas': 'Lojas',
       '/categorias': 'Categorias',
       '/pedidos': 'Pedidos',
+      '/avaliacoes': 'Avaliações',
       '/configuracoes': 'Configurações',
       '/subcategorias': 'Subcategorias',
     };

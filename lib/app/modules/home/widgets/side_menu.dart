@@ -138,6 +138,13 @@ class SideMenu extends StatelessWidget {
                   route: '/pedidos',
                   isCompact: isCompact,
                 ),
+                _buildMenuItem(
+                  context,
+                  icon: Icons.star_rate,
+                  label: 'Avaliações',
+                  route: '/avaliacoes',
+                  isCompact: isCompact,
+                ),
 
                 _buildSectionHeader(context, 'SISTEMA', isCompact),
                 _buildMenuItem(

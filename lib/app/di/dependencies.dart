@@ -7,6 +7,8 @@ import '../modules/lojistas/services/lojista_service.dart';
 import '../modules/lojistas/repositories/lojista_repository.dart';
 import '../modules/lojistas/bloc/lojistas_cubit.dart';
 import '../modules/lojistas/bloc/lojista_form_cubit.dart';
+import '../modules/avaliacoes/services/avaliacao_service.dart';
+import '../modules/avaliacoes/bloc/avaliacoes_cubit.dart';
 import '../modules/subcategorias/services/subcategoria_service.dart';
 import '../modules/subcategorias/bloc/subcategoria_cubit.dart';
 import '../modules/clientes/bloc/clientes_cubit.dart';
@@ -51,6 +53,9 @@ Future<void> setupDependencies() async {
   // Lojistas
   getIt.registerLazySingleton(() => LojistaService(getIt<ApiClient>()));
   getIt.registerLazySingleton(() => LojistaRepository(getIt<LojistaService>()));
+
+  // Avaliações
+  getIt.registerLazySingleton(() => AvaliacaoService(getIt<ApiClient>()));
   
   // Subcategorias
   getIt.registerLazySingleton(() => SubcategoriaService(getIt<ApiClient>()));
@@ -58,6 +63,7 @@ Future<void> setupDependencies() async {
   // Factory cubits to ensure fresh state when navigating
   getIt.registerFactory(() => LojistasCubit(getIt<LojistaRepository>()));
   getIt.registerFactory(() => LojistaFormCubit(getIt<LojistaRepository>()));
+  getIt.registerFactory(() => AvaliacoesCubit(getIt<AvaliacaoService>()));
   getIt.registerFactory(() => SubcategoriaCubit(getIt<SubcategoriaService>()));
   getIt.registerFactory(() => ClientesCubit(getIt<ApiClient>()));
 }
