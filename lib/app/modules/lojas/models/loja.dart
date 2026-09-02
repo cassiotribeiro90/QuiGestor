@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../shared/utils/image_helper.dart';
 
 class Loja {
   final int id;
@@ -168,4 +169,6 @@ class Loja {
   String get categoriaNome {
     return categoria.replaceAll(RegExp(r'\p{Emoji}', unicode: true), '').trim();
   }
+
+  String get logoUrl => ImageHelper.getFullImageUrl(logo);
 }

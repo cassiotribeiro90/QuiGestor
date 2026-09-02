@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../../apparte/widgets/app_text.dart';
 import '../../../../apparte/widgets/quigestor_card.dart';
 import '../models/cliente.dart';
+import '../../../../shared/utils/image_helper.dart';
 
 class ClienteCard extends StatelessWidget {
   final Cliente cliente;
@@ -45,7 +46,7 @@ class ClienteCard extends StatelessWidget {
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(10),
                         child: Image.network(
-                          cliente.avatar!,
+                          ImageHelper.getFullImageUrl(cliente.avatar),
                           width: 48,
                           height: 48,
                           fit: BoxFit.cover,

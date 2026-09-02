@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../apparte/widgets/app_text.dart';
 import '../../../../apparte/widgets/quigestor_card.dart';
 import '../models/categoria.dart';
+import '../../../../shared/utils/image_helper.dart';
 
 class CategoriaCard extends StatelessWidget {
   final Categoria categoria;
@@ -45,11 +46,26 @@ class CategoriaCard extends StatelessWidget {
               ),
               child: Center(
                 child: categoria.icone != null && categoria.icone!.isNotEmpty
+                    ? (categoria.icone!.length < 5
                     ? Text(
                   categoria.icone!,
                   style: const TextStyle(fontSize: 24),
                   textAlign: TextAlign.center,
                 )
+                    : ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    ImageHelper.getFullImageUrl(categoria.icone),
+                    width: 48,
+                    height: 48,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Icon(
+                      Icons.category_outlined,
+                      color: categoria.colorValue,
+                      size: 24,
+                    ),
+                  ),
+                ))
                     : Icon(
                   Icons.category_outlined,
                   color: categoria.colorValue,

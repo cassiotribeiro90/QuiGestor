@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../bloc/avaliacoes_cubit.dart';
 import '../models/avaliacao_model.dart';
 import '../widgets/star_display.dart';
+import '../../../../shared/utils/image_helper.dart';
 
 class AvaliacaoDetalheScreen extends StatefulWidget {
   final int avaliacaoId;
@@ -311,6 +312,19 @@ class _AvaliacaoDetalheScreenState extends State<AvaliacaoDetalheScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Row(
                   children: [
+                    if (produto.imagem != null && produto.imagem!.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: Image.network(
+                            ImageHelper.getFullImageUrl(produto.imagem),
+                            width: 32,
+                            height: 32,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
                     Expanded(
                       child: Text(
                         '${produto.quantidade}x ${produto.nome}',

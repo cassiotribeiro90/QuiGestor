@@ -5,6 +5,7 @@ import '../../../../apparte/widgets/quigestor_card.dart';
 import '../../../../apparte/widgets/app_text.dart';
 import '../models/loja.dart';
 import 'loja_status_chip.dart';
+import '../../../../shared/utils/image_helper.dart';
 
 class LojaCardItem extends StatelessWidget {
   final Loja loja;
@@ -33,24 +34,13 @@ class LojaCardItem extends StatelessWidget {
     }
   }
 
-  String _ajustarUrl(String url) {
-    if (url.isEmpty) return url;
-    if (!url.contains('localhost') && !url.contains('10.0.2.2')) return url;
-    final bool isAndroid = !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
-    if (isAndroid) {
-      return url.replaceAll('localhost', '10.0.2.2');
-    } else {
-      return url.replaceAll('10.0.2.2', 'localhost');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final statusColor = _getStatusColor();
     final String? logoUrl = (loja.logo != null && loja.logo!.isNotEmpty)
-        ? _ajustarUrl(loja.logo!)
+        ? ImageHelper.getFullImageUrl(loja.logo)
         : null;
 
     // Cores adaptativas para dark/light

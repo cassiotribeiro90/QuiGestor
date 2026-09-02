@@ -9,6 +9,10 @@ import '../bloc/categorias_state.dart';
 import '../models/categoria.dart';
 import '../../../core/constants/icon_constants.dart';
 import '../../../core/widgets/back_button_mixin.dart';
+import '../../../../apparte/widgets/product_image_picker.dart';
+import '../../../../shared/services/upload_service.dart';
+import '../../../../shared/utils/image_helper.dart';
+import '../../../../apparte/widgets/quigestor_card.dart';
 
 class CategoriaFormScreen extends StatefulWidget {
   final int? categoriaId;
@@ -30,6 +34,10 @@ class _CategoriaFormScreenState extends State<CategoriaFormScreen> with BackButt
   late TextEditingController _descricaoController;
   late TextEditingController _iconeController;
   late TextEditingController _ordemController;
+
+  // Imagem
+  String? _iconePath;
+
   late Color _selectedColor;
   bool _ativo = true;
   bool _destaque = false;
@@ -106,6 +114,7 @@ class _CategoriaFormScreenState extends State<CategoriaFormScreen> with BackButt
     _nomeController.text = categoria.nome;
     _descricaoController.text = categoria.descricao ?? '';
     _iconeController.text = categoria.icone ?? '🍔';
+    _iconePath = ImageHelper.extractPath(categoria.icone) ?? categoria.icone;
     _ordemController.text = categoria.ordem.toString();
     _selectedColor = categoria.colorValue;
     _ativo = categoria.ativo;
@@ -151,7 +160,7 @@ class _CategoriaFormScreenState extends State<CategoriaFormScreen> with BackButt
     final data = {
       'nome': _nomeController.text.trim(),
       'descricao': _descricaoController.text.trim(),
-      'icone': _iconeController.text.trim(),
+      'icone': _iconePath ?? _iconeController.text.trim(),
       'cor': _colorToHex(_selectedColor),
       'ordem': int.tryParse(_ordemController.text) ?? 0,
       'ativo': _ativo ? 1 : 0,
@@ -302,6 +311,61 @@ class _CategoriaFormScreenState extends State<CategoriaFormScreen> with BackButt
               const SizedBox(height: 24),
               const TextBody1('Configurações Visuais', fontWeight: FontWeight.bold),
               const SizedBox(height: 16),
+              
+              // Card de Ícone/Imagem
+              QuiGestorCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(Icons.image_outlined, color: theme.colorScheme.primary, size: 20),
+                        ),
+                        const SizedBox(width: 12),
+                        const TextH3('Ícone da Categoria', fontWeight: FontWeight.bold),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    ProductImagePicker(
+                      initialImagePath: _iconePath,
+                      folder: UploadService.FOLDER_CATEGORIES,
+                      size: 100,
+                      onImageSelected: (path) {
+                        setState(() {
+                          _iconePath = path;
+                        });
+                      },
+                      onUploadError: (error) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: TextInverse('Erro no upload: $error'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      },
+                    ),
+                    
+                    if (_iconePath != null && _iconePath!.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: TextBody3(
+                          _iconePath!,
+                          color: Colors.grey[600],
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -309,7 +373,7 @@ class _CategoriaFormScreenState extends State<CategoriaFormScreen> with BackButt
                     flex: 2,
                     child: TextFormField(
                       controller: _iconeController,
-                      decoration: _inputDecoration(theme, 'Ícone (Emoji)', Icons.emoji_emotions_outlined, isDark),
+                      decoration: _inputDecoration(theme, 'Emoji Alternativo', Icons.emoji_emotions_outlined, isDark),
                     ),
                   ),
                   const SizedBox(width: 16),

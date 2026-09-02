@@ -11,6 +11,7 @@ import '../../../../apparte/widgets/quigestor_card.dart';
 import '../../../../apparte/widgets/loading_skeleton.dart';
 import '../../../core/constants/icon_constants.dart';
 import '../../../widgets/conditional_selection_area.dart';
+import '../../../../shared/utils/image_helper.dart';
 
 class ProdutosListScreen extends StatefulWidget {
   final int lojaId;
@@ -269,7 +270,7 @@ class _ProdutosListScreenState extends State<ProdutosListScreen> with BackButton
                 borderRadius: BorderRadius.circular(8),
                 image: produto.imagem != null && produto.imagem!.isNotEmpty
                     ? DecorationImage(
-                  image: NetworkImage(produto.imagem!),
+                  image: NetworkImage(ImageHelper.getFullImageUrl(produto.imagem)),
                   fit: BoxFit.cover,
                 )
                     : null,

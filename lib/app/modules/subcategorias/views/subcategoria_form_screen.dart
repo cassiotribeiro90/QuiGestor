@@ -11,6 +11,10 @@ import '../../categorias/models/categoria.dart';
 import '../bloc/subcategoria_cubit.dart';
 import '../bloc/subcategoria_state.dart';
 import '../models/subcategoria.dart';
+import '../../../../apparte/widgets/product_image_picker.dart';
+import '../../../../shared/services/upload_service.dart';
+import '../../../../shared/utils/image_helper.dart';
+import '../../../../apparte/widgets/quigestor_card.dart';
 
 class SubcategoriaFormScreen extends StatefulWidget {
   final int? subcategoriaId;
@@ -33,6 +37,7 @@ class _SubcategoriaFormScreenState extends State<SubcategoriaFormScreen> with Ba
   late TextEditingController _nomeController;
   late TextEditingController _descricaoController;
   int? _categoriaId;
+  String? _iconePath;
   bool _ativo = true;
   bool _isEditing = false;
   bool _isLoading = false;
@@ -106,6 +111,7 @@ class _SubcategoriaFormScreenState extends State<SubcategoriaFormScreen> with Ba
     _nomeController.text = subcategoria.nome;
     _descricaoController.text = subcategoria.descricao ?? '';
     _categoriaId = subcategoria.categoriaId;
+    _iconePath = ImageHelper.extractPath(subcategoria.icone) ?? subcategoria.icone;
     _ativo = subcategoria.ativo;
   }
 
@@ -152,6 +158,7 @@ class _SubcategoriaFormScreenState extends State<SubcategoriaFormScreen> with Ba
       'nome': _nomeController.text.trim(),
       'descricao': _descricaoController.text.trim(),
       'categoria_id': _categoriaId,
+      'icone': _iconePath,
       'status': _ativo ? 1 : 0,
     };
 
@@ -324,6 +331,36 @@ class _SubcategoriaFormScreenState extends State<SubcategoriaFormScreen> with Ba
                 controller: _descricaoController,
                 decoration: _inputDecoration(theme, 'Descrição', AppIcons.inventory, isDark),
                 maxLines: 3,
+              ),
+              const SizedBox(height: 20),
+
+              // Card de Ícone
+              QuiGestorCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const TextBody1('Ícone / Imagem', fontWeight: FontWeight.bold),
+                    const SizedBox(height: 16),
+                    ProductImagePicker(
+                      initialImagePath: _iconePath,
+                      folder: UploadService.FOLDER_CATEGORIES,
+                      size: 100,
+                      onImageSelected: (path) {
+                        setState(() {
+                          _iconePath = path;
+                        });
+                      },
+                      onUploadError: (error) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: TextInverse('Erro no upload: $error'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 20),
 

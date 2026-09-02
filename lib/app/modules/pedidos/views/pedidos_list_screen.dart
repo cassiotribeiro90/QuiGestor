@@ -8,6 +8,7 @@ import '../bloc/pedidos_cubit.dart';
 import '../../../widgets/generic_filter_widget.dart';
 import '../models/pedido_model.dart';
 import '../../../core/constants/icon_constants.dart';
+import '../../../../shared/utils/image_helper.dart';
 
 class PedidosListScreen extends StatefulWidget {
   const PedidosListScreen({super.key});
@@ -278,7 +279,7 @@ class _PedidoCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
                 child: pedido.lojaImagem != null && pedido.lojaImagem!.isNotEmpty
                     ? Image.network(
-                  pedido.lojaImagem!,
+                  ImageHelper.getFullImageUrl(pedido.lojaImagem),
                   width: 48,
                   height: 48,
                   fit: BoxFit.cover,

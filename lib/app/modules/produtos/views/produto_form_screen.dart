@@ -1,7 +1,10 @@
+// lib/app/modules/produtos/views/produto_form_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../apparte/widgets/app_text.dart';
+import '../../../../apparte/widgets/product_image_picker.dart'; // 🔥 NOVO
 import '../../../../apparte/widgets/qui_button.dart';
 import '../bloc/produto_cubit.dart';
 import '../bloc/produto_state.dart';
@@ -10,8 +13,10 @@ import 'package:quigestor/app/modules/subcategorias/models/subcategoria.dart';
 import '../../categorias/models/categoria.dart';
 import '../../lojas/models/loja.dart';
 import '../../../../apparte/widgets/quigestor_card.dart';
-import '../../../../shared/api/api_client.dart';
 import '../../../core/widgets/back_button_mixin.dart';
+// 🔥 NOVO: Import do serviço de upload
+import '../../../../shared/services/upload_service.dart';
+import '../../../../shared/utils/image_helper.dart';
 
 class ProdutoFormScreen extends StatefulWidget {
   final int? produtoId;
@@ -25,13 +30,13 @@ class ProdutoFormScreen extends StatefulWidget {
 
 class _ProdutoFormScreenState extends State<ProdutoFormScreen> with BackButtonMixin {
   final _formKey = GlobalKey<FormState>();
-  
+
   // Controllers
   late TextEditingController _nomeController;
   late TextEditingController _descricaoController;
   late TextEditingController _precoController;
   late TextEditingController _precoPromocionalController;
-  late TextEditingController _imagemController;
+  // 🔥 REMOVIDO: _imagemController (não é mais necessário)
   late TextEditingController _ingredientesController;
   late TextEditingController _tempoPreparoController;
   late TextEditingController _ordemController;
@@ -41,12 +46,15 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> with BackButtonMi
   int? _lojaId;
   int? _categoriaId;
   int? _subcategoriaId;
-  
+
+  // 🔥 NOVO: Caminho da imagem (gerenciada pelo picker)
+  String? _imagemPath;
+
   // Listas de opções
   List<Categoria> _categorias = [];
   List<Subcategoria> _subcategorias = [];
   bool _loadingSubcategorias = false;
-  
+
   // Status
   bool _disponivel = true;
   bool _ativo = true;
@@ -56,7 +64,7 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> with BackButtonMi
   bool _vegano = false;
   bool _vegetariano = false;
   bool _apimentado = false;
-  
+
   bool _isEditing = false;
   bool _initialDataLoaded = false;
 
@@ -66,7 +74,7 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> with BackButtonMi
     _isEditing = widget.produtoId != null;
     _lojaId = widget.initialLojaId;
     _inicializarControllers();
-    
+
     context.read<ProdutoCubit>().loadInitialData(produtoId: widget.produtoId);
   }
 
@@ -75,12 +83,12 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> with BackButtonMi
     _descricaoController = TextEditingController();
     _precoController = TextEditingController();
     _precoPromocionalController = TextEditingController();
-    _imagemController = TextEditingController();
+    // 🔥 REMOVIDO: _imagemController
     _ingredientesController = TextEditingController();
     _tempoPreparoController = TextEditingController();
     _ordemController = TextEditingController();
     _estoqueController = TextEditingController();
-    
+
     _nomeController.addListener(() {
       if (mounted) setState(() {});
     });
@@ -91,18 +99,17 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> with BackButtonMi
     _descricaoController.text = produto.descricao ?? '';
     _precoController.text = produto.preco.toString();
     _precoPromocionalController.text = produto.precoPromocional?.toString() ?? '';
-    _imagemController.text = produto.imagem ?? '';
+    // 🔥 NOVO: Seta o caminho da imagem
+    _imagemPath = ImageHelper.extractPath(produto.imagem) ?? produto.imagem;
     _ingredientesController.text = produto.ingredientesTexto ?? '';
     _tempoPreparoController.text = produto.tempoPreparo?.toString() ?? '';
     _ordemController.text = produto.ordem.toString();
     _estoqueController.text = produto.estoque.toString();
-    
+
     _lojaId = produto.lojaId;
-    
-    // Prioriza o categoria_id do produto ou do objeto categoria (join)
-    _categoriaId = produto.categoriaId ?? produto.categoriaId;
+    _categoriaId = produto.categoriaId;
     _subcategoriaId = produto.subcategoriaId;
-    
+
     _disponivel = produto.disponivel;
     _ativo = produto.ativo;
     _destaque = produto.destaque;
@@ -123,14 +130,14 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> with BackButtonMi
     });
 
     try {
-      final response = await context.read<ApiClient>().get(
-        '/gestor/subcategoria/por-categoria?id=$categoriaId',
-      );
+      // 🔥 Usa o metodo do Cubit em vez de chamar diretamente
+      await context.read<ProdutoCubit>().loadSubcategoriasPorCategoria(categoriaId);
 
-      if (response.data['success'] == true) {
-        final List<dynamic> data = response.data['data'];
+      // Pega as subcategorias do estado atual
+      final state = context.read<ProdutoCubit>().state;
+      if (state is ProdutoLoaded) {
         setState(() {
-          _subcategorias = data.map((json) => Subcategoria.fromJson(json)).toList();
+          _subcategorias = state.subcategorias;
         });
       }
     } catch (e) {
@@ -155,7 +162,7 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> with BackButtonMi
     _descricaoController.dispose();
     _precoController.dispose();
     _precoPromocionalController.dispose();
-    _imagemController.dispose();
+    // 🔥 REMOVIDO: _imagemController
     _ingredientesController.dispose();
     _tempoPreparoController.dispose();
     _ordemController.dispose();
@@ -177,7 +184,7 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> with BackButtonMi
     required String title,
   }) {
     final theme = Theme.of(context);
-    
+
     return Row(
       children: [
         Container(
@@ -204,7 +211,7 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> with BackButtonMi
         if (state is ProdutoLoaded) {
           setState(() {
             _categorias = {for (var cat in state.categorias) cat.id: cat}.values.toList();
-            
+
             if (!_initialDataLoaded) {
               if (state.produto != null) {
                 _preencherControllers(state.produto!);
@@ -214,7 +221,7 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> with BackButtonMi
             }
           });
         } else if (state is ProdutoOperationSuccess) {
-          // SnackBar removido daqui e movido para _salvar/_deletar com delay antes do pop
+          // SnackBar já é mostrado no _salvar/_deletar
         } else if (state is ProdutoError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: TextInverse(state.message), backgroundColor: Colors.red),
@@ -223,24 +230,24 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> with BackButtonMi
       },
       builder: (context, state) {
         final isLoading = state is ProdutoLoading || state is ProdutoOperationLoading;
-        
+
         if (state is ProdutoLoading && !_initialDataLoaded) {
-           return Scaffold(
-             appBar: AppBar(
-               leading: buildBackButton(context),
-               title: TextH2(_isEditing ? 'Editar Produto' : 'Novo Produto'),
-             ),
-             body: const Center(child: CircularProgressIndicator())
-           );
+          return Scaffold(
+              appBar: AppBar(
+                leading: buildBackButton(context),
+                title: TextH2(_isEditing ? 'Editar Produto' : 'Novo Produto'),
+              ),
+              body: const Center(child: CircularProgressIndicator())
+          );
         }
 
         String title = _isEditing ? 'Editar Produto' : 'Novo Produto';
         if (state is ProdutoLoaded) {
           final lojaNome = _getLojaNome(state.lojas);
-          final nomeProd = _nomeController.text.trim().isNotEmpty 
-              ? _nomeController.text.trim() 
+          final nomeProd = _nomeController.text.trim().isNotEmpty
+              ? _nomeController.text.trim()
               : (_isEditing ? '...' : 'Novo Produto');
-          
+
           if (lojaNome.isNotEmpty) {
             title = '$nomeProd - $lojaNome';
           } else {
@@ -264,44 +271,47 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> with BackButtonMi
           body: isLoading && !_initialDataLoaded
               ? const Center(child: CircularProgressIndicator())
               : SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      children: [
-                        if (state is ProdutoLoaded || state is ProdutoOperationLoading || state is ProdutoOperationSuccess) ...[
-                          _buildBasicInfoCard(context),
-                          const SizedBox(height: 20),
-                          _buildCategorizationCard(context),
-                          const SizedBox(height: 20),
-                          _buildImageCard(context),
-                          const SizedBox(height: 20),
-                          _buildStatusCard(context),
-                          const SizedBox(height: 20),
-                          _buildAdditionalInfoCard(context),
-                          const SizedBox(height: 20),
-                          _buildStockAndPrepCard(context),
-                          const SizedBox(height: 32),
-                          
-                          if (_isEditing)
-                            _buildDeleteButton(context, isLoading),
-                          
-                          const SizedBox(height: 16),
-                          
-                          QuiButton(
-                            label: _isEditing ? 'ATUALIZAR PRODUTO' : 'CRIAR PRODUTO',
-                            onPressed: _salvar,
-                            isLoading: isLoading,
-                          ),
-                        ]
-                      ],
+            padding: const EdgeInsets.all(20),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  if (state is ProdutoLoaded || state is ProdutoOperationLoading || state is ProdutoOperationSuccess) ...[
+                    _buildBasicInfoCard(context),
+                    const SizedBox(height: 20),
+                    _buildCategorizationCard(context),
+                    const SizedBox(height: 20),
+                    // 🔥 SUBSTITUÍDO: Card de imagem com upload
+                    _buildImageCard(context),
+                    const SizedBox(height: 20),
+                    _buildStatusCard(context),
+                    const SizedBox(height: 20),
+                    _buildAdditionalInfoCard(context),
+                    const SizedBox(height: 20),
+                    _buildStockAndPrepCard(context),
+                    const SizedBox(height: 32),
+
+                    if (_isEditing)
+                      _buildDeleteButton(context, isLoading),
+
+                    const SizedBox(height: 16),
+
+                    QuiButton(
+                      label: _isEditing ? 'ATUALIZAR PRODUTO' : 'CRIAR PRODUTO',
+                      onPressed: _salvar,
+                      isLoading: isLoading,
                     ),
-                  ),
-                ),
+                  ]
+                ],
+              ),
+            ),
+          ),
         );
       },
     );
   }
+
+  // ============ CARDS ============
 
   Widget _buildBasicInfoCard(BuildContext context) {
     return QuiGestorCard(
@@ -348,16 +358,15 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> with BackButtonMi
   }
 
   Widget _buildCategorizationCard(BuildContext context) {
-    // 1. Remove duplicatas e garante que o valor selecionado existe
     final uniqueCategorias = {for (var cat in _categorias) cat.id: cat}.values.toList();
-    
+
     int? effectiveCategoriaId = _categoriaId;
     if (effectiveCategoriaId != null && !uniqueCategorias.any((cat) => cat.id == effectiveCategoriaId)) {
       effectiveCategoriaId = null;
     }
 
     final uniqueSubcategorias = {for (var sub in _subcategorias) sub.id: sub}.values.toList();
-    
+
     int? effectiveSubcategoriaId = _subcategoriaId;
     if (effectiveSubcategoriaId != null && !uniqueSubcategorias.any((sub) => sub.id == effectiveSubcategoriaId)) {
       effectiveSubcategoriaId = null;
@@ -369,7 +378,7 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> with BackButtonMi
         children: [
           _buildSectionHeader(context, icon: Icons.category_outlined, title: 'Categorização'),
           const SizedBox(height: 20),
-          
+
           if (uniqueCategorias.isNotEmpty)
             DropdownButtonFormField<int?>(
               initialValue: effectiveCategoriaId,
@@ -393,7 +402,7 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> with BackButtonMi
               },
               validator: (value) => value == null ? 'Selecione uma categoria' : null,
             )
-          else 
+          else
             const Center(child: Padding(
               padding: EdgeInsets.all(16.0),
               child: CircularProgressIndicator(),
@@ -419,7 +428,7 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> with BackButtonMi
               ],
               onChanged: (value) => setState(() => _subcategoriaId = value),
             ),
-          
+
           if (!_loadingSubcategorias && uniqueSubcategorias.isEmpty && _categoriaId != null)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 8),
@@ -433,34 +442,63 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> with BackButtonMi
     );
   }
 
+  // 🔥 NOVO: Card de imagem com upload
   Widget _buildImageCard(BuildContext context) {
     return QuiGestorCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSectionHeader(context, icon: Icons.image_outlined, title: 'Imagem'),
+          _buildSectionHeader(context, icon: Icons.image_outlined, title: 'Imagem do Produto'),
           const SizedBox(height: 20),
-          TextFormField(
-            controller: _imagemController,
-            decoration: const InputDecoration(labelText: 'URL da Imagem', prefixIcon: Icon(Icons.link)),
-            onChanged: (_) => setState(() {}),
-          ),
-          if (_imagemController.text.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  _imagemController.text,
-                  height: 100,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
-                    height: 100,
-                    color: Colors.grey[200],
-                    child: const Center(child: TextBody2('Imagem inválida')),
-                  ),
+
+          // 🔥 Widget de upload de imagem
+          ProductImagePicker(
+            initialImagePath: _imagemPath,
+            folder: UploadService.FOLDER_PRODUCTS,
+            size: 200,
+            storeId: _lojaId, // 🔥 Passa o ID da loja
+            onImageSelected: (path) {
+              setState(() {
+                _imagemPath = path;
+              });
+            },
+            onUploadError: (error) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: TextInverse('Erro no upload: $error'),
+                  backgroundColor: Colors.red,
                 ),
+              );
+            },
+          ),
+
+          const SizedBox(height: 12),
+
+          // Mostra o caminho atual (opcional, para debug)
+          if (_imagemPath != null && _imagemPath!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Row(
+                children: [
+                  Icon(Icons.link, size: 16, color: Colors.grey[600]),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextBody3(
+                      _imagemPath!,
+                      color: Colors.grey[600],
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+          if (_imagemPath == null || _imagemPath!.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: TextBody3(
+                'Nenhuma imagem selecionada. Clique no quadrado acima para adicionar.',
+                color: Colors.grey[500],
               ),
             ),
         ],
@@ -576,17 +614,31 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> with BackButtonMi
     );
   }
 
+  // ============ AÇÕES ============
+
   Future<void> _salvar() async {
     if (!_formKey.currentState!.validate()) return;
+
+    // 🔥 Valida se tem imagem (opcional, depende da regra de negócio)
+    // if (_imagemUrl == null || _imagemUrl!.isEmpty) {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     const SnackBar(
+    //       content: TextInverse('Adicione uma imagem para o produto'),
+    //       backgroundColor: Colors.orange,
+    //     ),
+    //   );
+    //   return;
+    // }
 
     final data = {
       'nome': _nomeController.text,
       'descricao': _descricaoController.text,
       'preco': double.tryParse(_precoController.text.replaceAll(',', '.')) ?? 0,
-      'preco_promocional': _precoPromocionalController.text.isNotEmpty 
-          ? double.tryParse(_precoPromocionalController.text.replaceAll(',', '.')) 
+      'preco_promocional': _precoPromocionalController.text.isNotEmpty
+          ? double.tryParse(_precoPromocionalController.text.replaceAll(',', '.'))
           : null,
-      'imagem': _imagemController.text,
+      // 🔥 NOVO: Usa o caminho da imagem do picker
+      'imagem': _imagemPath,
       'loja_id': _lojaId,
       'subcategoria_id': _subcategoriaId,
       'disponivel': _disponivel ? 1 : 0,
@@ -604,7 +656,7 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> with BackButtonMi
     };
 
     final success = await context.read<ProdutoCubit>().saveProduto(data, id: widget.produtoId);
-    
+
     if (success && mounted) {
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
@@ -616,7 +668,7 @@ class _ProdutoFormScreenState extends State<ProdutoFormScreen> with BackButtonMi
           duration: const Duration(seconds: 2),
         ),
       );
-      
+
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           if (context.canPop()) {

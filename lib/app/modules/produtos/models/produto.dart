@@ -1,4 +1,6 @@
 
+import '../../../../shared/utils/image_helper.dart';
+
 class Produto {
   final int id;
   final int lojaId;
@@ -134,4 +136,6 @@ class Produto {
   }
 
   bool get emPromocao => precoPromocional != null && precoPromocional! < preco;
+
+  String get imagemUrl => ImageHelper.getFullImageUrl(imagem);
 }

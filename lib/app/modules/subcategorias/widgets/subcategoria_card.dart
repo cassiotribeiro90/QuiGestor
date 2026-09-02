@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../apparte/widgets/app_text.dart';
 import '../../../../apparte/widgets/quigestor_card.dart';
 import '../models/subcategoria.dart';
+import '../../../../shared/utils/image_helper.dart';
 
 class SubcategoriaCard extends StatelessWidget {
   final Subcategoria subcategoria;
@@ -41,8 +42,28 @@ class SubcategoriaCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Center(
-                child: (subcategoria.categoriaEmoji != null &&
-                    subcategoria.categoriaEmoji!.isNotEmpty)
+                child: (subcategoria.icone != null && subcategoria.icone!.isNotEmpty)
+                    ? (subcategoria.icone!.length < 5
+                    ? Text(
+                  subcategoria.icone!,
+                  style: const TextStyle(fontSize: 24),
+                  textAlign: TextAlign.center,
+                )
+                    : ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    ImageHelper.getFullImageUrl(subcategoria.icone),
+                    width: 48,
+                    height: 48,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Icon(
+                      Icons.subdirectory_arrow_right,
+                      color: primaryColor,
+                      size: 24,
+                    ),
+                  ),
+                ))
+                    : (subcategoria.categoriaEmoji != null && subcategoria.categoriaEmoji!.isNotEmpty)
                     ? Text(
                   subcategoria.categoriaEmoji!,
                   style: const TextStyle(fontSize: 24),

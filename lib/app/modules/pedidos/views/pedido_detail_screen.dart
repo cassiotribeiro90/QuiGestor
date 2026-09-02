@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/widgets/back_button_mixin.dart';
 import '../bloc/pedidos_cubit.dart';
 import '../models/pedido_model.dart';
+import '../../../../shared/utils/image_helper.dart';
 
 class PedidoDetailScreen extends StatefulWidget {
   final int pedidoId;
@@ -172,7 +173,7 @@ class _PedidoDetailScreenState extends State<PedidoDetailScreen> with BackButton
                     if (item.imagem != null)
                       CircleAvatar(
                         radius: 16,
-                        backgroundImage: NetworkImage(item.imagem!),
+                        backgroundImage: NetworkImage(ImageHelper.getFullImageUrl(item.imagem)),
                         onBackgroundImageError: (_, __) => Container(),
                       ),
                     const SizedBox(width: 8),

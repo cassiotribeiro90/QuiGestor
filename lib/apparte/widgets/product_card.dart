@@ -1,5 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
 import 'app_text.dart';
+import '../../shared/utils/image_helper.dart';
 
 class ProductCard extends StatelessWidget {
   final String title;
@@ -30,7 +33,7 @@ class ProductCard extends StatelessWidget {
           children: [
             if (imageUrl != null)
               Image.network(
-                imageUrl!,
+                ImageHelper.getFullImageUrl(imageUrl),
                 height: 120,
                 width: double.infinity,
                 fit: BoxFit.cover,

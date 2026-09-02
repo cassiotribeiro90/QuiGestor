@@ -9,6 +9,10 @@ import '../models/loja.dart';
 import '../../../core/constants/icon_constants.dart';
 import '../../../core/widgets/back_button_mixin.dart';
 import '../../../routes/app_router.dart';
+import '../../../../apparte/widgets/product_image_picker.dart';
+import '../../../../shared/services/upload_service.dart';
+import '../../../../shared/utils/image_helper.dart';
+import '../../../../apparte/widgets/quigestor_card.dart';
 
 class LojaFormScreen extends StatefulWidget {
   final int? lojaId;
@@ -48,6 +52,9 @@ class _LojaFormScreenState extends State<LojaFormScreen> with BackButtonMixin {
   late TextEditingController _tempoEntregaMaxController;
   late TextEditingController _taxaEntregaController;
   late TextEditingController _pedidoMinimoController;
+
+  // Imagem
+  String? _logoPath;
 
   // Status
   String _status = 'ativo';
@@ -158,6 +165,7 @@ class _LojaFormScreenState extends State<LojaFormScreen> with BackButtonMixin {
     _tempoEntregaMaxController.text = loja.tempoEntregaMax.toString();
     _taxaEntregaController.text = loja.taxaEntrega.toString();
     _pedidoMinimoController.text = loja.pedidoMinimo.toString();
+    _logoPath = ImageHelper.extractPath(loja.logo) ?? loja.logo;
     _status = loja.status;
     _verificado = loja.verificado;
     _destaque = loja.destaque;
@@ -210,6 +218,7 @@ class _LojaFormScreenState extends State<LojaFormScreen> with BackButtonMixin {
       'tempo_entrega_max': int.tryParse(_tempoEntregaMaxController.text) ?? 0,
       'taxa_entrega': double.tryParse(_taxaEntregaController.text) ?? 0,
       'pedido_minimo': double.tryParse(_pedidoMinimoController.text) ?? 0,
+      'logo': _logoPath,
       'status': _status,
       'verificado': _verificado ? 1 : 0,
       'destaque': _destaque ? 1 : 0,
@@ -373,224 +382,273 @@ class _LojaFormScreenState extends State<LojaFormScreen> with BackButtonMixin {
               padding: const EdgeInsets.all(20),
               children: [
                 // Card Principal
-                Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildSectionHeader(context, AppIcons.store, 'Informações Básicas'),
-                        const SizedBox(height: 24),
+                QuiGestorCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSectionHeader(context, AppIcons.store, 'Informações Básicas'),
+                      const SizedBox(height: 24),
 
-                        // Nome
-                        TextFormField(
-                          controller: _nomeController,
-                          decoration: _inputDecoration(theme, 'Nome da Loja *', AppIcons.store, isDark),
-                          validator: (value) => value == null || value.isEmpty ? 'Campo obrigatório' : null,
-                        ),
-                        const SizedBox(height: 16),
+                      // Nome
+                      TextFormField(
+                        controller: _nomeController,
+                        decoration: _inputDecoration(theme, 'Nome da Loja *', AppIcons.store, isDark),
+                        validator: (value) => value == null || value.isEmpty ? 'Campo obrigatório' : null,
+                      ),
+                      const SizedBox(height: 16),
 
-                        // Categoria e Telefone
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextFormField(
-                                controller: _categoriaController,
-                                decoration: _inputDecoration(theme, 'Categoria *', AppIcons.category, isDark),
-                                validator: (value) => value == null || value.isEmpty ? 'Campo obrigatório' : null,
-                              ),
+                      // Categoria e Telefone
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: _categoriaController,
+                              decoration: _inputDecoration(theme, 'Categoria *', AppIcons.category, isDark),
+                              validator: (value) => value == null || value.isEmpty ? 'Campo obrigatório' : null,
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: TextFormField(
-                                controller: _telefoneController,
-                                decoration: _inputDecoration(theme, 'Telefone *', AppIcons.phone, isDark),
-                                validator: (value) => value == null || value.isEmpty ? 'Campo obrigatório' : null,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Descrição
-                        TextFormField(
-                          controller: _descricaoController,
-                          decoration: _inputDecoration(theme, 'Descrição', AppIcons.inventory, isDark),
-                          maxLines: 3,
-                        ),
-                        const SizedBox(height: 20),
-
-                        Divider(color: isDark ? Colors.grey[700] : Colors.grey[300]),
-                        const SizedBox(height: 16),
-
-                        // Endereço
-                        _buildSectionHeader(context, AppIcons.location, 'Endereço'),
-                        const SizedBox(height: 24),
-
-                        // CEP
-                        TextFormField(
-                          controller: _cepController,
-                          decoration: _inputDecoration(theme, 'CEP *', AppIcons.location, isDark),
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Logradouro e Número
-                        Row(
-                          children: [
-                            Expanded(flex: 3, child: TextFormField(
-                              controller: _logradouroController,
-                              decoration: _inputDecoration(theme, 'Logradouro *', null, isDark),
-                            )),
-                            const SizedBox(width: 12),
-                            Expanded(flex: 1, child: TextFormField(
-                              controller: _numeroController,
-                              decoration: _inputDecoration(theme, 'Nº *', null, isDark),
-                            )),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Complemento e Bairro
-                        Row(
-                          children: [
-                            Expanded(child: TextFormField(
-                              controller: _complementoController,
-                              decoration: _inputDecoration(theme, 'Complemento', null, isDark),
-                            )),
-                            const SizedBox(width: 12),
-                            Expanded(child: TextFormField(
-                              controller: _bairroController,
-                              decoration: _inputDecoration(theme, 'Bairro *', null, isDark),
-                            )),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Cidade e UF
-                        Row(
-                          children: [
-                            Expanded(flex: 3, child: TextFormField(
-                              controller: _cidadeController,
-                              decoration: _inputDecoration(theme, 'Cidade *', null, isDark),
-                            )),
-                            const SizedBox(width: 12),
-                            Expanded(child: TextFormField(
-                              controller: _ufController,
-                              decoration: _inputDecoration(theme, 'UF *', null, isDark),
-                              maxLength: 2,
-                            )),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-
-                        Divider(color: isDark ? Colors.grey[700] : Colors.grey[300]),
-                        const SizedBox(height: 16),
-
-                        // Entrega e Valores
-                        _buildSectionHeader(context, AppIcons.delivery, 'Entrega e Valores'),
-                        const SizedBox(height: 24),
-
-                        // Tempo de Entrega
-                        Row(
-                          children: [
-                            Expanded(child: TextFormField(
-                              controller: _tempoEntregaMinController,
-                              decoration: _inputDecoration(theme, 'Min (min) *', null, isDark),
-                              keyboardType: TextInputType.number,
-                            )),
-                            const SizedBox(width: 12),
-                            Expanded(child: TextFormField(
-                              controller: _tempoEntregaMaxController,
-                              decoration: _inputDecoration(theme, 'Max (min) *', null, isDark),
-                              keyboardType: TextInputType.number,
-                            )),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Taxa e Pedido Mínimo
-                        Row(
-                          children: [
-                            Expanded(child: TextFormField(
-                              controller: _taxaEntregaController,
-                              decoration: _inputDecoration(theme, r'Taxa (R$) *', AppIcons.money, isDark),
-                              keyboardType: TextInputType.number,
-                            )),
-                            const SizedBox(width: 12),
-                            Expanded(child: TextFormField(
-                              controller: _pedidoMinimoController,
-                              decoration: _inputDecoration(theme, r'Pedido Mín (R$) *', AppIcons.money, isDark),
-                              keyboardType: TextInputType.number,
-                            )),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-
-                        Divider(color: isDark ? Colors.grey[700] : Colors.grey[300]),
-                        const SizedBox(height: 16),
-
-                        // Status e Destaque
-                        _buildSectionHeader(context, AppIcons.info, 'Status e Destaque'),
-                        const SizedBox(height: 24),
-
-                        // Status Dropdown
-                        DropdownButtonFormField<String>(
-                          value: _status,
-                          decoration: _inputDecoration(theme, 'Status *', AppIcons.info, isDark),
-                          items: _statusOptions.map((opt) => DropdownMenuItem(
-                            value: opt['value'],
-                            child: TextBody2(opt['label']!),
-                          )).toList(),
-                          onChanged: (val) => setState(() => _status = val!),
-                          dropdownColor: isDark ? Colors.grey[800] : Colors.white,
-                          style: TextStyle(color: isDark ? Colors.white : Colors.black87),
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Verificado Switch
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: isDark ? Colors.grey[600]! : Colors.grey[300]!),
                           ),
-                          child: SwitchListTile(
-                            title: const TextBody1('Verificada', fontWeight: FontWeight.w500),
-                            subtitle: TextBody3(
-                              'Loja validada',
-                              color: isDark ? Colors.grey[400] : Colors.grey[600],
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: TextFormField(
+                              controller: _telefoneController,
+                              decoration: _inputDecoration(theme, 'Telefone *', AppIcons.phone, isDark),
+                              validator: (value) => value == null || value.isEmpty ? 'Campo obrigatório' : null,
                             ),
-                            value: _verificado,
-                            onChanged: (val) => setState(() => _verificado = val),
-                            activeColor: theme.primaryColor,
-                            contentPadding: EdgeInsets.zero,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Descrição
+                      TextFormField(
+                        controller: _descricaoController,
+                        decoration: _inputDecoration(theme, 'Descrição', AppIcons.inventory, isDark),
+                        maxLines: 3,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Card de Logo
+                QuiGestorCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSectionHeader(context, Icons.image_outlined, 'Logo da Loja'),
+                      const SizedBox(height: 20),
+
+                      ProductImagePicker(
+                        initialImagePath: _logoPath,
+                        folder: UploadService.FOLDER_STORES,
+                        size: 150,
+                        storeId: widget.lojaId ?? widget.loja?.id,
+                        onImageSelected: (path) {
+                          setState(() {
+                            _logoPath = path;
+                          });
+                        },
+                        onUploadError: (error) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: TextInverse('Erro no upload: $error'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        },
+                      ),
+
+                      if (_logoPath != null && _logoPath!.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: TextBody3(
+                            _logoPath!,
+                            color: Colors.grey[600],
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const SizedBox(height: 12),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
 
-                        // Destaque Switch
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: isDark ? Colors.grey[600]! : Colors.grey[300]!),
-                          ),
-                          child: SwitchListTile(
-                            title: const TextBody1('Destaque', fontWeight: FontWeight.w500),
-                            subtitle: TextBody3(
-                              'Página inicial',
-                              color: isDark ? Colors.grey[400] : Colors.grey[600],
-                            ),
-                            value: _destaque,
-                            onChanged: (val) => setState(() => _destaque = val),
-                            activeColor: theme.primaryColor,
-                            contentPadding: EdgeInsets.zero,
-                          ),
+                // Card de Endereço
+                QuiGestorCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSectionHeader(context, AppIcons.location, 'Endereço'),
+                      const SizedBox(height: 24),
+
+                      // CEP
+                      TextFormField(
+                        controller: _cepController,
+                        decoration: _inputDecoration(theme, 'CEP *', AppIcons.location, isDark),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Logradouro e Número
+                      Row(
+                        children: [
+                          Expanded(flex: 3, child: TextFormField(
+                            controller: _logradouroController,
+                            decoration: _inputDecoration(theme, 'Logradouro *', null, isDark),
+                          )),
+                          const SizedBox(width: 12),
+                          Expanded(flex: 1, child: TextFormField(
+                            controller: _numeroController,
+                            decoration: _inputDecoration(theme, 'Nº *', null, isDark),
+                          )),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Complemento e Bairro
+                      Row(
+                        children: [
+                          Expanded(child: TextFormField(
+                            controller: _complementoController,
+                            decoration: _inputDecoration(theme, 'Complemento', null, isDark),
+                          )),
+                          const SizedBox(width: 12),
+                          Expanded(child: TextFormField(
+                            controller: _bairroController,
+                            decoration: _inputDecoration(theme, 'Bairro *', null, isDark),
+                          )),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Cidade e UF
+                      Row(
+                        children: [
+                          Expanded(flex: 3, child: TextFormField(
+                            controller: _cidadeController,
+                            decoration: _inputDecoration(theme, 'Cidade *', null, isDark),
+                          )),
+                          const SizedBox(width: 12),
+                          Expanded(child: TextFormField(
+                            controller: _ufController,
+                            decoration: _inputDecoration(theme, 'UF *', null, isDark),
+                            maxLength: 2,
+                          )),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Card de Entrega
+                QuiGestorCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSectionHeader(context, AppIcons.delivery, 'Entrega e Valores'),
+                      const SizedBox(height: 24),
+
+                      // Tempo de Entrega
+                      Row(
+                        children: [
+                          Expanded(child: TextFormField(
+                            controller: _tempoEntregaMinController,
+                            decoration: _inputDecoration(theme, 'Min (min) *', null, isDark),
+                            keyboardType: TextInputType.number,
+                          )),
+                          const SizedBox(width: 12),
+                          Expanded(child: TextFormField(
+                            controller: _tempoEntregaMaxController,
+                            decoration: _inputDecoration(theme, 'Max (min) *', null, isDark),
+                            keyboardType: TextInputType.number,
+                          )),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Taxa e Pedido Mínimo
+                      Row(
+                        children: [
+                          Expanded(child: TextFormField(
+                            controller: _taxaEntregaController,
+                            decoration: _inputDecoration(theme, r'Taxa (R$) *', AppIcons.money, isDark),
+                            keyboardType: TextInputType.number,
+                          )),
+                          const SizedBox(width: 12),
+                          Expanded(child: TextFormField(
+                            controller: _pedidoMinimoController,
+                            decoration: _inputDecoration(theme, r'Pedido Mín (R$) *', AppIcons.money, isDark),
+                            keyboardType: TextInputType.number,
+                          )),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Card de Status
+                QuiGestorCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSectionHeader(context, AppIcons.info, 'Status e Destaque'),
+                      const SizedBox(height: 24),
+
+                      // Status Dropdown
+                      DropdownButtonFormField<String>(
+                        value: _status,
+                        decoration: _inputDecoration(theme, 'Status *', AppIcons.info, isDark),
+                        items: _statusOptions.map((opt) => DropdownMenuItem(
+                          value: opt['value'],
+                          child: TextBody2(opt['label']!),
+                        )).toList(),
+                        onChanged: (val) => setState(() => _status = val!),
+                        dropdownColor: isDark ? Colors.grey[800] : Colors.white,
+                        style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Verificado Switch
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: isDark ? Colors.grey[600]! : Colors.grey[300]!),
                         ),
-                      ],
-                    ),
+                        child: SwitchListTile(
+                          title: const TextBody1('Verificada', fontWeight: FontWeight.w500),
+                          subtitle: TextBody3(
+                            'Loja validada',
+                            color: isDark ? Colors.grey[400] : Colors.grey[600],
+                          ),
+                          value: _verificado,
+                          onChanged: (val) => setState(() => _verificado = val),
+                          activeColor: theme.primaryColor,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Destaque Switch
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: isDark ? Colors.grey[600]! : Colors.grey[300]!),
+                        ),
+                        child: SwitchListTile(
+                          title: const TextBody1('Destaque', fontWeight: FontWeight.w500),
+                          subtitle: TextBody3(
+                            'Página inicial',
+                            color: isDark ? Colors.grey[400] : Colors.grey[600],
+                          ),
+                          value: _destaque,
+                          onChanged: (val) => setState(() => _destaque = val),
+                          activeColor: theme.primaryColor,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
 

@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
+import '../../../../shared/utils/image_helper.dart';
 
 class Categoria extends Equatable {
   final int id;
@@ -101,6 +102,8 @@ class Categoria extends Equatable {
   }
 
   String get statusLabel => ativo ? 'Ativo' : 'Inativo';
+
+  String get iconeUrl => ImageHelper.getFullImageUrl(icone);
 
   @override
   List<Object?> get props => [

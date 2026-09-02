@@ -1,3 +1,5 @@
+// lib/app/di/injection.dart
+
 import 'package:get_it/get_it.dart';
 import '../../../shared/api/api_client.dart';
 import '../../../shared/services/token_service.dart';
@@ -9,6 +11,7 @@ import '../modules/lojistas/bloc/lojistas_cubit.dart';
 import '../modules/lojistas/bloc/lojista_form_cubit.dart';
 import '../modules/avaliacoes/services/avaliacao_service.dart';
 import '../modules/avaliacoes/bloc/avaliacoes_cubit.dart';
+import '../../shared/services/upload_service.dart';
 import '../modules/subcategorias/services/subcategoria_service.dart';
 import '../modules/subcategorias/bloc/subcategoria_cubit.dart';
 import '../modules/clientes/bloc/clientes_cubit.dart';
@@ -36,6 +39,13 @@ Future<void> setupDependencies() async {
     getIt.registerLazySingleton(() => ApiClient());
   }
 
+  // 🔥 NOVO: Upload Service (depende do ApiClient)
+  if (!getIt.isRegistered<UploadService>()) {
+    getIt.registerLazySingleton(
+          () => UploadService(getIt<ApiClient>()),
+    );
+  }
+
   // Auth
   if (!getIt.isRegistered<AuthRepository>()) {
     getIt.registerLazySingleton(() => AuthRepository(
@@ -56,10 +66,10 @@ Future<void> setupDependencies() async {
 
   // Avaliações
   getIt.registerLazySingleton(() => AvaliacaoService(getIt<ApiClient>()));
-  
+
   // Subcategorias
   getIt.registerLazySingleton(() => SubcategoriaService(getIt<ApiClient>()));
-  
+
   // Factory cubits to ensure fresh state when navigating
   getIt.registerFactory(() => LojistasCubit(getIt<LojistaRepository>()));
   getIt.registerFactory(() => LojistaFormCubit(getIt<LojistaRepository>()));

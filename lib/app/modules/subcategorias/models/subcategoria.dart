@@ -1,3 +1,5 @@
+import '../../../../shared/utils/image_helper.dart';
+
 class Subcategoria {
   final int id;
   final String nome;
@@ -59,4 +61,6 @@ class Subcategoria {
     'descricao': descricao,
     'status': ativo ? 1 : 0,
   };
+
+  String get iconeUrl => ImageHelper.getFullImageUrl(icone);
 }
